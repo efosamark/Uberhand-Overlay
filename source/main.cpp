@@ -3,6 +3,7 @@
 #define TESLA_INIT_IMPL
 #include <tesla.hpp>
 #include <utils.hpp>
+#include <regex>
 
 
 // Overlay booleans
@@ -124,7 +125,13 @@ public:
     ~SelectionOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
-        auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(filePath), "Uberhand Package");
+        std::regex pattern("^(\\d{1,2})_");
+        std::smatch matches;
+        std::string viewfilePath = getNameFromPath(filePath);
+        if (std::regex_search(viewfilePath, matches, pattern)) {
+            viewfilePath = viewfilePath.substr(matches[0].length()); // Remove the matched part from the beginning
+        }
+        auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(viewfilePath), "Uberhand Package");
         auto list = new tsl::elm::List();
 
         // Extract the path pattern from commands
@@ -451,12 +458,32 @@ public:
     ~SubMenu() {}
 
     virtual tsl::elm::Element* createUI() override {
-        auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(subPath), package);
+        std::regex pattern("^(\\d{1,2})_");
+        std::smatch matches;
+        std::string viewSubdirectory;
+        std::string viewPackage = package;
+        std::string viewsubPath = getNameFromPath(subPath);
+        std::vector<std::string> subdirectories = getSubdirectories(subPath);
+
+        if (std::regex_search(viewsubPath, matches, pattern)) {
+            viewsubPath = viewsubPath.substr(matches[0].length()); // Remove the matched part from the beginning
+        }
+        if (std::regex_search(package, matches, pattern)) {
+            viewPackage = package.substr(matches[0].length()); // Remove the matched part from the beginning
+        }
+        auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(viewsubPath), viewPackage);
         auto list = new tsl::elm::List();
 
-        for(const auto& subDirectory : getSubdirectories(subPath)){
+        std::sort(subdirectories.begin(), subdirectories.end());
+        
+        for(const auto& subDirectory : subdirectories){
+            if (std::regex_search(subDirectory, matches, pattern)) {
+                    viewSubdirectory = subDirectory.substr(matches[0].length()); // Remove the matched part from the beginning
+            } else {
+                    viewSubdirectory = subDirectory;
+            }
             if(isFileOrDirectory(subPath + subDirectory + '/' + configFileName)){
-                auto item = new tsl::elm::ListItem(subDirectory);
+                auto item = new tsl::elm::ListItem(viewSubdirectory);
                 item->setValue("\u25B6", tsl::PredefinedColors::White);
                 item->setClickListener([&,subDirectory](u64 keys)->bool{
                     if(keys & KEY_A){
@@ -689,10 +716,20 @@ public:
     Package(const std::string& path) : SubMenu(path) {}
 
     tsl::elm::Element* createUI() override {
+        std::regex pattern("^(\\d{1,2})_");
+        std::smatch matches; // To store matched values
+        std::string viewPackage;
+
         package = getNameFromPath(subPath);
+        if (std::regex_search(package, matches, pattern)) {
+            viewPackage = package.substr(matches[0].length()); // Remove the matched part from the beginning
+        } else {
+            viewPackage = package;
+        }
+        
         logMessage(subPath+' '+package);
         auto rootFrame = static_cast<tsl::elm::OverlayFrame*>(SubMenu::createUI());
-        rootFrame->setTitle(package);
+        rootFrame->setTitle(viewPackage);
         rootFrame->setSubtitle("                             "); // FIXME: former subtitle is not fully erased if new string is shorter
         return rootFrame;
     }
@@ -870,10 +907,21 @@ public:
                 //bool usingStar = false;
                 std::string subdirectory = taintedSubdirectory;
                 std::string subdirectoryIcon = "";
+                std::string viewSubdirectory;
+                std::regex pattern("^(\\d{1,2})_");
+                std::smatch matches; // To store matched values
+
                 if (subdirectory.find("0_") == 0) {
                     subdirectory = subdirectory.substr(2); // Remove "0_" from the beginning
                     subdirectoryIcon = "\u2605 ";
                 }
+
+                if (std::regex_search(subdirectory, matches, pattern)) {
+                    viewSubdirectory = subdirectory.substr(matches[0].length()); // Remove the matched part from the beginning
+                } else {
+                    viewSubdirectory = subdirectory;
+                }
+
                 std::string subPath = packageDirectory + subdirectory + "/";
                 std::string configFilePath = subPath + "config.ini";
             
@@ -884,7 +932,7 @@ public:
                         list->addItem(new tsl::elm::CategoryHeader("Packages"));
                     }
                     
-                    auto listItem = new tsl::elm::ListItem(subdirectoryIcon + subdirectory);
+                    auto listItem = new tsl::elm::ListItem(subdirectoryIcon + viewSubdirectory);
                     listItem->setValue(packageHeader.version);
             
                     listItem->setClickListener([this, subPath = packageDirectory + subdirectory + "/"](uint64_t keys) {
