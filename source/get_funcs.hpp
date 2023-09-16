@@ -5,6 +5,7 @@
 #include <jansson.h>
 #include <string_funcs.hpp>
 #include "debug_funcs.hpp"
+#include <regex>
 
 // Get functions
 
@@ -147,7 +148,14 @@ std::string getParentDirNameFromPath(const std::string& path) {
     return "";
 }
 
-
+std::string getNameWithoutPrefix(std::string Name) {
+    std::regex pattern("^(\\d{1,2})_");
+    std::smatch matches;
+    if (std::regex_search(Name, matches, pattern)) {
+        Name = Name.substr(matches[0].length()); // Remove the matched part from the beginning
+    }
+    return Name;
+}
 
 std::vector<std::string> getSubdirectories(const std::string& directoryPath) {
     std::vector<std::string> subdirectories;
