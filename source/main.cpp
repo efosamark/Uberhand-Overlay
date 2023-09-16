@@ -124,7 +124,7 @@ public:
     ~SelectionOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
-        auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(getNameWithoutPrefix(filePath)), "Uberhand Package");
+        auto rootFrame = new tsl::elm::OverlayFrame(getNameWithoutPrefix(getNameFromPath(filePath)), "Uberhand Package");
         auto list = new tsl::elm::List();
 
         // Extract the path pattern from commands
