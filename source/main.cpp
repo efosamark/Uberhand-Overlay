@@ -9,6 +9,73 @@
 static bool defaultMenuLoaded = true;
 static std::string package = "";
 
+class InfoOverlay : public tsl::Gui {
+private:
+    std::vector<std::string> kipInfoCommand;
+    bool isInSection, inQuotes;
+
+public:
+    InfoOverlay(std::vector<std::string> kipInfoCommand) : kipInfoCommand(kipInfoCommand) {}
+    ~InfoOverlay() {}
+
+    virtual tsl::elm::Element* createUI() override {
+
+        std::pair<std::string, int> textDataPair;
+        constexpr int lineHeight = 20;  // Adjust the line height as needed
+        constexpr int fontSize = 19;    // Adjust the font size as needed
+
+        auto rootFrame = new tsl::elm::OverlayFrame("Backup Management", "Uberhand Package");
+        auto list = new tsl::elm::List();
+
+        textDataPair = dispCustData(kipInfoCommand[2], kipInfoCommand[1]);
+        std::string textdata = textDataPair.first;
+        int textsize = textDataPair.second;
+        if (!textdata.empty()) {
+            list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+            renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+            }), fontSize * textsize + lineHeight);
+            auto listItem = new tsl::elm::ListItem("Apply");
+            listItem->setClickListener([this, listItem](uint64_t keys) { // Add 'command' to the capture list
+            if (keys & KEY_A) {
+                bool result = copyFileOrDirectory(this->kipInfoCommand[1], "/atmosphere/kips/loader.kip");
+                if (result)
+                    listItem->setValue("DONE", tsl::PredefinedColors::Green);
+                else
+                    listItem->setValue("FAIL", tsl::PredefinedColors::Red);
+                return true;
+            }
+                return false;
+            });
+            list->addItem(listItem);
+            listItem = new tsl::elm::ListItem("Delete");
+            listItem->setClickListener([this, listItem](uint64_t keys) { // Add 'command' to the capture list
+            if (keys & KEY_A) {
+                bool result = deleteFileOrDirectory(this->kipInfoCommand[1]);
+                if (result) {
+                    tsl::goBack();
+                    tsl::goBack();
+                }
+                else
+                    listItem->setValue("FAIL", tsl::PredefinedColors::Red);
+                return true;
+            }
+                return false;
+            });
+            list->addItem(listItem);
+            rootFrame->setContent(list);
+        }
+            return rootFrame;
+    }
+
+    virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+        if (keysDown & KEY_B) {
+            tsl::goBack();
+            return true;
+        }
+        return false;
+    }
+};
+
 class ConfigOverlay : public tsl::Gui {
 private:
     std::string filePath, specificKey;
@@ -122,141 +189,6 @@ public:
     SelectionOverlay(const std::string& file, const std::string& key = "", const std::vector<std::vector<std::string>>& cmds = {}) 
         : filePath(file), specificKey(key), commands(cmds) {}
     ~SelectionOverlay() {}
-
-    std::pair<std::string, int> dispCustData(const std::string jsonPath) {
-
-        std::string custOffset = "";
-        std::string currentHex = "";
-        std::string extent = "";
-        std::string output = "";
-        std::string state = "";
-        std::string name = "";
-        std::string offset  = "";
-        bool allign = false;
-        int checkDefault = 0;
-        int length = 0;
-        int lineCount = 1;
-
-        if (!isFileOrDirectory(jsonPath)) {
-            return std::make_pair(output, lineCount);
-        }
-        json_t* jsonData = readJsonFromFile(jsonPath);
-        if (jsonData) {
-            size_t arraySize = json_array_size(jsonData);
-
-            std::vector<std::string> offsetStrs = findHexDataOffsets("/atmosphere/kips/loader.kip", "43555354"); // 43555354 is a CUST
-            custOffset = offsetStrs[0];
-            FILE* file = fopen("/atmosphere/kips/loader.kip", "rb");
-            if (!file) {
-                logMessage("Failed to open the loader.kip.");
-                return std::make_pair(output, lineCount);
-            }
-
-            for (size_t i = 0; i < arraySize; ++i) {
-                json_t* item = json_array_get(jsonData, i);
-                if (item && json_is_object(item)) {
-                    json_t* keyValue = json_object_get(item, "name");
-                    if (keyValue && json_is_string(keyValue)) {
-                        json_t* j_offset = json_object_get(item, "offset");
-                        json_t* j_length = json_object_get(item, "length");
-                        json_t* j_extent = json_object_get(item, "extent");
-                        json_t* j_state = json_object_get(item, "state");
-
-                        if (j_state) {
-                            state = json_string_value(j_state);
-                        } else {
-                            state = "";
-                        }
-
-                        if (state != "filler" || state.empty()) {
-                            if (!j_offset || !j_length) {
-                                return std::make_pair(output, lineCount);
-                            }
-                            name = json_string_value(keyValue);
-                            offset = json_string_value(j_offset);
-                            length = std::stoi(json_string_value(j_length));
-                            if (j_extent)
-                                extent = json_string_value(j_extent);
-                            else extent = "";
-
-                            if (offset.find(',') != std::string::npos) {
-                                std::istringstream iss(offset);
-                                std::string offsetItem;
-                                std::vector<std::string> offsetList;
-
-                                // Split the string by commas and store each offset in a vector
-                                while (std::getline(iss, offsetItem, ',')) {
-                                    offsetList.push_back(offsetItem);
-                                }
-
-                                currentHex = "";
-                                for (const std::string& offsetItem : offsetList) {
-                                    std::string tempHex = readHexDataAtOffsetF(file, custOffset, "43555354", offsetItem.c_str(), length); // Read the data from kip with offset starting from 'C' in 'CUST'
-                                    unsigned int intValue = reversedHexToInt(tempHex);
-                                    currentHex += std::to_string(intValue) + '-';
-                                }
-                                currentHex.pop_back();
-                                output += name + ": " + currentHex;
-                            } else {
-                                json_t* j_default = json_object_get(item, "default");
-                                if (j_default) {
-                                    checkDefault = std::stoi(json_string_value(j_default));
-                                    if (checkDefault == 1) {
-                                        std::string offsetDef = std::to_string(std::stoi(offset) + length);
-                                        currentHex = readHexDataAtOffsetF(file, custOffset, "43555354", offsetDef.c_str(), length); // Read next <length> hex chars from specified offset
-                                    }
-                                }
-                                if (allign) {
-                                    // Format the string to have two columns; Calculate number of spaces needed
-                                    size_t found = output.rfind('\n');
-                                    int numreps = 33 - (output.length() - found - 1) - name.length() - length - 2;
-                                    if (!extent.empty()) {
-                                        numreps -= extent.length();
-                                    }
-                                    output.append(numreps, ' ');
-                                    allign = false;
-                                }
-                                
-                                if (checkDefault && currentHex != "000000") {
-                                    output += name + ": " + "Default";
-                                    extent = "";
-                                    checkDefault = 0;
-                                } else {
-                                    currentHex = readHexDataAtOffsetF(file, custOffset, "43555354", offset.c_str(), length); // Read the data from kip with offset starting from 'C' in 'CUST'
-                                    unsigned int intValue = reversedHexToInt(currentHex);
-                                    if (offset == "32") { // If got RAM MHz- adjust to 4IFIR value
-                                        intValue += 200000;
-                                    } else if (offset == "16") { // If got Vdd2- adjust to 4IFIR value
-                                        intValue += 100000;
-                                    }
-                                    output += name + ": " + std::to_string(intValue).substr(0, length);
-                                }
-                            }
-
-                            if (!extent.empty()) {
-                                output += " " + extent;
-                            }
-                            if (state != "no_skip"){
-                                output += '\n';
-                                lineCount++;
-                            } else {
-                                allign = true;
-                            }
-                        } else { // When state = filler
-                            std::string name = json_string_value(keyValue);
-                            output += '\n';
-                            lineCount++;
-                            output += name;
-                            output += '\n';
-                            lineCount++;
-                        }
-                    }
-                }
-            }
-            fclose(file);
-        }
-        return std::make_pair(output, lineCount);
-    }
 
     virtual tsl::elm::Element* createUI() override {
         auto rootFrame = new tsl::elm::OverlayFrame(getNameWithoutPrefix(getNameFromPath(filePath)), "Uberhand Package");
@@ -545,14 +477,14 @@ public:
                     list->addItem(listItem);
                 } else {
                     auto listItem = new tsl::elm::ListItem(itemName);
-                    bool test = false;
+                    bool listBackups = false;
                     std::vector<std::string> kipInfoCommand;
                     for (const std::vector<std::string>& row : commands) {
                         // Iterate over the inner vector (row)
                         for (const std::string& cell : row) {
                             if (cell == "kip_info") {
                                 kipInfoCommand = row;
-                                test = true;
+                                listBackups = true;
                             }
                         }
                     }
@@ -568,7 +500,7 @@ public:
                         concatenatedString += str + " ";
                     }
                     logMessage (concatenatedString);
-                    if (!test) {
+                    if (!listBackups) {
                         listItem->setClickListener([file, this, listItem](uint64_t keys) { // Add 'command' to the capture list
                             if (keys & KEY_A) {
                                 // Replace "{source}" with file in commands, then execute
@@ -589,36 +521,13 @@ public:
                         });
                         list->addItem(listItem);
                     } else {
-                        bool res1;
-                        listItem->setClickListener([file, this, listItem, &res1](uint64_t keys) { // Add 'command' to the capture list
+                        listItem->setClickListener([file, this, listItem, kipInfoCommand](uint64_t keys) { // Add 'command' to the capture list
                             if (keys & KEY_A) {
-                                return res1 = true;
+                                tsl::changeTo<InfoOverlay>(kipInfoCommand);
                             }
                             return false;
                         });
                         list->addItem(listItem);
-                        logMessage(std::to_string(res1));
-                        if (res1) {
-                            textDataPair = dispCustData(kipInfoCommand[2]);
-                            std::string textdata = textDataPair.first;
-                            int textsize = textDataPair.second;
-                            if (!textdata.empty()) {
-                                list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                                renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
-                                }), fontSize * textsize + lineHeight);
-                                auto listItem = new tsl::elm::ListItem("Back");
-                                listItem->setClickListener([](uint64_t keys) { // Add 'command' to the capture list
-                                if (keys & KEY_A) {
-                                    tsl::goBack();
-                                    return true;
-                                }
-                                    return false;
-                                });
-                                list->addItem(listItem);
-                                rootFrame->setContent(list);
-                                return rootFrame;
-                            }
-                        }
                     }
                 }
             } else { // for handiling toggles
@@ -654,7 +563,6 @@ public:
             } 
             count++;
         }
-
         rootFrame->setContent(list);
         return rootFrame;
     }

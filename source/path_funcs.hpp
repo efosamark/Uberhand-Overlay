@@ -1,6 +1,7 @@
 #pragma once
 #include <sys/stat.h>
 #include <dirent.h>
+#include <ctime>
 
 // Function to create a directory if it doesn't exist
 void createSingleDirectory(const std::string& directoryPath) {
@@ -394,4 +395,22 @@ bool ensureDirectoryExists(const std::string& path) {
     
     logMessage(std::string("Failed to create directory: ") + path);
     return false;
+}
+
+bool generateBackup() {
+    // Generate a unique code
+    time_t now = time(NULL);
+    tm* timeinfo = localtime(&now);
+    int year = timeinfo->tm_year + 1900;
+    int month = timeinfo->tm_mon + 1;
+    int day = timeinfo->tm_mday;
+    int hour = timeinfo->tm_hour;
+    int minute = timeinfo->tm_min;
+    int second = timeinfo->tm_sec;
+    std::string code = std::to_string(year % 100) + std::to_string(month) + std::to_string(day) + std::to_string(hour) + std::to_string(minute) + std::to_string(second);
+
+    std::string backupName = "/atmosphere/kips/.bak/Backup [" + code + "]";
+    // Save current kip with the unique name
+    bool result = copyFileOrDirectory("/atmosphere/kips/loader.kip", backupName.c_str());
+    return result;
 }
