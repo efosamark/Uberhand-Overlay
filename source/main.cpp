@@ -263,6 +263,8 @@ public:
         auto list = new tsl::elm::List();
 
         bool kipInfo = false;
+        bool useFilter = false;
+        bool useSource = false;
         bool useJson = false;
         bool useText = false;
         bool useToggle = false;
@@ -280,6 +282,7 @@ public:
                     useSplitHeader = true;
                 } else if (cmd[0] == "filter") {
                     filterList.push_back(cmd[1]);
+                    useFilter = true;
                 } else if (cmd[0] == "filter_on") {
                     filterOnList.push_back(cmd[1]);
                     useToggle = true;
@@ -288,6 +291,7 @@ public:
                     useToggle = true;
                 } else if (cmd[0] == "source") {
                     pathPattern = cmd[1];
+                    useSource = true;
                 } else if (cmd[0] == "source_on") {
                     pathPatternOn = cmd[1];
                     useToggle = true;
@@ -322,35 +326,7 @@ public:
 
         // Get the list of files matching the pattern
         if (!useToggle) {
-            if (kipInfo) {
-                if (!isFileOrDirectory(jsonPath)) {
-                    list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                    renderer->drawString("TMPL file not found. Contact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
-                    }), fontSize + lineHeight);
-                    rootFrame->setContent(list);
-                    return rootFrame;
-                } else {
-                    textDataPair = dispCustData(jsonPath);
-                    std::string textdata = textDataPair.first;
-                    int textsize = textDataPair.second;
-                    if (!textdata.empty()) {
-                        list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                        renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
-                        }), fontSize * textsize + lineHeight);
-                        auto listItem = new tsl::elm::ListItem("Back");
-                        listItem->setClickListener([](uint64_t keys) { // Add 'command' to the capture list
-                        if (keys & KEY_A) {
-                            tsl::goBack();
-                            return true;
-                        }
-                            return false;
-                        });
-                        list->addItem(listItem);
-                        rootFrame->setContent(list);
-                        return rootFrame;
-                    }
-                }
-            } else if (useText) {
+            if (useText) {
                 if (!isFileOrDirectory(textPath)) {
                     list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
                     renderer->drawString("Text file not found. Contact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
@@ -427,8 +403,36 @@ public:
                         }
                     }
                 }
-            } else {
+            } else if (useFilter || useSource) {
                 filesList = getFilesListByWildcards(pathPattern);
+            } else if (kipInfo) {
+                if (!isFileOrDirectory(jsonPath)) {
+                    list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+                    renderer->drawString("TMPL file not found. Contact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                    }), fontSize + lineHeight);
+                    rootFrame->setContent(list);
+                    return rootFrame;
+                } else {
+                    textDataPair = dispCustData(jsonPath);
+                    std::string textdata = textDataPair.first;
+                    int textsize = textDataPair.second;
+                    if (!textdata.empty()) {
+                        list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+                        renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                        }), fontSize * textsize + lineHeight);
+                        auto listItem = new tsl::elm::ListItem("Back");
+                        listItem->setClickListener([](uint64_t keys) { // Add 'command' to the capture list
+                        if (keys & KEY_A) {
+                            tsl::goBack();
+                            return true;
+                        }
+                            return false;
+                        });
+                        list->addItem(listItem);
+                        rootFrame->setContent(list);
+                        return rootFrame;
+                    }
+                }
             }
         } else {
             filesListOn = getFilesListByWildcards(pathPatternOn);
@@ -541,25 +545,81 @@ public:
                     list->addItem(listItem);
                 } else {
                     auto listItem = new tsl::elm::ListItem(itemName);
-                    listItem->setClickListener([file, this, listItem](uint64_t keys) { // Add 'command' to the capture list
-                        if (keys & KEY_A) {
-                            // Replace "{source}" with file in commands, then execute
-                            std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(commands, file);
-                            int result = interpretAndExecuteCommand(modifiedCommands);
-                            if (result == 0) {
-                                listItem->setValue("DONE", tsl::PredefinedColors::Green);
-                            } else if (result == 1) {
-                                tsl::goBack();
-                            } else {
-                                listItem->setValue("FAIL", tsl::PredefinedColors::Red);
+                    bool test = false;
+                    std::vector<std::string> kipInfoCommand;
+                    for (const std::vector<std::string>& row : commands) {
+                        // Iterate over the inner vector (row)
+                        for (const std::string& cell : row) {
+                            if (cell == "kip_info") {
+                                kipInfoCommand = row;
+                                test = true;
                             }
-                            return true;
-                        } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
-                            listItem->setValue("");
                         }
-                        return false;
-                    });
-                    list->addItem(listItem);
+                    }
+                    std::string concatenatedString;
+
+                    // Iterate through the vector and append each string with a space
+                    for (auto & str : kipInfoCommand) {
+                        if (str == "{source}") {
+                            str = replacePlaceholder(str, "{source}", file);
+                        }
+                    }
+                    for (const std::string& str : kipInfoCommand) {
+                        concatenatedString += str + " ";
+                    }
+                    logMessage (concatenatedString);
+                    if (!test) {
+                        listItem->setClickListener([file, this, listItem](uint64_t keys) { // Add 'command' to the capture list
+                            if (keys & KEY_A) {
+                                // Replace "{source}" with file in commands, then execute
+                                std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(commands, file);
+                                int result = interpretAndExecuteCommand(modifiedCommands);
+                                if (result == 0) {
+                                    listItem->setValue("DONE", tsl::PredefinedColors::Green);
+                                } else if (result == 1) {
+                                    tsl::goBack();
+                                } else {
+                                    listItem->setValue("FAIL", tsl::PredefinedColors::Red);
+                                }
+                                return true;
+                            } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
+                                listItem->setValue("");
+                            }
+                            return false;
+                        });
+                        list->addItem(listItem);
+                    } else {
+                        bool res1;
+                        listItem->setClickListener([file, this, listItem, &res1](uint64_t keys) { // Add 'command' to the capture list
+                            if (keys & KEY_A) {
+                                return res1 = true;
+                            }
+                            return false;
+                        });
+                        list->addItem(listItem);
+                        logMessage(std::to_string(res1));
+                        if (res1) {
+                            textDataPair = dispCustData(kipInfoCommand[2]);
+                            std::string textdata = textDataPair.first;
+                            int textsize = textDataPair.second;
+                            if (!textdata.empty()) {
+                                list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+                                renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                                }), fontSize * textsize + lineHeight);
+                                auto listItem = new tsl::elm::ListItem("Back");
+                                listItem->setClickListener([](uint64_t keys) { // Add 'command' to the capture list
+                                if (keys & KEY_A) {
+                                    tsl::goBack();
+                                    return true;
+                                }
+                                    return false;
+                                });
+                                list->addItem(listItem);
+                                rootFrame->setContent(list);
+                                return rootFrame;
+                            }
+                        }
+                    }
                 }
             } else { // for handiling toggles
                 auto toggleListItem = new tsl::elm::ToggleListItem(itemName, false, "On", "Off");
