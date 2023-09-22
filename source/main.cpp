@@ -251,14 +251,23 @@ public:
     ~SelectionOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
+    // logMessage ("SelectionOverlay");
+
         size_t fifthSlashPos = filePath.find('/', filePath.find('/', filePath.find('/', filePath.find('/') + 1) + 1) + 1);
         bool hasHelp = false;
         std::string helpPath = "";
+        std::string menuName = "";
         if (fifthSlashPos != std::string::npos) {
             // Extract the substring up to the fourth slash
             helpPath = filePath.substr(0, fifthSlashPos);
             if (!specificKey.empty()) {
-                helpPath += "/Help/" + getNameWithoutPrefix(getNameFromPath(filePath)) + "/" + specificKey.substr(1) + ".txt";
+                if (std::isdigit(specificKey.end()[-1])) {
+                    menuName = specificKey.substr(0,specificKey.rfind(' '));
+                } else
+                {
+                    menuName = specificKey;
+                }
+                helpPath += "/Help/" + getNameWithoutPrefix(getNameFromPath(filePath)) + "/" + menuName.substr(1) + ".txt";
             } else {
                 helpPath += "/Help/" + getNameWithoutPrefix(getNameFromPath(filePath)) + ".txt";
             }
@@ -267,6 +276,7 @@ public:
             } else {
                 helpPath = "";
             }
+
         }
         auto rootFrame = new tsl::elm::OverlayFrame(specificKey.empty() ? getNameWithoutPrefix(getNameFromPath(filePath)) : specificKey.substr(1),
                                                     "Uberhand Package", "", hasHelp);
