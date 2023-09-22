@@ -251,7 +251,7 @@ public:
     ~SelectionOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
-    // logMessage ("SelectionOverlay");
+        // logMessage ("SelectionOverlay");
 
         size_t fifthSlashPos = filePath.find('/', filePath.find('/', filePath.find('/', filePath.find('/') + 1) + 1) + 1);
         bool hasHelp = false;
@@ -261,12 +261,8 @@ public:
             // Extract the substring up to the fourth slash
             helpPath = filePath.substr(0, fifthSlashPos);
             if (!specificKey.empty()) {
-                if (std::isdigit(specificKey.end()[-1])) {
-                    menuName = specificKey.substr(0,specificKey.rfind(' '));
-                } else
-                {
-                    menuName = specificKey;
-                }
+                menuName = specificKey;
+                removeLastNumericWord(menuName);
                 helpPath += "/Help/" + getNameWithoutPrefix(getNameFromPath(filePath)) + "/" + menuName.substr(1) + ".txt";
             } else {
                 helpPath += "/Help/" + getNameWithoutPrefix(getNameFromPath(filePath)) + ".txt";

@@ -775,3 +775,15 @@ bool verifyIntegrity (std::string check) {
 
     return verified;
 }
+
+
+void removeLastNumericWord(std::string& str) {
+    // Iterate through the string from the end
+    for (int i = str.length() - 1; i >= 0; --i) {
+        if (str[i] == ' ' && std::isdigit(str[i + 1])) {
+            std::string lastWord = str.substr(i + 1); // Extract the last word
+            str.resize(i); // Remove the last word if it's numeric
+            break;
+        }
+    }
+}
