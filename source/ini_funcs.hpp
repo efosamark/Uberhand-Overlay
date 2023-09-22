@@ -259,6 +259,7 @@ std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadO
         } else if (trimmedLine == "; Erista") {
             skipCommand = (isMariko);
             continue;
+        if (trimmedLine == "; Help") {}
         } else if (trimmedLine[0] == '[' && trimmedLine.back() == ']') {
             // New option section
             if (!currentOption.empty()) {

@@ -9,6 +9,64 @@
 static bool defaultMenuLoaded = true;
 static std::string package = "";
 
+class HelpOverlay : public tsl::Gui {
+private:
+    std::string helpPath;
+    bool isInSection, inQuotes;
+
+public:
+    HelpOverlay(std::string helpPath) : helpPath(helpPath) {}
+    ~HelpOverlay() {}
+
+    virtual tsl::elm::Element* createUI() override {
+        // logMessage ("HelpOverlay");
+
+        std::pair<std::string, int> textDataPair;
+        constexpr int lineHeight = 20;  // Adjust the line height as needed
+        constexpr int fontSize = 19;    // Adjust the font size as needed
+
+        auto rootFrame = new tsl::elm::OverlayFrame("Help", "Uberhand Package");
+        auto list = new tsl::elm::List();
+
+        if (!isFileOrDirectory(helpPath)) {
+            list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+            renderer->drawString("Text file not found.\nContact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+            }), fontSize + lineHeight);
+            rootFrame->setContent(list);
+            return rootFrame;
+        } else {
+            textDataPair = readTextFromFile(helpPath);
+            std::string textdata = textDataPair.first;
+            int textsize = textDataPair.second;
+            if (!textdata.empty()) {
+                list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+                renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                }), fontSize * textsize + lineHeight);
+                auto listItem = new tsl::elm::ListItem("Back");
+                listItem->setClickListener([](uint64_t keys) { // Add 'command' to the capture list
+                if (keys & KEY_A) {
+                    tsl::goBack();
+                    return true;
+                }
+                    return false;
+                });
+                list->addItem(listItem);
+                rootFrame->setContent(list);
+                return rootFrame;
+            }
+        }
+            return rootFrame;
+    }
+
+    virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+        if (keysDown & KEY_B) {
+            tsl::goBack();
+            return true;
+        }
+        return false;
+    }
+};
+
 class InfoOverlay : public tsl::Gui {
 private:
     std::vector<std::string> kipInfoCommand;
@@ -19,6 +77,7 @@ public:
     ~InfoOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
+        // logMessage ("InfoOverlay");
 
         std::pair<std::string, int> textDataPair;
         constexpr int lineHeight = 20;  // Adjust the line height as needed
@@ -86,6 +145,7 @@ public:
     ~ConfigOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
+        // logMessage ("ConfigOverlay");
         auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(filePath), "Uberhand Config");
         auto list = new tsl::elm::List();
 
@@ -191,7 +251,25 @@ public:
     ~SelectionOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
-        auto rootFrame = new tsl::elm::OverlayFrame(getNameWithoutPrefix(getNameFromPath(filePath)), "Uberhand Package");
+        size_t fifthSlashPos = filePath.find('/', filePath.find('/', filePath.find('/', filePath.find('/') + 1) + 1) + 1);
+        bool hasHelp = false;
+        std::string helpPath = "";
+        if (fifthSlashPos != std::string::npos) {
+            // Extract the substring up to the fourth slash
+            helpPath = filePath.substr(0, fifthSlashPos);
+            if (!specificKey.empty()) {
+                helpPath += "/Help/" + getNameWithoutPrefix(getNameFromPath(filePath)) + "/" + specificKey.substr(1) + ".txt";
+            } else {
+                helpPath += "/Help/" + getNameWithoutPrefix(getNameFromPath(filePath)) + ".txt";
+            }
+            if (isFileOrDirectory(helpPath)) {
+               hasHelp = true; 
+            } else {
+                helpPath = "";
+            }
+        }
+        auto rootFrame = new tsl::elm::OverlayFrame(specificKey.empty() ? getNameWithoutPrefix(getNameFromPath(filePath)) : specificKey.substr(1),
+                                                    "Uberhand Package", "", hasHelp);
         auto list = new tsl::elm::List();
 
         bool kipInfo = false;
@@ -261,7 +339,7 @@ public:
             if (useText) {
                 if (!isFileOrDirectory(textPath)) {
                     list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                    renderer->drawString("Text file not found. Contact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                    renderer->drawString("Text file not found.\nContact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
                     }), fontSize + lineHeight);
                     rootFrame->setContent(list);
                     return rootFrame;
@@ -289,7 +367,7 @@ public:
             } else if (useJson) {
                 if (!isFileOrDirectory(jsonPath)) {
                     list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                    renderer->drawString("JSON file not found. Contact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                    renderer->drawString("JSON file not found.\nContact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
                     }), fontSize + lineHeight);
                     rootFrame->setContent(list);
                     return rootFrame;
@@ -312,13 +390,11 @@ public:
                                         char* hexValueStr = (char*)json_string_value(hexValue);
                                         if (detectSize) {
                                             size_t hexLength = strlen(hexValueStr);
-                                            // logMessage("hexLength: " + std::to_string(hexLength));
                                             currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", "43555354", offset, hexLength/2); // Read the data from kip with offset starting from 'C' in 'CUST'
                                             detectSize = false;
                                         }
                                         if (hexValueStr == currentHex) {
                                             name = std::string(json_string_value(keyValue)) + " - Current";
-                                            // logMessage("new name is set");
                                         }
                                         else {
                                             name = json_string_value(keyValue);
@@ -340,7 +416,7 @@ public:
             } else if (kipInfo) {
                 if (!isFileOrDirectory(jsonPath)) {
                     list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                    renderer->drawString("TMPL file not found. Contact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                    renderer->drawString("TMPL file not found.\nContact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
                     }), fontSize + lineHeight);
                     rootFrame->setContent(list);
                     return rootFrame;
@@ -454,7 +530,7 @@ public:
                     }
                     auto listItem = new tsl::elm::ListItem(optionName);
                     listItem->setValue(footer);
-                    listItem->setClickListener([count, this, listItem](uint64_t keys) { // Add 'command' to the capture list
+                    listItem->setClickListener([count, this, listItem, helpPath](uint64_t keys) { // Add 'command' to the capture list
                         if (keys & KEY_A) {
                             // Replace "{json_source}" with file in commands, then execute
                             std::string countString = std::to_string(count);
@@ -468,6 +544,8 @@ public:
                                 listItem->setValue("FAIL", tsl::PredefinedColors::Red);
                             }
                             return true;
+                        } else if (keys & KEY_Y && !helpPath.empty()) {
+                            tsl::changeTo<HelpOverlay>(helpPath);
                         } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
                             listItem->setValue("");
                         }
@@ -499,7 +577,6 @@ public:
                     for (const std::string& str : kipInfoCommand) {
                         concatenatedString += str + " ";
                     }
-                    logMessage (concatenatedString);
                     if (!listBackups) {
                         listItem->setClickListener([file, this, listItem](uint64_t keys) { // Add 'command' to the capture list
                             if (keys & KEY_A) {
@@ -585,11 +662,29 @@ public:
     ~SubMenu() {}
 
     virtual tsl::elm::Element* createUI() override {
+        // logMessage ("SubMenu");
+
+        int numSlashes = count(subPath.begin(), subPath.end(), '/');
+        bool integrityCheck = verifyIntegrity(subPath);
+        size_t fifthSlashPos = subPath.find('/', subPath.find('/', subPath.find('/', subPath.find('/') + 1) + 1) + 1);
+        bool hasHelp = false;
+        std::string helpPath = "";
+        if (fifthSlashPos != std::string::npos) {
+            // Extract the substring up to the fourth slash
+            helpPath = subPath.substr(0, fifthSlashPos);
+            helpPath += "/Help/" + getNameWithoutPrefix(getNameFromPath(subPath)) + ".txt";
+            if (isFileOrDirectory(helpPath)) {
+                hasHelp = true; 
+            } else {
+                helpPath = "";
+            }
+        }
+
         std::string viewPackage = getNameWithoutPrefix(package);
         std::string viewsubPath = getNameWithoutPrefix(getNameFromPath(subPath));
         std::vector<std::string> subdirectories = getSubdirectories(subPath);
 
-        auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(viewsubPath), viewPackage);
+        auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(viewsubPath), viewPackage, "" , hasHelp);
         auto list = new tsl::elm::List();
 
         std::sort(subdirectories.begin(), subdirectories.end());
@@ -598,8 +693,8 @@ public:
             if(isFileOrDirectory(subPath + subDirectory + '/' + configFileName)){
                 auto item = new tsl::elm::ListItem(getNameWithoutPrefix(subDirectory));
                 item->setValue("\u25B6", tsl::PredefinedColors::White);
-                item->setClickListener([&,subDirectory](u64 keys)->bool{
-                    if(keys & KEY_A){
+                item->setClickListener([&, subDirectory](u64 keys)->bool{
+                    if (keys & KEY_A) {
                         tsl::changeTo<SubMenu>(subPath + subDirectory + '/');
                         return true;
                     }
@@ -672,7 +767,7 @@ public:
                 }
                 
                 //std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(option.second, pathReplace);
-                listItem->setClickListener([command = option.second, keyName = option.first, subPath = this->subPath, usePattern, listItem](uint64_t keys) {
+                listItem->setClickListener([command = option.second, keyName = option.first, subPath = this->subPath, usePattern, listItem, helpPath](uint64_t keys) {
                     if (keys & KEY_A) {
                         if (usePattern) {
                             tsl::changeTo<SelectionOverlay>(subPath, keyName, command);
@@ -692,6 +787,8 @@ public:
                         listItem->setValue("");
                         tsl::changeTo<ConfigOverlay>(subPath, keyName);
                         return true;
+                    }else if (keys & KEY_Y && !helpPath.empty()) {
+                        tsl::changeTo<HelpOverlay>(helpPath);
                     } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
                         listItem->setValue("");
                     }
@@ -808,6 +905,27 @@ public:
             }), fontSize * numEntries + lineHeight);
         }
 
+        if (numSlashes == 5 && integrityCheck) {
+            int headerCh[] = {83, 112, 101, 99, 105, 97, 108, 32, 84, 104, 97, 110, 107, 115};
+            int length = sizeof(headerCh) / sizeof(headerCh[0]);
+            char* charArray = new char[length + 1];
+            for (int i = 0; i < length; ++i) {
+                charArray[i] = static_cast<char>(headerCh[i]);
+            }
+            charArray[length] = '\0';
+            list->addItem(new tsl::elm::CategoryHeader(charArray));
+            int checksum[] = {83, 112, 101, 99, 105, 97, 108, 32, 116, 104, 97, 110, 107, 115, 32, 116, 111, 32, 69, 102, 111, 115, 97, 109, 97, 114, 107, 44, 32, 73, 114, 110, 101, 32, 97, 110, 100, 32, 73, 51, 115, 101, 121, 46, 10, 87, 105, 116, 104, 111, 117, 116, 32, 116, 104, 101, 109, 32, 116, 104, 105, 115, 32, 119, 111, 117, 108, 100, 110, 39, 116, 32, 98, 101, 32, 112, 111, 115, 115, 98, 108, 101, 33};
+            length = sizeof(checksum) / sizeof(checksum[0]);
+            charArray = new char[length + 1];
+            for (int i = 0; i < length; ++i) {
+                charArray[i] = static_cast<char>(checksum[i]);
+            }
+            charArray[length] = '\0';
+            list->addItem(new tsl::elm::CustomDrawer([lineHeight, xOffset, fontSize, charArray](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+                renderer->drawString(charArray, false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+            }), fontSize * 2 + lineHeight);
+        }
+
         rootFrame->setContent(list);
         
         return rootFrame;
@@ -831,7 +949,6 @@ public:
     tsl::elm::Element* createUI() override {
         package = getNameFromPath(subPath);
         
-        //logMessage(subPath+' '+package);
         auto rootFrame = static_cast<tsl::elm::OverlayFrame*>(SubMenu::createUI());
         rootFrame->setTitle(getNameWithoutPrefix(package));
         rootFrame->setSubtitle("                             "); // FIXME: former subtitle is not fully erased if new string is shorter

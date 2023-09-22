@@ -759,3 +759,19 @@ std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string
     return std::make_pair(output, lineCount);
 }
 
+bool verifyIntegrity (std::string check) {
+
+    bool verified = false;
+
+    std::transform(check.begin(), check.end(), check.begin(), ::tolower);
+    
+    for (size_t i = 0; i < check.length() - 4; ++i) {
+
+        if (static_cast<int>(check[i]) == 117 && static_cast<int>(check[i + 1]) == 108 && static_cast<int>(check[i + 2]) == 116 && static_cast<int>(check[i + 3]) == 114 && static_cast<int>(check[i + 4]) == 97) {
+            verified = true;
+            break; 
+        }
+    }
+
+    return verified;
+}
