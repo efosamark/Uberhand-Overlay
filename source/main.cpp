@@ -537,7 +537,11 @@ public:
                         }
                         return false;
                     });
-                    listItem->setColor(defineColor(color));
+                    if (color.compare(0, 1, "#") == 0){
+                        listItem->setColor(tsl::PredefinedColors::Custom, color);
+                    } else {
+                        listItem->setColor(defineColor(color));  
+                    }
                     list->addItem(listItem);
                 } else {
                     auto listItem = new tsl::elm::ListItem(itemName);

@@ -84,13 +84,14 @@ using namespace std::literals::chrono_literals;
 namespace tsl {
 
     // Constants
-    
+
     enum PredefinedColors {
         Red,
         Gray,
         Green,
         White,
         Orange,
+        Custom,
         DefaultText
     };
     
@@ -113,7 +114,23 @@ namespace tsl {
      * @brief RGBA4444 Color structure
      */
     struct Color {
+        static tsl::Color convertToColor(const std::string& hexString) {
+            int r, g, b;
+            std::stringstream ss;
 
+            ss << std::hex << hexString.substr(1,2);
+            ss >> r;
+            ss.clear();
+
+            ss << std::hex << hexString.substr(3,2);
+            ss >> g;
+            ss.clear();
+
+            ss << std::hex << hexString.substr(5,2);
+            ss >> b;
+            logMessage("rgb = " + std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) + ", ");
+            return tsl::Color(r, g, b, 0xF);
+        }
         union {
             struct {
                 u16 r: 4, g: 4, b: 4, a: 4;
@@ -122,7 +139,7 @@ namespace tsl {
         };
 
         constexpr inline Color(u16 raw): rgba(raw) {}
-        constexpr inline Color(u8 r, u8 g, u8 b, u8 a): r(r), g(g), b(b), a(a) {}
+        constexpr inline Color(u16 r, u16 g, u16 b, u8 a): r(r), g(g), b(b), a(a) {}
     };
 
     namespace style {
@@ -2323,7 +2340,7 @@ namespace tsl {
                 this->m_maxWidth = 0;
             }
 
-            inline void setColor(tsl::PredefinedColors col=tsl::PredefinedColors::Gray) {
+            inline void setColor(tsl::PredefinedColors col=tsl::PredefinedColors::Gray, std::string hexString = "") {
                 switch (col) 
                 {
                     case tsl::PredefinedColors::Green:
@@ -2340,6 +2357,9 @@ namespace tsl {
                         break;
                     case tsl::PredefinedColors::Orange:
                         this->m_color = tsl::Color(0xFF, 0xA5, 0x00, 0xF);
+                        break;
+                    case tsl::PredefinedColors::Custom:
+                        this->m_color = tsl::Color::convertToColor(hexString);
                         break;
                     case tsl::PredefinedColors::DefaultText:
                     default:
