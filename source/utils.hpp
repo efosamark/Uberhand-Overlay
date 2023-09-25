@@ -750,6 +750,8 @@ std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string
                         output += name;
                         output += '\n';
                         lineCount++;
+                        output += '\n';
+                        lineCount++;
                     }
                 }
             }

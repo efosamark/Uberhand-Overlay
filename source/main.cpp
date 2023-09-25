@@ -42,15 +42,6 @@ public:
                 list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
                 renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
                 }), fontSize * textsize + lineHeight);
-                auto listItem = new tsl::elm::ListItem("Back");
-                listItem->setClickListener([](uint64_t keys) { // Add 'command' to the capture list
-                if (keys & KEY_A) {
-                    tsl::goBack();
-                    return true;
-                }
-                    return false;
-                });
-                list->addItem(listItem);
                 rootFrame->setContent(list);
                 return rootFrame;
             }
@@ -373,15 +364,6 @@ public:
                         list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
                         renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
                         }), fontSize * textsize + lineHeight);
-                        auto listItem = new tsl::elm::ListItem("Back");
-                        listItem->setClickListener([](uint64_t keys) { // Add 'command' to the capture list
-                        if (keys & KEY_A) {
-                            tsl::goBack();
-                            return true;
-                        }
-                            return false;
-                        });
-                        list->addItem(listItem);
                         rootFrame->setContent(list);
                         return rootFrame;
                     }
@@ -465,15 +447,6 @@ public:
                         list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
                         renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
                         }), fontSize * textsize + lineHeight);
-                        auto listItem = new tsl::elm::ListItem("Back");
-                        listItem->setClickListener([](uint64_t keys) { // Add 'command' to the capture list
-                        if (keys & KEY_A) {
-                            tsl::goBack();
-                            return true;
-                        }
-                            return false;
-                        });
-                        list->addItem(listItem);
                         rootFrame->setContent(list);
                         return rootFrame;
                     }
