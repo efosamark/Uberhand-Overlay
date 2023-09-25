@@ -432,7 +432,7 @@ std::vector<std::vector<std::string>> getModifyCommands(const std::vector<std::v
                     }
                 }
             }
-            if ((usingJsonSource) && (cmd[0] == "json_source" || cmd[0] == "json_mark_current")) {
+            if ((usingJsonSource) && (cmd[0] == "json_source" || cmd[0] == "json_mark_cur_kip" || cmd[0] == "json_mark_cur_ini")) {
                 jsonPath = preprocessPath(cmd[1]);
             } 
         }
@@ -469,10 +469,10 @@ std::vector<std::vector<std::string>> getModifyCommands(const std::vector<std::v
                 } else if (usingJsonSource && (arg.find("{json_source(") != std::string::npos)) {
                     std::string countStr = file;
                     
-                    logMessage(std::string("count: ")+countStr);
-                    logMessage(std::string("pre arg: ") + arg);
+                    // logMessage(std::string("count: ")+countStr);
+                    // logMessage(std::string("pre arg: ") + arg);
                     arg = replacePlaceholder(arg, "*", file);
-                    logMessage(std::string("post arg: ") + arg);
+                    // logMessage(std::string("post arg: ") + arg);
 
                     
                     size_t startPos = arg.find("{json_source(");
@@ -484,19 +484,34 @@ std::vector<std::vector<std::string>> getModifyCommands(const std::vector<std::v
                         arg.replace(startPos, endPos - startPos + 2, replacement);
                         //logMessage2("post-arg: "+arg);
                     }
-                } else if (usingJsonSource && (arg.find("{json_mark_current(") != std::string::npos)) {
+                } else if (usingJsonSource && (arg.find("{json_mark_cur_kip(") != std::string::npos)) {
                     std::string countStr = file;
                     
-                    logMessage(std::string("count: ")+countStr);
-                    logMessage(std::string("pre arg: ") + arg);
+                    // logMessage(std::string("count: ")+countStr);
+                    // logMessage(std::string("pre arg: ") + arg);
                     arg = replacePlaceholder(arg, "*", file);
-                    logMessage(std::string("post arg: ") + arg);
+                    // logMessage(std::string("post arg: ") + arg);
 
                     
-                    size_t startPos = arg.find("{json_mark_current(");
+                    size_t startPos = arg.find("{json_mark_cur_kip(");
                     size_t endPos = arg.find(")}");
                     if (endPos != std::string::npos && endPos > startPos) {
-                        replacement = replaceJsonSourcePlaceholder(arg.substr(startPos, endPos - startPos + 2), jsonPath, "{json_mark_current(");
+                        replacement = replaceJsonSourcePlaceholder(arg.substr(startPos, endPos - startPos + 2), jsonPath, "{json_mark_cur_kip(");
+                        arg.replace(startPos, endPos - startPos + 2, replacement);
+                    }
+                } else if (usingJsonSource && (arg.find("{json_mark_cur_ini(") != std::string::npos)) {
+                    std::string countStr = file;
+                    
+                    // logMessage(std::string("count: ")+countStr);
+                    // logMessage(std::string("pre arg: ") + arg);
+                    arg = replacePlaceholder(arg, "*", file);
+                    // logMessage(std::string("post arg: ") + arg);
+
+                    
+                    size_t startPos = arg.find("{json_mark_cur_ini(");
+                    size_t endPos = arg.find(")}");
+                    if (endPos != std::string::npos && endPos > startPos) {
+                        replacement = replaceJsonSourcePlaceholder(arg.substr(startPos, endPos - startPos + 2), jsonPath, "{json_mark_cur_ini(");
                         //logMessage2("replacement: "+replacement);
                         //logMessage2("pre-arg: "+arg);
                         arg.replace(startPos, endPos - startPos + 2, replacement);

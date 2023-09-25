@@ -285,7 +285,11 @@ public:
         bool useText = false;
         bool useToggle = false;
         bool useSplitHeader = false;
-        bool markCurrent = false;
+        bool markCurKip = false;
+        bool markCurIni = false;
+        std::string sourceIni = "";
+        std::string sectionIni = "";
+        std::string keyIni = "";
         std::string offset = "";
         std::pair<std::string, int> textDataPair;
 
@@ -323,7 +327,7 @@ public:
                 } else if (cmd[0] == "kip_info") {
                     jsonPath = preprocessPath(cmd[1]);
                     kipInfo = true;
-                } else if (cmd[0] == "json_mark_current") {
+                } else if (cmd[0] == "json_mark_cur_kip") {
                     jsonPath = preprocessPath(cmd[1]);
                     if (cmd.size() > 2) {
                         jsonKey = cmd[2]; //json display key
@@ -331,7 +335,19 @@ public:
                     useJson = true;
                     if (cmd.size() > 3) {
                         offset = cmd[3];
-                        markCurrent = true;
+                        markCurKip = true;
+                    }
+                } else if (cmd[0] == "json_mark_cur_ini") {
+                    jsonPath = preprocessPath(cmd[1]);
+                    if (cmd.size() > 2) {
+                        jsonKey = cmd[2]; //json display key
+                    }
+                    useJson = true;
+                    if (cmd.size() > 5) { // Enough parts are provided to mark the current ini value
+                        sourceIni  = preprocessPath(cmd[3]);
+                        sectionIni = cmd[4];
+                        keyIni     = cmd[5];
+                        markCurIni = true;
                     }
                 } else if (cmd[0] == "text_source") {
                         textPath = preprocessPath(cmd[1]);
@@ -380,6 +396,7 @@ public:
                 } else {
                     std::string currentHex = ""; // Is used to mark current value from the kip
                     bool detectSize = true;
+                    bool searchCurrent = markCurKip || markCurIni ? true : false;
                     // create list of data in the json 
                     jsonData = readJsonFromFile(jsonPath);
                     if (jsonData && json_is_array(jsonData)) {
@@ -392,7 +409,7 @@ public:
                                     std::string name;
                                     json_t* hexValue = json_object_get(item, "hex");
                                     json_t* colorValue = json_object_get(item, "color");
-                                    if (markCurrent && hexValue) {
+                                    if (markCurKip && hexValue && searchCurrent) {
                                         char* hexValueStr = (char*)json_string_value(hexValue);
                                         if (detectSize) {
                                             size_t hexLength = strlen(hexValueStr);
@@ -401,6 +418,17 @@ public:
                                         }
                                         if (hexValueStr == currentHex) {
                                             name = std::string(json_string_value(keyValue)) + " - Current";
+                                            searchCurrent = false;
+                                        }
+                                        else {
+                                            name = json_string_value(keyValue);
+                                        }
+                                    } else if (markCurIni && hexValue && searchCurrent) {
+                                        char* iniValueStr = (char*)json_string_value(hexValue);
+                                        std::string iniValue = readIniValue(sourceIni, sectionIni, keyIni);
+                                        if (iniValueStr == iniValue) {
+                                            name = std::string(json_string_value(keyValue)) + " - Current";
+                                            searchCurrent = false;
                                         }
                                         else {
                                             name = json_string_value(keyValue);
@@ -419,6 +447,9 @@ public:
                 }
             } else if (useFilter || useSource) {
                 filesList = getFilesListByWildcards(pathPattern);
+                std::sort(filesList.begin(), filesList.end(), [](const std::string& a, const std::string& b) {
+                    return getNameFromPath(a) < getNameFromPath(b);
+                });
             } else if (kipInfo) {
                 if (!isFileOrDirectory(jsonPath)) {
                     list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {

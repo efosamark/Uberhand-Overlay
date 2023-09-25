@@ -2,6 +2,10 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <ctime>
+#include <iostream>
+#include <fstream>
+#include <regex>
+#include <filesystem>
 
 // Function to create a directory if it doesn't exist
 void createSingleDirectory(const std::string& directoryPath) {
@@ -398,18 +402,22 @@ bool ensureDirectoryExists(const std::string& path) {
 }
 
 bool generateBackup() {
-    // Generate a unique code
-    time_t now = time(NULL);
-    tm* timeinfo = localtime(&now);
-    int year = timeinfo->tm_year + 1900;
-    int month = timeinfo->tm_mon + 1;
-    int day = timeinfo->tm_mday;
-    int hour = timeinfo->tm_hour;
-    int minute = timeinfo->tm_min;
-    int second = timeinfo->tm_sec;
-    std::string code = std::to_string(year % 100) + std::to_string(month) + std::to_string(day) + std::to_string(hour) + std::to_string(minute) + std::to_string(second);
+    int highestNumber = 0;
+    std::regex pattern(R"(Backup \[(\d+)\])");
+    namespace fs = std::filesystem;
 
-    std::string backupName = "/atmosphere/kips/.bak/Backup [" + code + "]";
+    for (const auto& entry : fs::directory_iterator("/atmosphere/kips/.bak/")) {
+        if (fs::is_regular_file(entry)) {
+            std::smatch match;
+            std::string filename = entry.path().filename().string();
+            if (std::regex_search(filename, match, pattern)) {
+                int number = std::stoi(match[1].str());
+                highestNumber = std::max(highestNumber, number);
+            }
+        }
+    }
+
+    std::string backupName = "/atmosphere/kips/.bak/Backup [" + std::to_string(highestNumber + 1) + "].kip";
     // Save current kip with the unique name
     bool result = copyFileOrDirectory("/atmosphere/kips/loader.kip", backupName.c_str());
     return result;

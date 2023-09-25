@@ -8,6 +8,7 @@
 #include <sstream>  // For std::istringstream
 #include <algorithm> // For std::remove_if
 #include <cctype>   // For ::isspace
+#include <fstream>
 #include "debug_funcs.hpp"
 
 // Ini Functions
@@ -468,4 +469,33 @@ bool setIniFileKey(const std::string& fileToEdit, const std::string& desiredSect
     bool result = setIniFile(fileToEdit, desiredSection, desiredKey, "", desiredNewKey);
     cleanIniFormatting(fileToEdit);
     return result;
+}
+
+std::string readIniValue(std::string filePath, std::string section, std::string key) {
+    std::ifstream file(filePath);
+    std::string line, currentSection;
+    bool sectionFound = false;
+
+    while (std::getline(file, line)) {
+        // Remove leading and trailing whitespace
+        line.erase(0, line.find_first_not_of(" \r\n"));
+        line.erase(line.find_last_not_of(" \r\n") + 1);
+
+        if (!line.empty()) {
+            if (line[0] == '[' && line.back() == ']') {
+                currentSection = line.substr(1, line.length() - 2);
+                sectionFound = (currentSection == section);
+            } else if (sectionFound) {
+                size_t equalsPos = line.find('=');
+                if (equalsPos != std::string::npos) {
+                    std::string keyInFile = line.substr(0, equalsPos - 1);
+                    if (keyInFile == key) {
+                        return line.substr(equalsPos + 2);
+                    }
+                }
+            }
+        }
+    }
+
+    return ""; // Key not found
 }
