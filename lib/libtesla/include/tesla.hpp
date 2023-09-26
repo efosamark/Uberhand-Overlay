@@ -1622,7 +1622,7 @@ namespace tsl {
                 }
                 else {
                     if (this->m_subtitle == "Uberhand Package") {
-                        renderer->drawString(this->m_title.c_str(), false, 20, 50, 32, a(Color(0x00, 0xFF, 0x00, 0xFF)));
+                        renderer->drawString(this->m_title.c_str(), false, 20, 50, 32, a(tsl::style::color::ColorText));
                     } else if (this->m_subtitle == "Uberhand Config") {
                         renderer->drawString(this->m_title.c_str(), false, 20, 50, 32, a(Color(0xFF, 0x33, 0x3F, 0xFF)));
                     } else {

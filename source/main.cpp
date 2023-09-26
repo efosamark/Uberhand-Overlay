@@ -8,6 +8,10 @@
 // Overlay booleans
 static bool defaultMenuLoaded = true;
 static std::string package = "";
+bool applied = false;
+bool deleted = false;
+bool resetValue = false;
+std::string prevValue = "";
 
 class HelpOverlay : public tsl::Gui {
 private:
@@ -61,7 +65,7 @@ public:
 class InfoOverlay : public tsl::Gui {
 private:
     std::vector<std::string> kipInfoCommand;
-    bool isInSection, inQuotes;
+
 
 public:
     InfoOverlay(std::vector<std::string> kipInfoCommand) : kipInfoCommand(kipInfoCommand) {}
@@ -96,13 +100,15 @@ public:
         }
          if (keysDown & KEY_A) {
             copyFileOrDirectory(this->kipInfoCommand[1], "/atmosphere/kips/loader.kip");
+            applied = true;
             tsl::goBack();
             return true;
          }
          if (keysDown & KEY_X) {
             deleteFileOrDirectory(this->kipInfoCommand[1]);
             tsl::goBack();
-            tsl::goBack();
+            applied = false;
+            deleted = true;
             return true;
          }
         return false;
@@ -526,15 +532,18 @@ public:
                     listItem->setClickListener([count, this, listItem, helpPath](uint64_t keys) { // Add 'command' to the capture list
                         if (keys & KEY_A) {
                             // Replace "{json_source}" with file in commands, then execute
-                            std::string countString = std::to_string(count);
-                            std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(commands, countString, false, true, true);
-                            int result = interpretAndExecuteCommand(modifiedCommands);
-                            if (result == 0) {
-                                listItem->setValue("DONE", tsl::PredefinedColors::Green);
-                            } else if (result == 1) {
-                                tsl::goBack();
-                            } else {
-                                listItem->setValue("FAIL", tsl::PredefinedColors::Red);
+                            if (listItem->getValue() != "DELETED") {
+                                std::string countString = std::to_string(count);
+                                std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(commands, countString, false, true, true);
+                                int result = interpretAndExecuteCommand(modifiedCommands);
+                                if (result == 0) {
+                                    listItem->setValue("DONE", tsl::PredefinedColors::Green);
+                                } else if (result == 1) {
+                                    applied = true;
+                                    tsl::goBack();
+                                } else {
+                                    listItem->setValue("FAIL", tsl::PredefinedColors::Red);
+                                }
                             }
                             return true;
                         } else if (keys & KEY_Y && !helpPath.empty()) {
@@ -574,11 +583,15 @@ public:
                         listItem->setClickListener([file, this, listItem](uint64_t keys) { // Add 'command' to the capture list
                             if (keys & KEY_A) {
                                 // Replace "{source}" with file in commands, then execute
+                                if (!prevValue.empty()) {
+                                    listItem->setValue(prevValue);
+                                }
                                 std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(commands, file);
                                 int result = interpretAndExecuteCommand(modifiedCommands);
                                 if (result == 0) {
                                     listItem->setValue("DONE", tsl::PredefinedColors::Green);
                                 } else if (result == 1) {
+                                    applied = true;
                                     tsl::goBack();
                                 } else {
                                     listItem->setValue("FAIL", tsl::PredefinedColors::Red);
@@ -593,7 +606,8 @@ public:
                     } else {
                         listItem->setClickListener([file, this, listItem, kipInfoCommand](uint64_t keys) { // Add 'command' to the capture list
                             if (keys & KEY_A) {
-                                tsl::changeTo<InfoOverlay>(kipInfoCommand);
+                                if (listItem->getValue() != "DELETED")
+                                    tsl::changeTo<InfoOverlay>(kipInfoCommand);
                             }
                             return false;
                         });
@@ -640,6 +654,26 @@ public:
     virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
         if (keysDown & KEY_B) {
             tsl::goBack();
+            return true;
+        } else if ((applied || deleted) && !keysDown) {
+            deleted = false;
+            tsl::elm::ListItem* focusedItem = dynamic_cast<tsl::elm::ListItem*>(this-> getFocusedElement());
+            if (prevValue.empty())
+                prevValue = focusedItem->getValue();
+            if (applied) {
+                resetValue = true;
+                focusedItem->setValue("APPLIED", tsl::PredefinedColors::Green);
+            }
+            else
+                focusedItem->setValue("DELETED", tsl::PredefinedColors::Red);
+            applied = false;
+            deleted = false;
+            return true;
+        } else if (resetValue && keysDown) {
+            resetValue = false;
+            tsl::elm::ListItem* focusedItem = dynamic_cast<tsl::elm::ListItem*>(this-> getFocusedElement());
+            focusedItem->setValue(prevValue);
+            prevValue = "";
             return true;
         }
         return false;
@@ -927,6 +961,20 @@ public:
     virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
         if ((keysDown & KEY_B)) {
             tsl::goBack();
+            return true;
+        } else if (applied && !keysDown) {
+            applied = false;
+            resetValue = true;
+            tsl::elm::ListItem* focusedItem = dynamic_cast<tsl::elm::ListItem*>(this-> getFocusedElement());
+            if (prevValue.empty())
+                prevValue = focusedItem->getValue();
+            focusedItem->setValue("APPLIED", tsl::PredefinedColors::Green);
+            return true;
+        } else if (resetValue && keysDown) {
+            resetValue = false;
+            tsl::elm::ListItem* focusedItem = dynamic_cast<tsl::elm::ListItem*>(this-> getFocusedElement());
+            focusedItem->setValue(prevValue);
+            prevValue = "";
             return true;
         }
         return false;
