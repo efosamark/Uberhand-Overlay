@@ -674,10 +674,12 @@ public:
             deleted = false;
             return true;
         } else if (resetValue && keysDown) {
-            resetValue = false;
             tsl::elm::ListItem* focusedItem = dynamic_cast<tsl::elm::ListItem*>(this-> getFocusedElement());
-            focusedItem->setValue(prevValue);
-            prevValue = "";
+            if (focusedItem->getValue() == "APPLIED"){
+                focusedItem->setValue(prevValue);
+                prevValue = "";
+                resetValue = false;
+            }
             return true;
         }
         return false;
@@ -975,10 +977,12 @@ public:
             focusedItem->setValue("APPLIED", tsl::PredefinedColors::Green);
             return true;
         } else if (resetValue && keysDown) {
-            resetValue = false;
             tsl::elm::ListItem* focusedItem = dynamic_cast<tsl::elm::ListItem*>(this-> getFocusedElement());
-            focusedItem->setValue(prevValue);
-            prevValue = "";
+            if (focusedItem->getValue() == "APPLIED"){
+                focusedItem->setValue(prevValue);
+                prevValue = "";
+                resetValue = false;
+            }
             return true;
         }
         return false;
