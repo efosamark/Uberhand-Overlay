@@ -128,7 +128,7 @@ namespace tsl {
 
             ss << std::hex << hexString.substr(5,2);
             ss >> b;
-            logMessage("rgb = " + std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) + ", ");
+            // logMessage("rgb = " + std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) + ", ");
             return tsl::Color(r, g, b, 0xF);
         }
         union {
@@ -150,12 +150,12 @@ namespace tsl {
 
         namespace color {
             constexpr Color ColorFrameBackground  = { 0x0, 0x0, 0x0, 0xD };   ///< Overlay frame background color
-            constexpr Color ColorTransparent      = { 0x0, 0x0, 0x0, 0x0 };   ///< Transparent color
-            constexpr Color ColorHighlight        = { 0x0, 0xF, 0xD, 0xF };   ///< Greenish highlight color
+            constexpr Color ColorTransparent      = { 0xF, 0xF, 0xF, 0x0 };   ///< Transparent color
+            constexpr Color ColorHighlight        = { 0xF, 0xF, 0xF, 0xF };   ///< Greenish highlight color
             constexpr Color ColorError            = { 0xF, 0x0, 0x2, 0xF };   ///< Red error highlight color
-            constexpr Color ColorFrame            = { 0x7, 0x7, 0x7, 0xF };   ///< Outer boarder color
-            constexpr Color ColorHandle           = { 0x5, 0x5, 0x5, 0xF };   ///< Track bar handle color
-            constexpr Color ColorText             = { 0xF, 0xF, 0xF, 0xF };   ///< Standard text color
+            constexpr Color ColorFrame            = { 0x0, 0x0, 0x0, 0x0 };   ///< Outer boarder color
+            constexpr Color ColorHandle           = { 0x0, 0x0, 0x0, 0x0 };   ///< Track bar handle color
+            constexpr Color ColorText             = { 0xC, 0xC, 0xC, 0xF };   ///< Standard text color
             constexpr Color ColorDescription      = { 0xA, 0xA, 0xA, 0xF };   ///< Description text color
             constexpr Color ColorHeaderBar        = { 0xC, 0xC, 0xC, 0xF };   ///< Category header rectangle color
             constexpr Color ColorClickAnimation   = { 0x0, 0x2, 0x2, 0xF };   ///< Element click animation color

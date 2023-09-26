@@ -1110,7 +1110,7 @@ public:
                     }
                     
                     auto* listItem = new tsl::elm::ListItem(overlayName);
-                    listItem->setValue(overlayVersion);
+                    // listItem->setValue(overlayVersion);
 
                     // Add a click listener to load the overlay when clicked upon
                     listItem->setClickListener([overlayFile](s64 key) {
