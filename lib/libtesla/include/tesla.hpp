@@ -1595,8 +1595,9 @@ namespace tsl {
              * @param subtitle Subtitle drawn bellow the title e.g version number
              */
             std::string m_menuMode; // CUSTOM MODIFICATION
-            OverlayFrame(const std::string& title, const std::string& subtitle, const std::string& menuMode = "", bool help = false)
-                : Element(), m_menuMode(menuMode), m_title(title), m_subtitle(subtitle), m_help(help) {} // CUSTOM MODIFICATION
+            OverlayFrame(const std::string& title, const std::string& subtitle, const std::string& menuMode = "", bool help = false, 
+                                                                              std::string footer = "")
+                : Element(), m_menuMode(menuMode), m_title(title), m_subtitle(subtitle), m_footer(footer), m_help(help)  {} // CUSTOM MODIFICATION
 
             virtual ~OverlayFrame() {
                 if (this->m_contentElement != nullptr)
@@ -1633,16 +1634,16 @@ namespace tsl {
                 renderer->drawString(this->m_subtitle.c_str(), false, 20, y+20+offset, 15, a(tsl::style::color::ColorDescription));
 
                 renderer->drawRect(15, tsl::cfg::FramebufferHeight - 73, tsl::cfg::FramebufferWidth - 30, 1, a(tsl::style::color::ColorText));
-                std::string menuBottomLine = "\uE0E1  Back     \uE0E0  OK     ";
+                std::string footer = m_footer.empty() ?  "\uE0E1  Back     \uE0E0  OK     " : m_footer;
                 if (this->m_menuMode == "packages") {
-                    menuBottomLine += "\uE0ED  Overlays";
+                    footer += "\uE0ED  Overlays";
                 } else if (this->m_menuMode == "overlays") {
-                    menuBottomLine += "\uE0EE  Packages";
+                    footer += "\uE0EE  Packages";
                 } else if (m_help) {
-                    menuBottomLine += "\uE0E3  Help";
+                    footer += "\uE0E3  Help";
                 }
                 
-                renderer->drawString(menuBottomLine.c_str(), false, 30, 693, 23, a(tsl::style::color::ColorText));
+                renderer->drawString(footer.c_str(), false, 30, 693, 23, a(tsl::style::color::ColorText));
 
                 if (this->m_contentElement != nullptr)
                     this->m_contentElement->frame(renderer);
@@ -1713,7 +1714,7 @@ namespace tsl {
         protected:
             Element *m_contentElement = nullptr;
 
-            std::string m_title, m_subtitle;
+            std::string m_title, m_subtitle, m_footer;
             bool m_help;
         };
 

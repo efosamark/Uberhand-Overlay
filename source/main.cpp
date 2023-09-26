@@ -74,7 +74,7 @@ public:
         constexpr int lineHeight = 20;  // Adjust the line height as needed
         constexpr int fontSize = 19;    // Adjust the font size as needed
 
-        auto rootFrame = new tsl::elm::OverlayFrame("Backup Management", "Uberhand Package");
+        auto rootFrame = new tsl::elm::OverlayFrame("Backup Management", "Uberhand Package","",false,"\uE0E1  Back     \uE0E0  Apply     \uE0E2  Delete");
         auto list = new tsl::elm::List();
 
         textDataPair = dispCustData(kipInfoCommand[2], kipInfoCommand[1]);
@@ -84,34 +84,6 @@ public:
             list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
             renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
             }), fontSize * textsize + lineHeight);
-            auto listItem = new tsl::elm::ListItem("Apply");
-            listItem->setClickListener([this, listItem](uint64_t keys) { // Add 'command' to the capture list
-            if (keys & KEY_A) {
-                bool result = copyFileOrDirectory(this->kipInfoCommand[1], "/atmosphere/kips/loader.kip");
-                if (result)
-                    listItem->setValue("DONE", tsl::PredefinedColors::Green);
-                else
-                    listItem->setValue("FAIL", tsl::PredefinedColors::Red);
-                return true;
-            }
-                return false;
-            });
-            list->addItem(listItem);
-            listItem = new tsl::elm::ListItem("Delete");
-            listItem->setClickListener([this, listItem](uint64_t keys) { // Add 'command' to the capture list
-            if (keys & KEY_A) {
-                bool result = deleteFileOrDirectory(this->kipInfoCommand[1]);
-                if (result) {
-                    tsl::goBack();
-                    tsl::goBack();
-                }
-                else
-                    listItem->setValue("FAIL", tsl::PredefinedColors::Red);
-                return true;
-            }
-                return false;
-            });
-            list->addItem(listItem);
             rootFrame->setContent(list);
         }
             return rootFrame;
@@ -122,6 +94,17 @@ public:
             tsl::goBack();
             return true;
         }
+         if (keysDown & KEY_A) {
+            copyFileOrDirectory(this->kipInfoCommand[1], "/atmosphere/kips/loader.kip");
+            tsl::goBack();
+            return true;
+         }
+         if (keysDown & KEY_X) {
+            deleteFileOrDirectory(this->kipInfoCommand[1]);
+            tsl::goBack();
+            tsl::goBack();
+            return true;
+         }
         return false;
     }
 };
