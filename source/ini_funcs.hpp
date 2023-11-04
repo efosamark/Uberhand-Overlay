@@ -17,6 +17,7 @@ struct PackageHeader {
     std::string version;
     std::string creator;
     std::string about;
+    bool enableNewFeatures{ false };
 };
 PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
     PackageHeader packageHeader;
@@ -35,8 +36,12 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
     const std::string versionPrefix = ";version=";
     const std::string creatorPrefix = ";creator=";
     const std::string aboutPrefix = ";about=";
+    const std::string newFeaturesMarker = ";enableNewFeatures";
 
     while (fgets(line, sizeof(line), file)) {
+        if (line[0] != ';') { // Header ended. Skip further parsing
+            break;
+        }
         std::string strLine(line);
         size_t versionPos = strLine.find(versionPrefix);
         if (versionPos != std::string::npos) {
@@ -90,6 +95,10 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
 
             // Remove trailing whitespace or newline characters
             packageHeader.about.erase(packageHeader.about.find_last_not_of(" \t\r\n") + 1);
+        }
+
+        if (newFeaturesMarker == strLine.substr(0, newFeaturesMarker.length())) {
+            packageHeader.enableNewFeatures = true;
         }
 
         if (!packageHeader.version.empty() && !packageHeader.creator.empty() && !packageHeader.about.empty()) {
