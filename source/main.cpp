@@ -715,27 +715,9 @@ public:
 
         std::string viewPackage = getNameWithoutPrefix(package);
         std::string viewsubPath = getNameWithoutPrefix(getNameFromPath(subPath));
-        std::vector<std::string> subdirectories = getSubdirectories(subPath);
 
         auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(viewsubPath), viewPackage, "" , hasHelp);
         auto list = new tsl::elm::List();
-
-        std::sort(subdirectories.begin(), subdirectories.end());
-        
-        for(const auto& subDirectory : subdirectories){
-            if(isFileOrDirectory(subPath + subDirectory + '/' + configFileName)){
-                auto item = new tsl::elm::ListItem(getNameWithoutPrefix(subDirectory));
-                item->setValue("\u25B6", tsl::PredefinedColors::White);
-                item->setClickListener([&, subDirectory](u64 keys)->bool{
-                    if (keys & KEY_A) {
-                        tsl::changeTo<SubMenu>(subPath + subDirectory + '/');
-                        return true;
-                    }
-                    return false;
-                });
-                list->addItem(item);
-            }
-        }
 
         // Add a section break with small text to indicate the "Commands" section
         // list->addItem(new tsl::elm::CategoryHeader("Commands"));
@@ -751,7 +733,21 @@ public:
             std::string optionName = option.first;
             std::string footer; 
             bool usePattern = false;
-            if (optionName[0] == '*') { 
+            if (optionName[0] == '>') { // a subdirectory. add a menu item and skip to the next command
+                auto subDirectory = optionName.substr(1);
+                auto item = new tsl::elm::ListItem(getNameWithoutPrefix(subDirectory));
+                item->setValue("\u25B6", tsl::PredefinedColors::White);
+                item->setClickListener([&, subDirectory](u64 keys)->bool {
+                    if (keys & KEY_A) {
+                        tsl::changeTo<SubMenu>(subPath + subDirectory + '/');
+                        return true;
+                    }
+                    return false;
+                    });
+                list->addItem(item);
+                continue;
+            }
+            else if (optionName[0] == '*') {
                 usePattern = true;
                 optionName = optionName.substr(1); // Strip the "*" character on the left
                 footer = "\u25B6";
