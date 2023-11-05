@@ -224,7 +224,6 @@ private:
     std::vector<std::string> filesList, filesListOn, filesListOff, filterList, filterOnList, filterOffList;
     std::vector<std::vector<std::string>> commands;
     bool toggleState = false;
-    json_t* jsonData;
 
 public:
     SelectionOverlay(const std::string& file, const std::string& key = "", const std::vector<std::vector<std::string>>& cmds = {}) 
@@ -370,7 +369,7 @@ public:
                     bool detectSize = true;
                     bool searchCurrent = markCurKip || markCurIni ? true : false;
                     // create list of data in the json 
-                    jsonData = readJsonFromFile(jsonPath);
+                    json_t* jsonData = readJsonFromFile(jsonPath);
                     if (jsonData && json_is_array(jsonData)) {
                         size_t arraySize = json_array_size(jsonData);
                         for (size_t i = 0; i < arraySize; ++i) {
@@ -415,6 +414,9 @@ public:
                                 }
                             }
                         }
+                    }
+                    if (jsonData) {
+                        json_decref(jsonData);
                     }
                 }
             } else if (useFilter || useSource) {
