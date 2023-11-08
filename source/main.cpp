@@ -706,6 +706,24 @@ public:
             bool usePattern = false;
             bool useSlider  = false;
             std::string headerName;
+            if (optionName[0] == '@') { // a subdirectory. add a menu item and skip to the next command
+                std::vector<std::string> tmpldir = option.second;
+                auto item = new tsl::elm::ListItem(getNameWithoutPrefix(optionName.substr(1)));
+                item->setValue("\u25B6", tsl::PredefinedColors::White);
+                item->setClickListener([&, tmpldir, item](u64 keys)->bool {
+                    if (keys & KEY_A) {
+                        if (!isFileOrDirectory(tmpldir[1])) {
+                            item->setValue("FAIL", tsl::PredefinedColors::Red);
+                            return true;
+                        }
+                        tsl::changeTo<KipInfoOverlay>(tmpldir, false);
+                        return true;
+                    }
+                    return false;
+                    });
+                list->addItem(item);
+                continue;
+            }
             if (enableConfigNav && optionName[0] == '>') { // a subdirectory. add a menu item and skip to the next command
                 auto subDirectory = optionName.substr(1);
                 auto item = new tsl::elm::ListItem(getNameWithoutPrefix(subDirectory));
