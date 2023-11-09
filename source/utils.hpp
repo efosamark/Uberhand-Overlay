@@ -744,7 +744,10 @@ std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string
                                 if (j_increment) { // Add increment value from the JSON to the displayed value
                                     intValue += std::stoi(json_string_value(j_increment));
                                 }
-                                output += name + ": " + std::to_string(intValue).substr(0, length);
+                                if (intValue > 1500) {
+                                    intValue = intValue/1000;
+                                }
+                                output += name + ": " + std::to_string(intValue);
                             }
                         }
 

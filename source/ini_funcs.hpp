@@ -20,6 +20,7 @@ struct PackageHeader {
     std::string github;
     std::string about;
     bool enableConfigNav{ false };
+    std::string checkKipVersion;
 };
 PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
     PackageHeader packageHeader;
@@ -29,6 +30,7 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
         packageHeader.creator = "";
         packageHeader.about = "";
         packageHeader.github = "";
+        packageHeader.checkKipVersion = "";
         return packageHeader;
     }
 
@@ -39,7 +41,9 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
     const std::string creatorPrefix = ";creator=";
     const std::string aboutPrefix = ";about=";
     const std::string repoPrefix = ";github=";
-    const std::string newFeaturesMarker = ";enableConfigNav";
+    const std::string configNavMarker = ";enableConfigNav";
+    const std::string kipVerMarker = ";kipVer=";
+
 
     while (fgets(line, sizeof(line), file)) {
         if (line[0] != ';') { // Header ended. Skip further parsing
@@ -100,7 +104,11 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
             packageHeader.about.erase(packageHeader.about.find_last_not_of(" \t\r\n") + 1);
         }
 
-        if (newFeaturesMarker == strLine.substr(0, newFeaturesMarker.length())) {
+        if (kipVerMarker == strLine.substr(0, kipVerMarker.length())) {
+            packageHeader.checkKipVersion = strLine.substr(kipVerMarker.length());
+        }
+
+        if (configNavMarker == strLine.substr(0, configNavMarker.length())) {
             packageHeader.enableConfigNav = true;
         }
 
@@ -273,6 +281,17 @@ std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadO
 
             auto name = trimmedLine.substr(2);
             auto start = name.find_first_not_of(' ');
+            size_t pos = name.find(" ; ");
+
+            logMessage(std::to_string(pos));
+            logMessage(std::to_string(isMariko));
+
+            if (pos != std::string::npos) {
+                if ((name.substr(pos + 3) == "Mariko" && !isMariko) || (name.substr(pos + 3) == "Erista" && isMariko)) {
+                    continue;
+                }
+                name = name.substr(0,pos);
+            }
             name = name.substr(start);
             std::vector<std::string> command{ "separator" };
             commands.push_back(std::move(command));

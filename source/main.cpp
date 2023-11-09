@@ -12,6 +12,7 @@
 static bool defaultMenuLoaded = true;
 static std::string package = "";
 bool enableConfigNav = false;
+std::string kipVersion = "";
 
 class ConfigOverlay : public tsl::Gui {
 private:
@@ -155,7 +156,6 @@ public:
                                                     "Uberhand Package", "", hasHelp, footer);
         auto list = new tsl::elm::List();
 
-        bool kipInfo = false;
         bool ramInfo = false;
         bool useFilter = false;
         bool useSource = false;
@@ -205,7 +205,6 @@ public:
                     useJson = true;
                 } else if (cmd[0] == "kip_info") {
                     jsonPath = preprocessPath(cmd[1]);
-                    kipInfo = true;
                 } else if (cmd[0] == "ram_info") {
                     ramPath = preprocessPath(cmd[1]);
                     ramInfo = true;
@@ -327,25 +326,6 @@ public:
                 std::sort(filesList.begin(), filesList.end(), [](const std::string& a, const std::string& b) {
                     return getNameFromPath(a) < getNameFromPath(b);
                 });
-            } else if (kipInfo) {
-                if (!isFileOrDirectory(jsonPath)) {
-                    list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                    renderer->drawString("TMPL file not found.\nContact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
-                    }), fontSize + lineHeight);
-                    rootFrame->setContent(list);
-                    return rootFrame;
-                } else {
-                    textDataPair = dispCustData(jsonPath);
-                    std::string textdata = textDataPair.first;
-                    int textsize = textDataPair.second;
-                    if (!textdata.empty()) {
-                        list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                        renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
-                        }), fontSize * textsize + lineHeight);
-                        rootFrame->setContent(list);
-                        return rootFrame;
-                    }
-                }
             }
         } else {
             filesListOn = getFilesListByWildcards(pathPatternOn);
@@ -673,6 +653,20 @@ public:
         auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(viewsubPath), viewPackage, "" , hasHelp);
         auto list = new tsl::elm::List();
 
+        if (!kipVersion.empty()) {
+            constexpr int lineHeight = 20;  // Adjust the line height as needed
+            constexpr int fontSize = 19;    // Adjust the font size as needed
+            std::string curKipVer = readHexDataAtOffset("/atmosphere/kips/loader.kip", "43555354", "4", 3);
+            int i_curKipVer = reversedHexToInt(curKipVer);
+            if (std::stoi(kipVersion) != i_curKipVer) {
+                list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
+                renderer->drawString("Kip version mismatch.\nUpdate the requirements to use this\npackage.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                }), fontSize * 3 + lineHeight);
+                rootFrame->setContent(list);
+                return rootFrame;
+            }
+        }
+
         if (!enableConfigNav) {
             std::vector<std::string> subdirectories = getSubdirectories(subPath);
             std::sort(subdirectories.begin(), subdirectories.end());
@@ -707,7 +701,7 @@ public:
             bool useSlider  = false;
             std::string headerName;
             if (optionName[0] == '@') { // a subdirectory. add a menu item and skip to the next command
-                std::vector<std::string> tmpldir = option.second;
+                std::vector<std::string> tmpldir = option.second[0];
                 auto item = new tsl::elm::ListItem(getNameWithoutPrefix(optionName.substr(1)));
                 item->setValue("\u25B6", tsl::PredefinedColors::White);
                 item->setClickListener([&, tmpldir, item](u64 keys)->bool {
@@ -1030,6 +1024,7 @@ public:
         std::string subConfigIniPath = subPath + "/" + configFileName;
         PackageHeader packageHeader = getPackageHeaderFromIni(subConfigIniPath);
         enableConfigNav = packageHeader.enableConfigNav;
+        kipVersion = packageHeader.checkKipVersion;
 
         auto rootFrame = static_cast<tsl::elm::OverlayFrame*>(SubMenu::createUI());
         rootFrame->setTitle(getNameWithoutPrefix(package));
