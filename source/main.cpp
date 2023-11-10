@@ -1125,32 +1125,37 @@ public:
         bool settingsLoaded = false;
         if (isFileOrDirectory(settingsConfigIniPath)) {
             settingsData = getParsedDataFromIniFile(settingsConfigIniPath);
-            if (settingsData.count("ultrahand") > 0) {
-                auto& ultrahandSection = settingsData["ultrahand"];
-                if (ultrahandSection.count("last_menu") > 0) {
-                    menuMode = ultrahandSection["last_menu"];
-                    if (ultrahandSection.count("default_menu") > 0) {
-                        defaultMenuMode = ultrahandSection["default_menu"];
-                        if (ultrahandSection.count("in_overlay") > 0) {
+            if (settingsData.count("uberhand") > 0) {
+                auto& uberhandSection = settingsData["uberhand"];
+                if (uberhandSection.count("last_menu") > 0) {
+                    menuMode = uberhandSection["last_menu"];
+                    if (uberhandSection.count("default_menu") > 0) {
+                        defaultMenuMode = uberhandSection["default_menu"];
+                        if (uberhandSection.count("in_overlay") > 0) {
                             settingsLoaded = true;
                         }
                     }
                 }
-                if (ultrahandSection["show_ovl_versions"] == "true") {
+                if (uberhandSection["show_ovl_versions"] == "true") {
                     showOverlayVersions = true;
                 } else {
-                    setIniFileValue(settingsConfigIniPath, "ultrahand", "show_ovl_versions", "false");
+                    setIniFileValue(settingsConfigIniPath, "uberhand", "show_ovl_versions", "false");
                 }
-                if (ultrahandSection["show_pack_versions"] == "false") {
+                if (uberhandSection["show_pack_versions"] == "false") {
                     showPackageVersions = false;
                 } else {
-                    setIniFileValue(settingsConfigIniPath, "ultrahand", "show_pack_versions", "true");
+                    setIniFileValue(settingsConfigIniPath, "uberhand", "show_pack_versions", "true");
                 }
-                if (ultrahandSection["coolerMode"] == "1"){
+                if (uberhandSection["item_separator"] == "true") {
+                    showPackageVersions = true;
+                } else {
+                    setIniFileValue(settingsConfigIniPath, "uberhand", "item_separator", "false");
+                }
+                if (uberhandSection["coolerMode"] == "1"){
                     coolerMode = true;
                 }
-                if (!ultrahandSection["ovlRepo"].empty()){
-                    repoUrl = ultrahandSection["ovlRepo"];
+                if (!uberhandSection["ovlRepo"].empty()){
+                    repoUrl = uberhandSection["ovlRepo"];
                 } else {
                     repoUrl = "https://raw.githubusercontent.com/i3sey/uUpdater-ovl-repo/main/main.ini";
                 }
@@ -1158,12 +1163,12 @@ public:
         }
         
         if (!settingsLoaded) { // write data if settings are not loaded
-            setIniFileValue(settingsConfigIniPath, "ultrahand", "default_menu", defaultMenuMode);
-            setIniFileValue(settingsConfigIniPath, "ultrahand", "last_menu", menuMode);
-            setIniFileValue(settingsConfigIniPath, "ultrahand", "in_overlay", "false");
+            setIniFileValue(settingsConfigIniPath, "uberhand", "default_menu", defaultMenuMode);
+            setIniFileValue(settingsConfigIniPath, "uberhand", "last_menu", menuMode);
+            setIniFileValue(settingsConfigIniPath, "uberhand", "in_overlay", "false");
         }
-        copyTeslaKeyComboToUltraHand();
-        //setIniFileValue(settingsConfigIniPath, "ultrahand", "in_overlay", "false");
+        copyTeslaKeyComboTouberhand();
+        //setIniFileValue(settingsConfigIniPath, "uberhand", "in_overlay", "false");
         
         
         if ((defaultMenuMode == "overlays") || (defaultMenuMode == "packages")) {
@@ -1173,7 +1178,7 @@ public:
             }
         } else {
             defaultMenuMode = "last_menu";
-            setIniFileValue(settingsConfigIniPath, "ultrahand", "default_menu", defaultMenuMode);
+            setIniFileValue(settingsConfigIniPath, "uberhand", "default_menu", defaultMenuMode);
         }
         
         std::string versionLabel = APP_VERSION+std::string("   (")+envGetLoaderInfo()+std::string(")");
@@ -1227,7 +1232,7 @@ public:
                     listItem->setClickListener([overlayFile](s64 key) {
                         if (key & KEY_A) {
                             // Load the overlay here
-                            setIniFileValue(settingsConfigIniPath, "ultrahand", "in_overlay", "true"); // this is handled within tesla.hpp
+                            setIniFileValue(settingsConfigIniPath, "uberhand", "in_overlay", "true"); // this is handled within tesla.hpp
                             tsl::setNextOverlay(overlayFile);
                             //envSetNextLoad(overlayPath, "");
                             tsl::Overlay::get()->close();
@@ -1267,8 +1272,8 @@ public:
                             if (!coolerMode) {
                                 std::vector<std::string> overlays = getFilesListByWildcard("sdmc:/switch/.overlays/*.ovl");
                                 std::map<std::string, std::string> package;
-                                downloadFile(repoUrl, "sdmc:/config/ultrahand/Updater.ini");
-                                std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> options = loadOptionsFromIni("sdmc:/config/ultrahand/Updater.ini");
+                                downloadFile(repoUrl, "sdmc:/config/uberhand/Updater.ini");
+                                std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> options = loadOptionsFromIni("sdmc:/config/uberhand/Updater.ini");
                                 for (const auto& option : options) {
                                     for (const std::string& overlay : overlays) {
                                         std::string uoverlay = dropExtension(getNameFromPath(overlay));
@@ -1474,14 +1479,14 @@ public:
     virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
         if ((keysDown & KEY_DRIGHT) && !(keysHeld & ~KEY_DRIGHT)) {
             if (menuMode != "packages") {
-                setIniFileValue(settingsConfigIniPath, "ultrahand", "last_menu", "packages");
+                setIniFileValue(settingsConfigIniPath, "uberhand", "last_menu", "packages");
                 tsl::changeTo<MainMenu>();
                 return true;
             }
         }
         if ((keysDown & KEY_DLEFT) && !(keysHeld & ~KEY_DLEFT)) {
             if (menuMode != "overlays") {
-                setIniFileValue(settingsConfigIniPath, "ultrahand", "last_menu", "overlays");
+                setIniFileValue(settingsConfigIniPath, "uberhand", "last_menu", "overlays");
                 tsl::changeTo<MainMenu>();
                 return true;
             }

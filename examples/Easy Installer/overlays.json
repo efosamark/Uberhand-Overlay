@@ -80,8 +80,8 @@
         "download-entry": "0"
     },
     {
-        "name": "Ultrahand - latest",
-        "ovl-url": "https://api.github.com/repos/ppkantorski/Ultrahand-Overlay/releases",
+        "name": "uberhand - latest",
+        "ovl-url": "https://api.github.com/repos/ppkantorski/uberhand-Overlay/releases",
         "download-entry": "0"
     }
 ]

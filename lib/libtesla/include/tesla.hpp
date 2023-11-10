@@ -153,7 +153,7 @@ namespace tsl {
             constexpr Color ColorTransparent      = { 0xF, 0xF, 0xF, 0x0 };   ///< Transparent color
             constexpr Color ColorHighlight        = { 0xF, 0xF, 0xF, 0xF };   ///< Greenish highlight color
             constexpr Color ColorError            = { 0xF, 0x0, 0x2, 0xF };   ///< Red error highlight color
-            constexpr Color ColorFrame            = { 0x0, 0x0, 0x0, 0x0 };   ///< Outer boarder color
+            Color ColorFrame                      = { 0x0, 0x0, 0x0, 0x0 };   ///< Outer border color
             constexpr Color ColorHandle           = { 0x0, 0x0, 0x0, 0x0 };   ///< Track bar handle color
             constexpr Color ColorText             = { 0xC, 0xC, 0xC, 0xF };   ///< Standard text color
             constexpr Color ColorDescription      = { 0xA, 0xA, 0xA, 0xF };   ///< Description text color
@@ -361,7 +361,7 @@ namespace tsl {
             /**
              * @brief Tesla config file
              */
-            static const char* CONFIG_FILE = "/config/ultrahand/config.ini"; // CUSTOM MODIFICATION
+            static const char* CONFIG_FILE = "/config/uberhand/config.ini"; // CUSTOM MODIFICATION
 
             /**
              * @brief Parses a ini string
@@ -3535,7 +3535,7 @@ namespace tsl {
         static void parseOverlaySettings() {
             hlp::ini::IniData parsedConfig = hlp::ini::readOverlaySettings();
 
-            u64 decodedKeys = hlp::comboStringToKeys(parsedConfig["ultrahand"]["key_combo"]); // CUSTOM MODIFICATION
+            u64 decodedKeys = hlp::comboStringToKeys(parsedConfig["uberhand"]["key_combo"]); // CUSTOM MODIFICATION
             if (decodedKeys)
                 tsl::cfg::launchCombo = decodedKeys;
         }
@@ -3548,7 +3548,7 @@ namespace tsl {
         [[maybe_unused]] static void updateCombo(u64 keys) {
             tsl::cfg::launchCombo = keys;
             hlp::ini::updateOverlaySettings({
-                { "ultrahand", { // CUSTOM MODIFICATION
+                { "uberhand", { // CUSTOM MODIFICATION
                     { "key_combo", tsl::hlp::keysToComboString(keys) }
                 }}
             });
@@ -3733,12 +3733,12 @@ namespace tsl {
             }
         }
         
-        std::string settingsConfigPath = "sdmc:/config/ultrahand/config.ini";
+        std::string settingsConfigPath = "sdmc:/config/uberhand/config.ini";
         std::map<std::string, std::map<std::string, std::string>> settingsData = getParsedDataFromIniFile(settingsConfigPath);
         std::string inOverlayString;
 
-        if (settingsData.count("ultrahand") > 0 && settingsData["ultrahand"].count("in_overlay") > 0) {
-            inOverlayString = settingsData["ultrahand"]["in_overlay"];
+        if (settingsData.count("uberhand") > 0 && settingsData["uberhand"].count("in_overlay") > 0) {
+            inOverlayString = settingsData["uberhand"]["in_overlay"];
         } else {
             inOverlayString = "false"; // Assign default value if the keys are not present
         }
@@ -3746,7 +3746,7 @@ namespace tsl {
         bool inOverlay = false;
         if (inOverlayString == "true") {
             inOverlay = true;
-            setIniFileValue(settingsConfigPath, "ultrahand", "in_overlay", "false");
+            setIniFileValue(settingsConfigPath, "uberhand", "in_overlay", "false");
         }
         
         

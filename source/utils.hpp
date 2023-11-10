@@ -43,7 +43,7 @@
 
 // String path variables
 const std::string configFileName = "config.ini";
-const std::string settingsPath = "sdmc:/config/ultrahand/";
+const std::string settingsPath = "sdmc:/config/uberhand/";
 const std::string settingsConfigIniPath = settingsPath + configFileName;
 const std::string packageDirectory = "sdmc:/switch/.packages/";
 const std::string overlayDirectory = "sdmc:/switch/.overlays/";
@@ -54,7 +54,7 @@ bool deleted = false;
 bool resetValue = false;
 std::string prevValue = "";
 
-void copyTeslaKeyComboToUltraHand() {
+void copyTeslaKeyComboTouberhand() {
     std::string keyCombo;
     std::map<std::string, std::map<std::string, std::string>> parsedData;
     
@@ -71,11 +71,11 @@ void copyTeslaKeyComboToUltraHand() {
     if (!keyCombo.empty()){
         if (isFileOrDirectory(settingsConfigIniPath)) {
             parsedData = getParsedDataFromIniFile(settingsConfigIniPath);
-            if (parsedData.count("ultrahand") > 0) {
-                auto& ultrahandSection = parsedData["ultrahand"];
-                if (ultrahandSection.count("key_combo") == 0) {
+            if (parsedData.count("uberhand") > 0) {
+                auto& uberhandSection = parsedData["uberhand"];
+                if (uberhandSection.count("key_combo") == 0) {
                     // Write the key combo to the destination file
-                    setIniFileValue(settingsConfigIniPath, "ultrahand", "key_combo", keyCombo);
+                    setIniFileValue(settingsConfigIniPath, "uberhand", "key_combo", keyCombo);
                 }
             }
         }
@@ -919,9 +919,9 @@ std::map<std::string, std::string> packageUpdateCheck(std::string subConfigIniPa
         if (packageInfo["repoVer"][0] == 'v') {
             packageInfo["repoVer"] = packageInfo["repoVer"].substr(1);
         }
-        //logMessage("672: "+ getLinkOnLatest("/config/ultrahand/downloads/temp.json"));
-        packageInfo["link"] = getLinkOnLatest("sdmc:/config/ultrahand/downloads/temp.json");
-        deleteFileOrDirectory("sdmc:/config/ultrahand/downloads/temp.json");
+        //logMessage("672: "+ getLinkOnLatest("/config/uberhand/downloads/temp.json"));
+        packageInfo["link"] = getLinkOnLatest("sdmc:/config/uberhand/downloads/temp.json");
+        deleteFileOrDirectory("sdmc:/config/uberhand/downloads/temp.json");
         //logMessage("repoVer " + packageInfo["repoVer"]);
         //logMessage("localVer " + packageInfo["localVer"]);
         packageInfo["type"] = "zip";
@@ -943,13 +943,13 @@ std::map<std::string, std::string> ovlUpdateCheck(std::map<std::string, std::str
             ovlItemToUpdate["repoVer"] = ovlItemToUpdate["repoVer"].substr(1);
         }
     if (currentOverlay["localVer"] != ovlItemToUpdate["repoVer"]) {
-        ovlItemToUpdate["link"] = getLinkOnLatest("/config/ultrahand/downloads/temp.json", std::stoi(currentOverlay["downloadEntry"]));
+        ovlItemToUpdate["link"] = getLinkOnLatest("/config/uberhand/downloads/temp.json", std::stoi(currentOverlay["downloadEntry"]));
         ovlItemToUpdate["name"] = currentOverlay["name"];
         ovlItemToUpdate["type"] = "ovl";
-        deleteFileOrDirectory("sdmc:/config/ultrahand/downloads/temp.json");
+        deleteFileOrDirectory("sdmc:/config/uberhand/downloads/temp.json");
         return ovlItemToUpdate;
     }
-    deleteFileOrDirectory("sdmc:/config/ultrahand/downloads/temp.json");
+    deleteFileOrDirectory("sdmc:/config/uberhand/downloads/temp.json");
     ovlItemToUpdate.clear();
     return ovlItemToUpdate;
 }
