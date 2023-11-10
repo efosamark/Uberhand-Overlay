@@ -909,10 +909,10 @@ std::map<std::string, std::string> packageUpdateCheck(std::string subConfigIniPa
         packageInfo["localVer"] = packageHeader.version;
         packageInfo["link"] = packageHeader.github;
         packageInfo["name"] = subConfigIniPath.substr(0, subConfigIniPath.find("/config.ini"));
-        downloadFile(packageInfo["link"], "sdmc:/config/ultrahand/downloads/temp.json");
-        packageInfo["repoVer"] = getversion("sdmc:/config/ultrahand/downloads/temp.json");
+        downloadFile(packageInfo["link"], "sdmc:/config/uberhand/downloads/temp.json");
+        packageInfo["repoVer"] = getversion("sdmc:/config/uberhand/downloads/temp.json");
         if (packageInfo["repoVer"] == "ApiLimit") {
-            deleteFileOrDirectory("sdmc:/config/ultrahand/downloads/temp.json");
+            deleteFileOrDirectory("sdmc:/config/uberhand/downloads/temp.json");
             packageInfo.clear();
             return packageInfo;
         }
@@ -931,10 +931,10 @@ std::map<std::string, std::string> packageUpdateCheck(std::string subConfigIniPa
 
 std::map<std::string, std::string> ovlUpdateCheck(std::map<std::string, std::string> currentOverlay) {
     std::map<std::string, std::string> ovlItemToUpdate;
-    downloadFile(currentOverlay["link"], "sdmc:/config/ultrahand/downloads/temp.json");
-    ovlItemToUpdate["repoVer"]= getversion("sdmc:/config/ultrahand/downloads/temp.json");
+    downloadFile(currentOverlay["link"], "sdmc:/config/uberhand/downloads/temp.json");
+    ovlItemToUpdate["repoVer"]= getversion("sdmc:/config/uberhand/downloads/temp.json");
     if (ovlItemToUpdate["repoVer"] == "ApiLimit") {
-        deleteFileOrDirectory("sdmc:/config/ultrahand/downloads/temp.json");
+        deleteFileOrDirectory("sdmc:/config/uberhand/downloads/temp.json");
         ovlItemToUpdate.clear();
         return ovlItemToUpdate;
     }
@@ -950,7 +950,7 @@ std::map<std::string, std::string> ovlUpdateCheck(std::map<std::string, std::str
         } else {
             ovlItemToUpdate["type"] = "ovl";
         }
-        deleteFileOrDirectory("sdmc:/config/ultrahand/downloads/temp.json");
+        deleteFileOrDirectory("sdmc:/config/uberhand/downloads/temp.json");
         return ovlItemToUpdate;
     }
     deleteFileOrDirectory("sdmc:/config/uberhand/downloads/temp.json");
