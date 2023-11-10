@@ -1402,7 +1402,7 @@ public:
                             std::vector<std::map<std::string, std::string>> items;
                             for (const auto& taintedSubdirectory : subdirectories) {
                                 std::map<std::string, std::string> packageInfo = packageUpdateCheck(taintedSubdirectory + "/" + "config.ini");
-                                if (packageInfo["localVer"] < packageInfo["repoVer"]){
+                                if (packageInfo["localVer"] != packageInfo["repoVer"]){
                                     NeedUpdate = true;
                                     items.insert(items.end(), packageInfo);
                                     }
