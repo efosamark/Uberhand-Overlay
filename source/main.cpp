@@ -1264,7 +1264,7 @@ public:
             }
 
             //ovl updater section
-            auto updaterItem = new tsl::elm::ListItem("Check for Updates");
+            auto updaterItem = new tsl::elm::ListItem("Check for Overlay Updates");
             updaterItem->setClickListener([this, updaterItem](uint64_t keys) {
                         if (keys & KEY_A) {
                             bool NeedUpdate = false;
@@ -1394,7 +1394,7 @@ public:
             }
 
             //package updater section
-            auto updaterItem = new tsl::elm::ListItem("Check for Updates");
+            auto updaterItem = new tsl::elm::ListItem("Check for Package Updates");
             updaterItem->setClickListener([this, subdirectories, updaterItem](uint64_t keys) {
                         if (keys & KEY_A) {
                             //setIniFile(packageDirectory + "Updater/config.ini", "App", "back", "", "");
@@ -1402,7 +1402,7 @@ public:
                             std::vector<std::map<std::string, std::string>> items;
                             for (const auto& taintedSubdirectory : subdirectories) {
                                 std::map<std::string, std::string> packageInfo = packageUpdateCheck(taintedSubdirectory + "/" + "config.ini");
-                                if (packageInfo["localVer"] != packageInfo["repoVer"]){
+                                if (packageInfo["localVer"] < packageInfo["repoVer"]){
                                     NeedUpdate = true;
                                     items.insert(items.end(), packageInfo);
                                     }
