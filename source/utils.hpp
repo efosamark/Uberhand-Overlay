@@ -634,7 +634,7 @@ tsl::PredefinedColors defineColor(std::string strColor) {
     } 
 }
 
-std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string kipPath = "/atmosphere/kips/loader.kip", bool spacing = true) {
+std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string kipPath = "/atmosphere/kips/loader.kip", bool spacing = false) {
 
     std::string custOffset = "";
     std::string currentHex = "";
@@ -748,6 +748,8 @@ std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string
                                     intValue = intValue/1000;
                                 }
                                 output += name + ": " + std::to_string(intValue);
+                                if (intValue < 100) 
+                                    extent = "";
                             }
                         }
 
