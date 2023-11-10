@@ -532,10 +532,11 @@ public:
                         });
                         list->addItem(listItem);
                     } else {
-                        listItem->setClickListener([file, this, listItem, kipInfoCommand](uint64_t keys) { // Add 'command' to the capture list
+                        listItem->setClickListener([&, file, this, listItem, kipInfoCommand](uint64_t keys) { // Add 'command' to the capture list
                             if (keys & KEY_A) {
-                                if (listItem->getValue() != "DELETED")
+                                if (listItem->getValue() != "DELETED") {
                                     tsl::changeTo<KipInfoOverlay>(kipInfoCommand);
+                                }
                             }
                             return false;
                         });

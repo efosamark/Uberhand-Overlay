@@ -4,7 +4,8 @@
 class KipInfoOverlay : public tsl::Gui {
 private:
     std::vector<std::string> kipInfoCommand;
-    bool showBackup, hasPages, isFirstPage = false;
+    bool showBackup, hasPages;
+    bool isFirstPage = true;
 
 public:
     KipInfoOverlay(std::vector<std::string> kipInfoCommand) : kipInfoCommand(kipInfoCommand), showBackup(true) {}
@@ -46,10 +47,8 @@ public:
 
         if (!showBackup) {
             textDataPair = dispCustData(kipInfoCommand[isFirstPage ? 1 : 2]);
-            showBackup = false;
         }
         else {
-            showBackup = true;
             textDataPair = dispCustData(kipInfoCommand[isFirstPage ? 2 : 3], kipInfoCommand[1]);
         }
 
@@ -88,7 +87,7 @@ public:
            return true;
         }
         if (hasPages && isFirstPage && (keysDown & KEY_DRIGHT)) {
-           tsl::changeTo<KipInfoOverlay>(kipInfoCommand, false, false);
+           tsl::changeTo<KipInfoOverlay>(kipInfoCommand, showBackup, false);
         }
         if (hasPages && !isFirstPage && (keysDown & KEY_DLEFT)) {
            tsl::goBack();

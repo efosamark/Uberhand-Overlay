@@ -283,9 +283,6 @@ std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadO
             auto start = name.find_first_not_of(' ');
             size_t pos = name.find(" ; ");
 
-            logMessage(std::to_string(pos));
-            logMessage(std::to_string(isMariko));
-
             if (pos != std::string::npos) {
                 if ((name.substr(pos + 3) == "Mariko" && !isMariko) || (name.substr(pos + 3) == "Erista" && isMariko)) {
                     continue;
