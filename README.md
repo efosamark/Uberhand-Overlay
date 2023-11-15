@@ -2,10 +2,10 @@
 <details>
 <summary>Screenshots</summary>
 
-![Overlay Menu](https://github.com/IrneRacoonovich/Ultrahand-Overlay/assets/143113705/3e62909c-e3f2-4791-9e83-aee36dcc1fb9)
-![Package Menu](https://github.com/IrneRacoonovich/Ultrahand-Overlay/assets/143113705/5d191d16-6879-4f74-8413-92ba538080f3)
-![4IFIR Wizard Package](https://github.com/IrneRacoonovich/Ultrahand-Overlay/assets/143113705/cd8a2baf-4172-4d86-99ac-a04527ccbe1a)
-![Easy Installer Package](https://github.com/IrneRacoonovich/Ultrahand-Overlay/assets/143113705/35b3b703-3737-4798-909d-55a02a07757e)
+![Overlay Menu](https://github.com/IrneRacoonovich/Uberhand-Overlay/assets/143113705/9d93913e-62f3-4218-89cb-f315257cd8a7)
+![Package Menu](https://github.com/IrneRacoonovich/Uberhand-Overlay/assets/143113705/ee4ddd67-1511-4877-a97f-183dbfa4a7ed)
+![Easy Installer Package](https://github.com/IrneRacoonovich/Uberhand-Overlay/assets/143113705/47919a09-5d16-43b8-b82c-4c1654ccf6e5)
+![4IFIR Wizard Package](https://github.com/IrneRacoonovich/Uberhand-Overlay/assets/143113705/2c8203c2-c7e3-4ade-9ed4-e2a963fddefc)
 
 </details>
 
