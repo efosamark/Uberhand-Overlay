@@ -48,12 +48,13 @@ public:
         std::string sourceIni = "";
         std::string sectionIni = "";
         std::string keyIni = "";
-
+        int fanMode = 0; //both by default
         
         for (const auto& cmd : commands) {
             if (cmd.size() > 1) {
                 if (cmd[0] == "slider_ini") {
                     sourceIni  = preprocessPath(cmd[1]);
+                    fanMode = (cmd[2] == "handheld") ? 1 : (cmd[2] == "console") ? 2 : 0;
                 }
             } 
         }
@@ -73,7 +74,7 @@ public:
                 setIniFileValue(sourceIni, "tc", "tskin_rate_table_handheld_on_fwdbg", "\"str!\"[[-1000000, 16000, -255, -255], [16000, 36000, -255, 0], [36000, 41000, 0, 51], [41000, 47000, 51, 64], [47000, 58000, 64, 153], [58000, 1000000, 255, 255]]\"\"");
             }
         }
-        std::string iniString = readIniValue(sourceIni, "tc", "tskin_rate_table_console_on_fwdbg");
+        std::string iniString = readIniValue(sourceIni, "tc", (fanMode == 2 or fanMode == 0) ? "tskin_rate_table_console_on_fwdbg" : "tskin_rate_table_handheld_on_fwdbg");
         std::vector<std::vector<int>> iniValues = parseIntIniData(iniString);
         for (const auto& arr : iniValues) {
             std::string low = arr[0] < 0 ? "0" : std::to_string(arr[0]/1000) + "°C";
@@ -110,7 +111,7 @@ public:
                         }
                     }
             });
-            slider->setClickListener([this, list, iniString, sourceIni, iniValues](uint64_t keys) { // Add 'command' to the capture list
+            slider->setClickListener([this, list, iniString, sourceIni, iniValues, fanMode](uint64_t keys) { // Add 'command' to the capture list
                 if (keys & KEY_A) {
                     std::vector<int> values;
                     size_t listSize = list->getSize();
@@ -119,8 +120,13 @@ public:
                             values.push_back(int(double(dynamic_cast<tsl::elm::StepTrackBar*>(list->getItemAtIndex(i))->getProgress())*12.75));
                         }
                     }
-                    setIniFileValue(sourceIni, "tc", "tskin_rate_table_console_on_fwdbg", formString(values, parseIntIniData(iniString, false)));
-                    setIniFileValue(sourceIni, "tc", "tskin_rate_table_handheld_on_fwdbg", formString(values, parseIntIniData(iniString, false)));
+                    if (fanMode == 0) {
+                        setIniFileValue(sourceIni, "tc", "tskin_rate_table_console_on_fwdbg", formString(values, parseIntIniData(iniString, false)));
+                        setIniFileValue(sourceIni, "tc", "tskin_rate_table_handheld_on_fwdbg", formString(values, parseIntIniData(iniString, false)));
+                    } else {
+                        setIniFileValue(sourceIni, "tc", (fanMode == 1) ? "tskin_rate_table_handheld_on_fwdbg" : "tskin_rate_table_console_on_fwdbg", formString(values, parseIntIniData(iniString, false)));
+                    }
+                    
                     applied = true;
                     tsl::goBack();
                     return true;
