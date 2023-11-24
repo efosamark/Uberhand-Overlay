@@ -49,7 +49,7 @@ void writeIniFile(const std::string& filename, const IniSectionInput& iniData) {
 void updateIniData(IniSectionInput& iniData, const IniSectionInput& updates) {
     for (const auto& [section, kvPairs] : updates) {
         for (const auto& [key, value] : kvPairs) {
-            logMessage(iniData[section][key]);
+            //logMessage(iniData[section][key]);
             iniData[section][key] = value;
         }
     }
