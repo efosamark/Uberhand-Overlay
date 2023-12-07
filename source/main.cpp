@@ -1301,14 +1301,12 @@ public:
                             std::map<std::string, std::map<std::string, std::string>> overlaysIniData = getParsedDataFromIniFile(overlaysIniFilePath);
                             localPriority = std::stoi(overlaysIniData[overlayFileName]["priority"])+1;
                             setIniFileValue(overlaysIniFilePath, overlayFileName, "priority", std::to_string(localPriority));
-                            //listItem->setValue("Priority: " + std::to_string(priority));
                             tsl::changeTo<MainMenu>(Soverlays);
                             return true;
                         } else if (key & KEY_MINUS) {
                             std::map<std::string, std::map<std::string, std::string>> overlaysIniData = getParsedDataFromIniFile(overlaysIniFilePath);
                             localPriority = std::stoi(overlaysIniData[overlayFileName]["priority"])-1;
                             setIniFileValue(overlaysIniFilePath, overlayFileName, "priority", std::to_string(localPriority));
-                            //listItem->setValue("Priority: " + std::to_string(priority));
                             tsl::changeTo<MainMenu>(Soverlays);
                             return true;
                         }
