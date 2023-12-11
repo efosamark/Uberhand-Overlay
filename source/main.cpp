@@ -1269,6 +1269,7 @@ public:
             }
 
             //ovl updater section
+            list->addItem(new tsl::elm::CategoryHeader("Updater", true));
             auto updaterItem = new tsl::elm::ListItem("Check for Overlay Updates");
             updaterItem->setClickListener([this, updaterItem](uint64_t keys) {
                         if (keys & KEY_A) {
@@ -1430,6 +1431,7 @@ public:
             }
 
             //package updater section
+            list->addItem(new tsl::elm::CategoryHeader("Updater", true));
             auto updaterItem = new tsl::elm::ListItem("Check for Package Updates");
             updaterItem->setClickListener([this, subdirectories, updaterItem](uint64_t keys) {
                         if (keys & KEY_A) {

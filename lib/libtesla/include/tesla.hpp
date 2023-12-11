@@ -153,9 +153,10 @@ namespace tsl {
             constexpr Color ColorTransparent      = { 0xF, 0xF, 0xF, 0x0 };   ///< Transparent color
             constexpr Color ColorHighlight        = { 0xF, 0xF, 0xF, 0xF };   ///< Greenish highlight color
             constexpr Color ColorError            = { 0xF, 0x0, 0x2, 0xF };   ///< Red error highlight color
-            Color ColorFrame                      = { 0x0, 0x0, 0x0, 0x0 };   ///< Outer border color
-            constexpr Color ColorHandle           = { 0x0, 0x0, 0x0, 0x0 };   ///< Track bar handle color
-            constexpr Color ColorText             = { 0xC, 0xC, 0xC, 0xF };   ///< Standard text color
+            constexpr Color ColorNoFrame          = { 0x0, 0x0, 0x0, 0x0 };   ///< Outer border color
+            constexpr Color ColorFrame            = { 0x7, 0x7, 0x7, 0x7 };   ///< Outer border color
+            constexpr Color ColorHandle           = { 0x5, 0x5, 0x5, 0xF };   ///< Track bar handle color
+            constexpr Color ColorText             = { 0xF, 0xF, 0xF, 0xF };   ///< Standard text color
             constexpr Color ColorDescription      = { 0xA, 0xA, 0xA, 0xF };   ///< Description text color
             constexpr Color ColorHeaderBar        = { 0xC, 0xC, 0xC, 0xF };   ///< Category header rectangle color
             constexpr Color ColorClickAnimation   = { 0x0, 0x2, 0x2, 0xF };   ///< Element click animation color
@@ -2200,6 +2201,8 @@ namespace tsl {
              *
              * @param text Initial description text
              */
+            tsl::Color frameColor = (readIniValue("/config/uberhand/config.ini", "uberhand", "showSeparator") == "true") ? tsl::style::color::ColorFrame : tsl::style::color::ColorNoFrame;
+
             ListItem(const std::string& text, const std::string& value = "") 
                 : Element(), m_text(text), m_value(value) {
             }
@@ -2232,8 +2235,8 @@ namespace tsl {
                     }
                 }
 
-                renderer->drawRect(this->getX(), this->getY(), this->getWidth(), 1, a(tsl::style::color::ColorFrame));
-                renderer->drawRect(this->getX(), this->getTopBound(), this->getWidth(), 1, a(tsl::style::color::ColorFrame));
+                renderer->drawRect(this->getX(), this->getY(), this->getWidth(), 1, a(frameColor));
+                renderer->drawRect(this->getX(), this->getTopBound(), this->getWidth(), 1, a(frameColor));
 
                 if (this->m_trunctuated) {
                     if (this->m_focused) {
@@ -2263,6 +2266,7 @@ namespace tsl {
                 } else {
                     renderer->drawString(this->m_value.c_str(), false, this->getX() + this->m_maxWidth + 45, this->getY() + 45, 20, a(this->m_faint));
                 }
+                renderer->drawRect(this->getX(), this->getBottomBound(), this->getWidth(), 1, a(frameColor));
                 // CUSTOM SECTION END 
             }
 
