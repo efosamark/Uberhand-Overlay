@@ -30,7 +30,6 @@ public:
                 menuName = specificKey;
                 removeLastNumericWord(menuName);
                 helpPath += "/Help/" + getNameWithoutPrefix(getNameFromPath(filePath)) + "/" + menuName + ".txt";
-                logMessage(helpPath);
             } else {
                 helpPath += "/Help/" + getNameWithoutPrefix(getNameFromPath(filePath)) + ".txt";
             }

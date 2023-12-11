@@ -20,6 +20,7 @@ struct PackageHeader {
     std::string github;
     std::string about;
     bool enableConfigNav{ false };
+    bool showCurInMenu  { false };
     std::string checkKipVersion;
 };
 PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
@@ -42,6 +43,7 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
     const std::string aboutPrefix = ";about=";
     const std::string repoPrefix = ";github=";
     const std::string configNavMarker = ";enableConfigNav";
+    const std::string hideCurMarker   = ";showCurInMenu";
     const std::string kipVerMarker = ";kipVer=";
 
 
@@ -110,6 +112,11 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
 
         if (configNavMarker == strLine.substr(0, configNavMarker.length())) {
             packageHeader.enableConfigNav = true;
+        }
+
+        if (hideCurMarker == strLine.substr(0, hideCurMarker.length())) {
+            packageHeader.showCurInMenu = true;
+
         }
 
         size_t repoPos = strLine.find(repoPrefix);

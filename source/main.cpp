@@ -12,6 +12,7 @@
 static bool defaultMenuLoaded = true;
 static std::string package = "";
 bool enableConfigNav = false;
+bool showCurInMenu   = false;
 std::string kipVersion = "";
 bool DownloadProcessing = false;
 
@@ -124,6 +125,7 @@ private:
     std::vector<std::string> filesList, filesListOn, filesListOff, filterList, filterOnList, filterOffList;
     std::vector<std::vector<std::string>> commands;
     bool toggleState = false;
+    bool searchCurrent;
 
 public:
     SelectionOverlay(const std::string& file, const std::string& key = "", const std::vector<std::vector<std::string>>& cmds = {}, std::string footer = "") 
@@ -270,7 +272,7 @@ public:
                 } else {
                     std::string currentHex = ""; // Is used to mark current value from the kip
                     bool detectSize = true;
-                    bool searchCurrent = markCurKip || markCurIni ? true : false;
+                    searchCurrent = markCurKip || markCurIni ? true : false;
                     // create list of data in the json 
                     json_t* jsonData = readJsonFromFile(jsonPath);
                     if (jsonData && json_is_array(jsonData)) {
@@ -282,16 +284,26 @@ public:
                                 if (keyValue && json_is_string(keyValue)) {
                                     std::string name;
                                     json_t* hexValue = json_object_get(item, "hex");
+                                    json_t* decValue = json_object_get(item, "dec");
+                                    bool hexOrDec = (hexValue || decValue);
                                     json_t* colorValue = json_object_get(item, "color");
-                                    if (markCurKip && hexValue && searchCurrent) {
-                                        char* hexValueStr = (char*)json_string_value(hexValue);
-                                        if (detectSize) {
-                                            size_t hexLength = strlen(hexValueStr);
-                                            currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", "43555354", offset, hexLength/2); // Read the data from kip with offset starting from 'C' in 'CUST'
-                                            detectSize = false;
+                                    if (markCurKip && hexOrDec && searchCurrent) {
+                                        std::string valueStr;
+                                        if (hexValue) {
+                                            valueStr = json_string_value(hexValue);
+                                        } else if (decValue) {
+                                            valueStr = json_string_value(decValue);
                                         }
-                                        if (hexValueStr == currentHex) {
-                                            name = std::string(json_string_value(keyValue)) + " - Current";
+                                        size_t hexLength = strlen(valueStr.c_str())/2;
+                                        if (detectSize) {
+                                            detectSize = false;
+                                            currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", "43555354", offset, hexLength); // Read the data from kip with offset starting from 'C' in 'CUST'
+                                            if (decValue) {
+                                                currentHex = std::to_string(reversedHexToInt(currentHex));
+                                            }
+                                        }
+                                        if (valueStr == currentHex) {
+                                            name = std::string(json_string_value(keyValue)) + " - \uE14B";
                                             searchCurrent = false;
                                         }
                                         else {
@@ -301,7 +313,7 @@ public:
                                         char* iniValueStr = (char*)json_string_value(hexValue);
                                         std::string iniValue = readIniValue(sourceIni, sectionIni, keyIni);
                                         if (iniValueStr == iniValue) {
-                                            name = std::string(json_string_value(keyValue)) + " - Current";
+                                            name = std::string(json_string_value(keyValue)) + " - \u2666";
                                             searchCurrent = false;
                                         }
                                         else {
@@ -457,6 +469,7 @@ public:
                                             listItem->setValue("DONE", tsl::PredefinedColors::Green);
                                         } else if (result == 1) {
                                             applied = true;
+                                            prevValue = listItem->getText();
                                             tsl::goBack();
                                         } else {
                                             listItem->setValue("FAIL", tsl::PredefinedColors::Red);
@@ -503,7 +516,7 @@ public:
                         concatenatedString += str + " ";
                     }
                     if (!listBackups) {
-                        listItem->setClickListener([file, this, listItem](uint64_t keys) { // Add 'command' to the capture list
+                        listItem->setClickListener([file, this, listItem](uint64_t keys) {
                             if (keys & KEY_A) {
                                 if (listItem->getValue() == "APPLIED" && !prevValue.empty()) {
                                     listItem->setValue(prevValue);
@@ -630,6 +643,64 @@ public:
     SubMenu(const std::string& path) : subPath(path) {}
     ~SubMenu() {}
 
+    std::string findCurrent(std::string jsonPath, std::string offset) {
+        std::string dispValue, searchKey;
+        size_t hexLength;
+
+        json_t* jsonData = readJsonFromFile(jsonPath);
+        if (jsonData && json_is_array(jsonData)) {
+            size_t arraySize = json_array_size(jsonData);
+            if (arraySize < 2) {
+                json_decref(jsonData);
+                return "\u25B6";
+            }
+            json_t* item = json_array_get(jsonData, 1);
+            if (item && json_is_object(item)) {
+                std::string name;
+                json_t* hexValue = json_object_get(item, "hex");
+                json_t* decValue = json_object_get(item, "dec");
+                if ((hexValue && json_is_string(hexValue))) {
+                    auto valueStr = (char*)json_string_value(hexValue);
+                    hexLength = strlen(valueStr)/2;
+                    searchKey = "hex";
+                }
+                else if ((decValue && json_is_string(decValue))) {
+                    auto valueStr = (char*)json_string_value(decValue);
+                    hexLength = strlen(valueStr)/2;
+                    searchKey = "dec";
+                }
+                else {
+                    json_decref(jsonData);
+                    return "\u25B6";
+                }
+                std::string currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", "43555354", offset, hexLength);
+                if (!currentHex.empty()) {
+                    if (searchKey == "dec") {
+                        currentHex = std::to_string(reversedHexToInt(currentHex));
+                    }
+                    for (size_t i = 0; i < arraySize; ++i) {
+                        json_t* item = json_array_get(jsonData, i);
+                        if (item && json_is_object(item)) {
+                            json_t* searchItem = json_object_get(item, searchKey.c_str());
+                            if (searchItem && json_is_string(searchItem)) {
+                                if (json_string_value(searchItem) == currentHex) {
+                                    json_t* name = json_object_get(item, "name");
+                                    std::string cur_name = json_string_value(name);
+                                    json_decref(jsonData);
+                                    return cur_name;
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+            json_decref(jsonData);
+        }
+        return "\u25B6";
+
+    }
+
     virtual tsl::elm::Element* createUI() override {
         // logMessage ("SubMenu");
 
@@ -694,6 +765,9 @@ public:
         // Load options from INI file in the subdirectory
         std::string subConfigIniPath = subPath + "/" + configFileName;
         std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> options = loadOptionsFromIni(subConfigIniPath);
+
+        // Package Info
+        PackageHeader packageHeader = getPackageHeaderFromIni(subConfigIniPath);
         
         // Populate the sub menu with options
         for (const auto& option : options) {
@@ -794,6 +868,13 @@ public:
                     listItem = new tsl::elm::ListItem(optionName);
                     listItem->setValue(footer);
                 }
+                for (const auto& cmd : option.second) {
+                    if (cmd[0] == "json_mark_cur_kip" && packageHeader.showCurInMenu) {
+                        auto& offset = cmd[3];
+                        std::string jsonPath = preprocessPath(cmd[1]);
+                        listItem->setValue(findCurrent(jsonPath, offset));
+                    }
+                }
                 
                 //std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(option.second, pathReplace);
                 listItem->setClickListener([command = option.second, keyName = headerName, subPath = this->subPath, usePattern, listItem, helpPath, useSlider](uint64_t keys) {
@@ -865,9 +946,6 @@ public:
             }
 
         }
-
-        // Package Info
-        PackageHeader packageHeader = getPackageHeaderFromIni(subConfigIniPath);
 
         constexpr int lineHeight = 20;  // Adjust the line height as needed
         constexpr int xOffset = 120;    // Adjust the horizontal offset as needed
@@ -1006,6 +1084,7 @@ public:
         std::string subConfigIniPath = subPath + "/" + configFileName;
         PackageHeader packageHeader = getPackageHeaderFromIni(subConfigIniPath);
         enableConfigNav = packageHeader.enableConfigNav;
+        showCurInMenu = packageHeader.showCurInMenu;
         kipVersion = packageHeader.checkKipVersion;
 
         auto rootFrame = static_cast<tsl::elm::OverlayFrame*>(SubMenu::createUI());
