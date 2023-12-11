@@ -43,7 +43,7 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
     const std::string aboutPrefix = ";about=";
     const std::string repoPrefix = ";github=";
     const std::string configNavMarker = ";enableConfigNav";
-    const std::string hideCurMarker   = ";showCurInMenu";
+    const std::string showCurMarker   = ";showCurInMenu";
     const std::string kipVerMarker = ";kipVer=";
 
 
@@ -114,7 +114,7 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
             packageHeader.enableConfigNav = true;
         }
 
-        if (hideCurMarker == strLine.substr(0, hideCurMarker.length())) {
+        if (showCurMarker == strLine.substr(0, showCurMarker.length())) {
             packageHeader.showCurInMenu = true;
 
         }

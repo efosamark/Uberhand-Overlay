@@ -686,6 +686,10 @@ public:
                                 if (json_string_value(searchItem) == currentHex) {
                                     json_t* name = json_object_get(item, "name");
                                     std::string cur_name = json_string_value(name);
+                                    size_t footer_pos = cur_name.find(" - ");
+                                    if (footer_pos != std::string::npos) {
+                                        cur_name = cur_name.substr(0, footer_pos);
+                                    }
                                     json_decref(jsonData);
                                     return cur_name;
                                 }
@@ -869,7 +873,7 @@ public:
                     listItem->setValue(footer);
                 }
                 for (const auto& cmd : option.second) {
-                    if (cmd[0] == "json_mark_cur_kip" && packageHeader.showCurInMenu) {
+                    if (cmd[0] == "json_mark_cur_kip" && showCurInMenu) {
                         auto& offset = cmd[3];
                         std::string jsonPath = preprocessPath(cmd[1]);
                         listItem->setValue(findCurrent(jsonPath, offset));
