@@ -48,6 +48,8 @@ const std::string settingsConfigIniPath = settingsPath + configFileName;
 const std::string packageDirectory = "sdmc:/switch/.packages/";
 const std::string overlayDirectory = "sdmc:/switch/.overlays/";
 const std::string teslaSettingsConfigIniPath = "sdmc:/config/tesla/"+configFileName;
+const std::string overlaysIniFilePath = settingsPath + "overlays.ini";
+const std::string packagesIniFilePath = settingsPath + "packages.ini";
 
 bool applied = false;
 bool deleted = false;
@@ -674,7 +676,7 @@ std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string
             json_t* item = json_array_get(jsonData, i);
             if (item && json_is_object(item)) {
                 json_t* keyValue = json_object_get(item, "name");
-                logMessage(json_string_value(keyValue));
+                // logMessage(json_string_value(keyValue));
                 std::string tabBaseCheck;
                 if (keyValue)
                     tabBaseCheck = json_string_value(keyValue);
@@ -682,7 +684,7 @@ std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string
                     tableShiftMode = true;
                     std::string tableStateStr = readHexDataAtOffsetF(file, custOffset, "43555354", "44", 1);
                     tableState = reversedHexToInt(tableStateStr);
-                    logMessage(tableStateStr);
+                    //logMessage(tableStateStr);
 
                     json_t* j_base = json_object_get(item, "base");
                     std::string base = json_string_value(j_base);
@@ -783,7 +785,7 @@ std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string
                                     checkDefault = 0;
                                 } else {
                                     if (tableShiftMode) {
-                                        logMessage(std::to_string(std::stoi(baseList[tableState]) + (std::stoi(offset) * std::stoi(baseIncList[tableState]))));
+                                        //logMessage(std::to_string(std::stoi(baseList[tableState]) + (std::stoi(offset) * std::stoi(baseIncList[tableState]))));
                                         std::string findFreq = std::to_string(std::stoi(baseList[tableState]) + (std::stoi(offset) * std::stoi(baseIncList[tableState])));
                                         currentHex = readHexDataAtOffsetF(file, custOffset, "43555354", findFreq.c_str(), length); // Read the data from kip with offset starting from 'C' in 'CUST'
                                     }
