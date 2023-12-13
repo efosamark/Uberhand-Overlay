@@ -1623,6 +1623,10 @@ namespace tsl {
                 if (this->m_contentElement != nullptr)
                     delete this->m_contentElement;
             }
+
+            std::string getClass() {
+                return "OverlayFrame";
+            }
             
             // CUSTOM SECTION START
             virtual void draw(gfx::Renderer *renderer) override {

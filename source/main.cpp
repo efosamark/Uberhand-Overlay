@@ -335,6 +335,7 @@ public:
                                     std::string name;
                                     json_t* hexValue = json_object_get(item, "hex");
                                     json_t* decValue = json_object_get(item, "dec");
+                                    json_t* otherValue = json_object_get(item, "value");
                                     bool hexOrDec = (hexValue || decValue);
                                     json_t* colorValue = json_object_get(item, "color");
                                     if (markCurKip && hexOrDec && searchCurrent) {
@@ -359,12 +360,14 @@ public:
                                         else {
                                             name = json_string_value(keyValue);
                                         }
-                                    } else if (markCurIni && hexOrDec && searchCurrent) {
+                                    } else if (markCurIni && (hexOrDec || otherValue) && searchCurrent) {
                                         std::string iniValueStr;
                                         if (hexValue) {
                                             iniValueStr = json_string_value(hexValue);
                                         } else if (decValue) {
                                             iniValueStr = json_string_value(decValue);
+                                        } else {
+                                            iniValueStr = json_string_value(otherValue);
                                         }
                                         std::string iniValue = readIniValue(sourceIni, sectionIni, keyIni);
                                         if (iniValueStr == iniValue) {
