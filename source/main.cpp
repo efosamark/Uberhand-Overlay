@@ -109,20 +109,55 @@ public:
         return rootFrame;
     }
 
+    bool adjuct_top, adjuct_bot = false;
+
     virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
-        if (keysDown & KEY_ZL) { // Scroll to the top of the menu
-            int i = 0;
-            do {
-                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
-                i++;
-            } while (i < 10000);
+        if (this->adjuct_top) { // Adjust cursor to the top item after jump bot-top
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            this->adjuct_top = false;
         }
-        if (keysDown & KEY_ZR) { // Scroll to the bottom of the menu
-            int i = 0;
-            do {
+        if (this->adjuct_bot) {  // Adjust cursor to the top item after jump top-bot
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+            this->adjuct_bot = false;
+        }
+        // Jump bot-top: scroll to the top after hitting the last list item
+        if ((keysDown & KEY_DDOWN) || (keysDown & KEY_DOWN)) {
+            auto prevItem = this->getFocusedElement();
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+            if (prevItem == this->getFocusedElement()) {
+                scrollListItems(this, ShiftFocusMode::UpMax);
+                this->adjuct_top = true; // Go one item 
+            } else { // Adjust to account for tesla key processing
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            }
+            return false;
+        }
+        // Jump bot-top: scroll to the top after hitting the last list item
+        if ((keysDown & KEY_DUP) || (keysDown & KEY_UP)) {
+            auto prevItem = this->getFocusedElement();
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            if (prevItem == this->getFocusedElement()) {
+                scrollListItems(this, ShiftFocusMode::DownMax);
+                this->adjuct_bot = true;
+            } else { // Adjust to account for tesla key processing
                 this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
-                i++;
-            } while (i < 10000);
+            }
+            return false;
+        }
+        if (keysDown & KEY_L) { // Scroll to up for 5 items
+            scrollListItems(this, ShiftFocusMode::UpNum);
+            return true;
+        }
+        if (keysDown & KEY_R) { // Scroll to down for 5 items
+            scrollListItems(this, ShiftFocusMode::DownNum);
+            return true;
+        }if (keysDown & KEY_ZL) { // Scroll to up for 5 items
+            scrollListItems(this, ShiftFocusMode::UpMax);
+            return true;
+        }
+        if (keysDown & KEY_ZR) { // Scroll to down for 5 items
+            scrollListItems(this, ShiftFocusMode::DownMax);
+            return true;
         }
         if (keysDown & KEY_B) {
             tsl::goBack();
@@ -140,7 +175,7 @@ private:
     std::vector<std::vector<std::string>> commands;
     bool toggleState = false;
     bool searchCurrent;
-    tsl::elm::ListItem* savedItem;
+    tsl::elm::ListItem* savedItem = nullptr;
 
 public:
     SelectionOverlay(const std::string& file, const std::string& key = "", const std::vector<std::vector<std::string>>& cmds = {}, std::string footer = "") 
@@ -446,7 +481,7 @@ public:
                             hasSep = true;
                         }
                         else {
-                            auto item = new tsl::elm::CategoryHeader(optionName, true);
+                            auto item = new tsl::elm::CategoryHeader(optionName.substr(1), true);
                             list->addItem(item);
                         }
                     }
@@ -619,6 +654,8 @@ public:
         return rootFrame;
     }
 
+    bool adjuct_top, adjuct_bot = false;
+
     virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
         if (this->savedItem != nullptr) {
             if (this->savedItem != this->getFocusedElement()) {
@@ -628,19 +665,52 @@ public:
             }
             this->savedItem = nullptr;
         }
-        if (keysDown & KEY_ZL) { // Scroll to the top of the menu
-            int i = 0;
-            do {
-                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
-                i++;
-            } while (i < 10000);
+        if (this->adjuct_top) { // Adjust cursor to the top item after jump bot-top
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            this->adjuct_top = false;
         }
-        if (keysDown & KEY_ZR) { // Scroll to the bottom of the menu
-            int i = 0;
-            do {
+        if (this->adjuct_bot) {  // Adjust cursor to the top item after jump top-bot
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+            this->adjuct_bot = false;
+        }
+        // Jump bot-top: scroll to the top after hitting the last list item
+        if ((keysDown & KEY_DDOWN) || (keysDown & KEY_DOWN)) {
+            auto prevItem = this->getFocusedElement();
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+            if (prevItem == this->getFocusedElement()) {
+                scrollListItems(this, ShiftFocusMode::UpMax);
+                this->adjuct_top = true; // Go one item 
+            } else { // Adjust to account for tesla key processing
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            }
+            return false;
+        }
+        // Jump bot-top: scroll to the top after hitting the last list item
+        if ((keysDown & KEY_DUP) || (keysDown & KEY_UP)) {
+            auto prevItem = this->getFocusedElement();
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            if (prevItem == this->getFocusedElement()) {
+                scrollListItems(this, ShiftFocusMode::DownMax);
+                this->adjuct_bot = true;
+            } else { // Adjust to account for tesla key processing
                 this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
-                i++;
-            } while (i < 10000);
+            }
+            return false;
+        }
+        if (keysDown & KEY_L) { // Scroll to up for 5 items
+            scrollListItems(this, ShiftFocusMode::UpNum);
+            return true;
+        }
+        if (keysDown & KEY_R) { // Scroll to down for 5 items
+            scrollListItems(this, ShiftFocusMode::DownNum);
+            return true;
+        }if (keysDown & KEY_ZL) { // Scroll to up for 5 items
+            scrollListItems(this, ShiftFocusMode::UpMax);
+            return true;
+        }
+        if (keysDown & KEY_ZR) { // Scroll to down for 5 items
+            scrollListItems(this, ShiftFocusMode::DownMax);
+            return true;
         }
         if (keysDown & KEY_B) {
             tsl::goBack();
@@ -1091,20 +1161,55 @@ public:
         return rootFrame;
     }
 
+    bool adjuct_top, adjuct_bot = false;
+
     virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
-        if (keysDown & KEY_ZL) { // Scroll to the top of the menu
-            int i = 0;
-            do {
-                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
-                i++;
-            } while (i < 10000);
+        if (this->adjuct_top) { // Adjust cursor to the top item after jump bot-top
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            this->adjuct_top = false;
         }
-        if (keysDown & KEY_ZR) { // Scroll to the bottom of the menu
-            int i = 0;
-            do {
+        if (this->adjuct_bot) {  // Adjust cursor to the top item after jump top-bot
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+            this->adjuct_bot = false;
+        }
+        // Jump bot-top: scroll to the top after hitting the last list item
+        if ((keysDown & KEY_DDOWN) || (keysDown & KEY_DOWN)) {
+            auto prevItem = this->getFocusedElement();
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+            if (prevItem == this->getFocusedElement()) {
+                scrollListItems(this, ShiftFocusMode::UpMax);
+                this->adjuct_top = true; // Go one item 
+            } else { // Adjust to account for tesla key processing
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            }
+            return false;
+        }
+        // Jump bot-top: scroll to the top after hitting the last list item
+        if ((keysDown & KEY_DUP) || (keysDown & KEY_UP)) {
+            auto prevItem = this->getFocusedElement();
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            if (prevItem == this->getFocusedElement()) {
+                scrollListItems(this, ShiftFocusMode::DownMax);
+                this->adjuct_bot = true;
+            } else { // Adjust to account for tesla key processing
                 this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
-                i++;
-            } while (i < 10000);
+            }
+            return false;
+        }
+        if (keysDown & KEY_L) { // Scroll to up for 5 items
+            scrollListItems(this, ShiftFocusMode::UpNum);
+            return true;
+        }
+        if (keysDown & KEY_R) { // Scroll to down for 5 items
+            scrollListItems(this, ShiftFocusMode::DownNum);
+            return true;
+        }if (keysDown & KEY_ZL) { // Scroll to up for 5 items
+            scrollListItems(this, ShiftFocusMode::UpMax);
+            return true;
+        }
+        if (keysDown & KEY_ZR) { // Scroll to down for 5 items
+            scrollListItems(this, ShiftFocusMode::DownMax);
+            return true;
         }
         if ((keysDown & KEY_B)) {
             tsl::goBack();
@@ -1153,20 +1258,55 @@ public:
         return rootFrame;
     }
 
+    bool adjuct_top, adjuct_bot = false;
+
     bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
-        if (keysDown & KEY_ZL) { // Scroll to the top of the menu
-            int i = 0;
-            do {
-                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
-                i++;
-            } while (i < 10000);
+        if (this->adjuct_top) { // Adjust cursor to the top item after jump bot-top
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            this->adjuct_top = false;
         }
-        if (keysDown & KEY_ZR) { // Scroll to the bottom of the menu
-            int i = 0;
-            do {
+        if (this->adjuct_bot) {  // Adjust cursor to the top item after jump top-bot
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+            this->adjuct_bot = false;
+        }
+        // Jump bot-top: scroll to the top after hitting the last list item
+        if ((keysDown & KEY_DDOWN) || (keysDown & KEY_DOWN)) {
+            auto prevItem = this->getFocusedElement();
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+            if (prevItem == this->getFocusedElement()) {
+                scrollListItems(this, ShiftFocusMode::UpMax);
+                this->adjuct_top = true; // Go one item 
+            } else { // Adjust to account for tesla key processing
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            }
+            return false;
+        }
+        // Jump bot-top: scroll to the top after hitting the last list item
+        if ((keysDown & KEY_DUP) || (keysDown & KEY_UP)) {
+            auto prevItem = this->getFocusedElement();
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            if (prevItem == this->getFocusedElement()) {
+                scrollListItems(this, ShiftFocusMode::DownMax);
+                this->adjuct_bot = true;
+            } else { // Adjust to account for tesla key processing
                 this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
-                i++;
-            } while (i < 10000);
+            }
+            return false;
+        }
+        if (keysDown & KEY_L) { // Scroll to up for 5 items
+            scrollListItems(this, ShiftFocusMode::UpNum);
+            return true;
+        }
+        if (keysDown & KEY_R) { // Scroll to down for 5 items
+            scrollListItems(this, ShiftFocusMode::DownNum);
+            return true;
+        }if (keysDown & KEY_ZL) { // Scroll to up for 5 items
+            scrollListItems(this, ShiftFocusMode::UpMax);
+            return true;
+        }
+        if (keysDown & KEY_ZR) { // Scroll to down for 5 items
+            scrollListItems(this, ShiftFocusMode::DownMax);
+            return true;
         }
         if ((keysDown & KEY_B)) {
             tsl::changeTo<MainMenu>();
@@ -1248,20 +1388,55 @@ public:
         return rootFrame;
     }
 
+    bool adjuct_top, adjuct_bot = false;
+
     bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
-        if (keysDown & KEY_ZL) { // Scroll to the top of the menu
-            int i = 0;
-            do {
-                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
-                i++;
-            } while (i < 10000);
+        if (this->adjuct_top) { // Adjust cursor to the top item after jump bot-top
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            this->adjuct_top = false;
         }
-        if (keysDown & KEY_ZR) { // Scroll to the bottom of the menu
-            int i = 0;
-            do {
+        if (this->adjuct_bot) {  // Adjust cursor to the top item after jump top-bot
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+            this->adjuct_bot = false;
+        }
+        // Jump bot-top: scroll to the top after hitting the last list item
+        if ((keysDown & KEY_DDOWN) || (keysDown & KEY_DOWN)) {
+            auto prevItem = this->getFocusedElement();
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+            if (prevItem == this->getFocusedElement()) {
+                scrollListItems(this, ShiftFocusMode::UpMax);
+                this->adjuct_top = true; // Go one item 
+            } else { // Adjust to account for tesla key processing
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            }
+            return false;
+        }
+        // Jump bot-top: scroll to the top after hitting the last list item
+        if ((keysDown & KEY_DUP) || (keysDown & KEY_UP)) {
+            auto prevItem = this->getFocusedElement();
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            if (prevItem == this->getFocusedElement()) {
+                scrollListItems(this, ShiftFocusMode::DownMax);
+                this->adjuct_bot = true;
+            } else { // Adjust to account for tesla key processing
                 this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
-                i++;
-            } while (i < 10000);
+            }
+            return false;
+        }
+        if (keysDown & KEY_L) { // Scroll to up for 5 items
+            scrollListItems(this, ShiftFocusMode::UpNum);
+            return true;
+        }
+        if (keysDown & KEY_R) { // Scroll to down for 5 items
+            scrollListItems(this, ShiftFocusMode::DownNum);
+            return true;
+        }if (keysDown & KEY_ZL) { // Scroll to up for 5 items
+            scrollListItems(this, ShiftFocusMode::UpMax);
+            return true;
+        }
+        if (keysDown & KEY_ZR) { // Scroll to down for 5 items
+            scrollListItems(this, ShiftFocusMode::DownMax);
+            return true;
         }
         if (keysDown & KEY_B) {
             tsl::changeTo<MainMenu>();
@@ -1763,21 +1938,56 @@ public:
 
         return rootFrame;
     }
+    
+    bool adjuct_top, adjuct_bot = false;
 
     virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
-        if (keysDown & KEY_ZL) { // Scroll to the top of the menu
-            int i = 0;
-            do {
-                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
-                i++;
-            } while (i < 10000);
+        if (this->adjuct_top) { // Adjust cursor to the top item after jump bot-top
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            this->adjuct_top = false;
         }
-        if (keysDown & KEY_ZR) { // Scroll to the bottom of the menu
-            int i = 0;
-            do {
+        if (this->adjuct_bot) {  // Adjust cursor to the top item after jump top-bot
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+            this->adjuct_bot = false;
+        }
+        // Jump bot-top: scroll to the top after hitting the last list item
+        if ((keysDown & KEY_DDOWN) || (keysDown & KEY_DOWN)) {
+            auto prevItem = this->getFocusedElement();
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+            if (prevItem == this->getFocusedElement()) {
+                scrollListItems(this, ShiftFocusMode::UpMax);
+                this->adjuct_top = true; // Go one item 
+            } else { // Adjust to account for tesla key processing
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            }
+            return false;
+        }
+        // Jump bot-top: scroll to the top after hitting the last list item
+        if ((keysDown & KEY_DUP) || (keysDown & KEY_UP)) {
+            auto prevItem = this->getFocusedElement();
+            this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+            if (prevItem == this->getFocusedElement()) {
+                scrollListItems(this, ShiftFocusMode::DownMax);
+                this->adjuct_bot = true;
+            } else { // Adjust to account for tesla key processing
                 this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
-                i++;
-            } while (i < 10000);
+            }
+            return false;
+        }
+        if (keysDown & KEY_L) { // Scroll to up for 5 items
+            scrollListItems(this, ShiftFocusMode::UpNum);
+            return true;
+        }
+        if (keysDown & KEY_R) { // Scroll to down for 5 items
+            scrollListItems(this, ShiftFocusMode::DownNum);
+            return true;
+        }if (keysDown & KEY_ZL) { // Scroll to up for 5 items
+            scrollListItems(this, ShiftFocusMode::UpMax);
+            return true;
+        }
+        if (keysDown & KEY_ZR) { // Scroll to down for 5 items
+            scrollListItems(this, ShiftFocusMode::DownMax);
+            return true;
         }
         if ((keysDown & KEY_DRIGHT) && !(keysHeld & ~KEY_DRIGHT)) {
             if (menuMode != "packages") {

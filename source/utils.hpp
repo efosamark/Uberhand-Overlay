@@ -56,6 +56,43 @@ bool applied = false;
 bool deleted = false;
 bool resetValue = false;
 std::string prevValue = "";
+enum ShiftFocusMode {
+    UpNum,
+    DownNum,
+    UpMax,
+    DownMax
+};
+
+void scrollListItems(tsl::Gui* gui, ShiftFocusMode mode) {
+    int i = 0;
+    int scrollItemNum = 0;
+    tsl::FocusDirection dir;
+    switch (mode)
+    {
+        case ShiftFocusMode::UpNum:
+            scrollItemNum = 5;
+            dir = tsl::FocusDirection::Up;
+            break;
+        case ShiftFocusMode::DownNum:
+            scrollItemNum = 5;
+            dir = tsl::FocusDirection::Down;
+            break;
+        case ShiftFocusMode::UpMax:
+            scrollItemNum = 10000;
+            dir = tsl::FocusDirection::Up;
+            break;
+        case ShiftFocusMode::DownMax:
+            scrollItemNum = 10000;
+            dir = tsl::FocusDirection::Down;
+            break;
+        default:
+            return;
+    }
+    do {
+        gui->requestFocus(gui->getTopElement(), dir);
+        i++;
+    } while (i < scrollItemNum);
+}
 
 void copyTeslaKeyComboTouberhand() {
     std::string keyCombo;
