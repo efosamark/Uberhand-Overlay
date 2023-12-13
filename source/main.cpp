@@ -359,8 +359,13 @@ public:
                                         else {
                                             name = json_string_value(keyValue);
                                         }
-                                    } else if (markCurIni && hexValue && searchCurrent) {
-                                        char* iniValueStr = (char*)json_string_value(hexValue);
+                                    } else if (markCurIni && hexOrDec && searchCurrent) {
+                                        std::string iniValueStr;
+                                        if (hexValue) {
+                                            iniValueStr = json_string_value(hexValue);
+                                        } else if (decValue) {
+                                            iniValueStr = json_string_value(decValue);
+                                        }
                                         std::string iniValue = readIniValue(sourceIni, sectionIni, keyIni);
                                         if (iniValueStr == iniValue) {
                                             name = std::string(json_string_value(keyValue)) +  " - " + checkmarkChar;
