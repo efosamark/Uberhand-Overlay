@@ -110,6 +110,20 @@ public:
     }
 
     virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+        if (keysDown & KEY_ZL) { // Scroll to the top of the menu
+            int i = 0;
+            do {
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+                i++;
+            } while (i < 10000);
+        }
+        if (keysDown & KEY_ZR) { // Scroll to the bottom of the menu
+            int i = 0;
+            do {
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+                i++;
+            } while (i < 10000);
+        }
         if (keysDown & KEY_B) {
             tsl::goBack();
             return true;
@@ -126,6 +140,7 @@ private:
     std::vector<std::vector<std::string>> commands;
     bool toggleState = false;
     bool searchCurrent;
+    tsl::elm::ListItem* savedItem;
 
 public:
     SelectionOverlay(const std::string& file, const std::string& key = "", const std::vector<std::vector<std::string>>& cmds = {}, std::string footer = "") 
@@ -303,7 +318,7 @@ public:
                                             }
                                         }
                                         if (valueStr == currentHex) {
-                                            name = std::string(json_string_value(keyValue)) + " - \uE14B";
+                                            name = std::string(json_string_value(keyValue)) + " - " + checkmarkChar;
                                             searchCurrent = false;
                                         }
                                         else {
@@ -313,7 +328,7 @@ public:
                                         char* iniValueStr = (char*)json_string_value(hexValue);
                                         std::string iniValue = readIniValue(sourceIni, sectionIni, keyIni);
                                         if (iniValueStr == iniValue) {
-                                            name = std::string(json_string_value(keyValue)) + " - \u2666";
+                                            name = std::string(json_string_value(keyValue)) +  " - " + checkmarkChar;
                                             searchCurrent = false;
                                         }
                                         else {
@@ -488,6 +503,11 @@ public:
                             } else {
                                 listItem->setColor(defineColor(color));  
                             }
+                            // Find the curent list item to jump to
+                            size_t checkmarkPos = listItem->getValue().find(checkmarkChar);
+                            if (checkmarkPos != std::string::npos) {
+                                savedItem = listItem;
+                            }
                             list->addItem(listItem);
                         }
                     }
@@ -600,6 +620,28 @@ public:
     }
 
     virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+        if (this->savedItem != nullptr) {
+            if (this->savedItem != this->getFocusedElement()) {
+                while(this->savedItem != this->getFocusedElement()) {
+                    this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+                }
+            }
+            this->savedItem = nullptr;
+        }
+        if (keysDown & KEY_ZL) { // Scroll to the top of the menu
+            int i = 0;
+            do {
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+                i++;
+            } while (i < 10000);
+        }
+        if (keysDown & KEY_ZR) { // Scroll to the bottom of the menu
+            int i = 0;
+            do {
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+                i++;
+            } while (i < 10000);
+        }
         if (keysDown & KEY_B) {
             tsl::goBack();
             return true;
@@ -1050,6 +1092,20 @@ public:
     }
 
     virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+        if (keysDown & KEY_ZL) { // Scroll to the top of the menu
+            int i = 0;
+            do {
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+                i++;
+            } while (i < 10000);
+        }
+        if (keysDown & KEY_ZR) { // Scroll to the bottom of the menu
+            int i = 0;
+            do {
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+                i++;
+            } while (i < 10000);
+        }
         if ((keysDown & KEY_B)) {
             tsl::goBack();
             return true;
@@ -1098,6 +1154,20 @@ public:
     }
 
     bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+        if (keysDown & KEY_ZL) { // Scroll to the top of the menu
+            int i = 0;
+            do {
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+                i++;
+            } while (i < 10000);
+        }
+        if (keysDown & KEY_ZR) { // Scroll to the bottom of the menu
+            int i = 0;
+            do {
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+                i++;
+            } while (i < 10000);
+        }
         if ((keysDown & KEY_B)) {
             tsl::changeTo<MainMenu>();
             return true;
@@ -1179,6 +1249,20 @@ public:
     }
 
     bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+        if (keysDown & KEY_ZL) { // Scroll to the top of the menu
+            int i = 0;
+            do {
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+                i++;
+            } while (i < 10000);
+        }
+        if (keysDown & KEY_ZR) { // Scroll to the bottom of the menu
+            int i = 0;
+            do {
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+                i++;
+            } while (i < 10000);
+        }
         if (keysDown & KEY_B) {
             tsl::changeTo<MainMenu>();
             return true;
@@ -1686,6 +1770,20 @@ public:
     }
 
     virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+        if (keysDown & KEY_ZL) { // Scroll to the top of the menu
+            int i = 0;
+            do {
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
+                i++;
+            } while (i < 10000);
+        }
+        if (keysDown & KEY_ZR) { // Scroll to the bottom of the menu
+            int i = 0;
+            do {
+                this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+                i++;
+            } while (i < 10000);
+        }
         if ((keysDown & KEY_DRIGHT) && !(keysHeld & ~KEY_DRIGHT)) {
             if (menuMode != "packages") {
                 setIniFileValue(settingsConfigIniPath, "uberhand", "last_menu", "packages");
