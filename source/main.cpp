@@ -1589,7 +1589,7 @@ public:
                     } else
                         setIniFileValue(packagesIniFilePath, subWithoutSpaces, "priority", "0");  
                 }
-                logMessage("priority, taintedSubdirectory: "+std::to_string(priority)+subWithoutSpaces);
+                // logMessage("priority, taintedSubdirectory: "+std::to_string(priority)+subWithoutSpaces);
                 order.emplace(priority, taintedSubdirectory);
             }
 
