@@ -2201,7 +2201,7 @@ namespace tsl {
              *
              * @param text Initial description text
              */
-            tsl::Color frameColor = (readIniValue("/config/uberhand/config.ini", "uberhand", "showSeparator") == "true") ? tsl::style::color::ColorFrame : tsl::style::color::ColorNoFrame;
+            tsl::Color frameColor = (readIniValue("/config/uberhand/config.ini", "uberhand", "showSeparator") == "false") ? tsl::style::color::ColorNoFrame : tsl::style::color::ColorFrame;
 
             ListItem(const std::string& text, const std::string& value = "") 
                 : Element(), m_text(text), m_value(value) {

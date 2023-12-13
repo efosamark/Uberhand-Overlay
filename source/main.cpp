@@ -1326,11 +1326,6 @@ public:
                 } else {
                     setIniFileValue(settingsConfigIniPath, "uberhand", "show_pack_versions", "true");
                 }
-                if (uberhandSection["item_separator"] == "true") {
-                    showPackageVersions = true;
-                } else {
-                    setIniFileValue(settingsConfigIniPath, "uberhand", "item_separator", "false");
-                }
                 if (uberhandSection["coolerMode"] == "1"){
                     coolerMode = true;
                 }
