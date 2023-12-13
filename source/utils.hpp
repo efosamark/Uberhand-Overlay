@@ -70,11 +70,11 @@ void scrollListItems(tsl::Gui* gui, ShiftFocusMode mode) {
     switch (mode)
     {
         case ShiftFocusMode::UpNum:
-            scrollItemNum = 5;
+            scrollItemNum = 4;
             dir = tsl::FocusDirection::Up;
             break;
         case ShiftFocusMode::DownNum:
-            scrollItemNum = 5;
+            scrollItemNum = 4;
             dir = tsl::FocusDirection::Down;
             break;
         case ShiftFocusMode::UpMax:
