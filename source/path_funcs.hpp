@@ -123,7 +123,9 @@ bool deleteFileOrDirectoryByPattern(const std::string& pathPattern) {
     for (const auto& path : fileList) {
         //logMessage("path: "+path);
         result = result && deleteFileOrDirectory(path);
-        
+        if (!result) {
+                return result;
+        }
     }
     return result;
 }
@@ -136,6 +138,9 @@ bool mirrorDeleteFiles(const std::string& sourcePath, const std::string& targetP
         std::string updatedPath = targetPath + path.substr(sourcePath.size());
         //logMessage("mirror-delete: "+path+" "+updatedPath);
         result = result && deleteFileOrDirectory(updatedPath);
+        if (!result) {
+                return result;
+        }
     }
     return result;
 }
@@ -238,6 +243,9 @@ bool moveFilesOrDirectoriesByPattern(const std::string& sourcePathPattern, const
         if (!isDirectory(sourceFileOrDirectory)) {
             //logMessage("destinationPath: "+destinationPath);
             result = result && moveFileOrDirectory(sourceFileOrDirectory.c_str(), destinationPath.c_str());
+            if (!result) {
+                return result;
+            }
         } else if (isDirectory(sourceFileOrDirectory)) {
             // if sourceFile is a directory (needs conditoin handling)
             std::string folderName = getNameFromPath(sourceFileOrDirectory);
@@ -246,6 +254,9 @@ bool moveFilesOrDirectoriesByPattern(const std::string& sourcePathPattern, const
             //logMessage("fixedDestinationPath: "+fixedDestinationPath);
         
             result = result && moveFileOrDirectory(sourceFileOrDirectory.c_str(), fixedDestinationPath.c_str());
+            if (!result) {
+                return result;
+            }
         }
 
     }
@@ -348,11 +359,19 @@ bool copyFileOrDirectory(const std::string& fromFileOrDirectory, const std::stri
                             if (fileOrFolderName != "." && fileOrFolderName != "..") {
                                 std::string fromFilePath = fromDirectory + fileOrFolderName;
                                 result = result && copyFileOrDirectory(fromFilePath, toDirPath);
+                                if (!result) {
+                                    closedir(dir);
+                                    return result;
+                                }
                             }
                             // handle case for subfolders within the from file path
                             if (entry->d_type == DT_DIR && fileOrFolderName != "." && fileOrFolderName != "..") {
                                 std::string subFolderPath = fromDirectory + fileOrFolderName + "/";                          
                                 result = result && copyFileOrDirectory(subFolderPath, toDirPath);
+                                if (!result) {
+                                    closedir(dir);
+                                    return result;
+                                }
                             }
                             
                         }
@@ -374,8 +393,11 @@ bool copyFileOrDirectoryByPattern(const std::string& sourcePathPattern, const st
         //logMessage("toDirectory: "+toDirectory);
         if (sourcePath != toDirectory){
             result = result && copyFileOrDirectory(sourcePath, toDirectory);
+            if (!result) {
+                return result;
+            }
         } else {
-            result = false;
+            return false;
         }
         
     }
@@ -392,8 +414,11 @@ bool mirrorCopyFiles(const std::string& sourcePath, const std::string& targetPat
         if (path != updatedPath){
             //logMessage("mirror-copy: "+path+" "+updatedPath);
             result = result && copyFileOrDirectory(path, updatedPath);
+            if (!result) {
+                return result;
+            }
         } else {
-            result = false;
+            return false;
         }
     }
     return result;
