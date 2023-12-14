@@ -119,10 +119,10 @@ bool deleteFileOrDirectory(const std::string& pathToDelete) {
 bool deleteFileOrDirectoryByPattern(const std::string& pathPattern) {
     //logMessage("pathPattern: "+pathPattern);
     std::vector<std::string> fileList = getFilesListByWildcards(pathPattern);
-    bool result = false;
+    bool result = true;
     for (const auto& path : fileList) {
         //logMessage("path: "+path);
-        result = deleteFileOrDirectory(path);
+        result = result && deleteFileOrDirectory(path);
         
     }
     return result;
@@ -130,12 +130,12 @@ bool deleteFileOrDirectoryByPattern(const std::string& pathPattern) {
 
 bool mirrorDeleteFiles(const std::string& sourcePath, const std::string& targetPath="sdmc:/") {
     std::vector<std::string> fileList = getFilesListFromDirectory(sourcePath);
-    bool result = false;
+    bool result = true;
     for (const auto& path : fileList) {
         // Generate the corresponding path in the target directory by replacing the source path
         std::string updatedPath = targetPath + path.substr(sourcePath.size());
         //logMessage("mirror-delete: "+path+" "+updatedPath);
-        result = deleteFileOrDirectory(updatedPath);
+        result = result && deleteFileOrDirectory(updatedPath);
     }
     return result;
 }
@@ -223,7 +223,7 @@ bool moveFileOrDirectory(const std::string& sourcePath, const std::string& desti
 
 bool moveFilesOrDirectoriesByPattern(const std::string& sourcePathPattern, const std::string& destinationPath) {
     std::vector<std::string> fileList = getFilesListByWildcards(sourcePathPattern);
-    bool result = false;
+    bool result = true;
     std::string fileListAsString;
     for (const std::string& filePath : fileList) {
         fileListAsString += filePath + "\n";
@@ -237,7 +237,7 @@ bool moveFilesOrDirectoriesByPattern(const std::string& sourcePathPattern, const
         // if sourceFile is a file (Needs condition handling)
         if (!isDirectory(sourceFileOrDirectory)) {
             //logMessage("destinationPath: "+destinationPath);
-            result = moveFileOrDirectory(sourceFileOrDirectory.c_str(), destinationPath.c_str());
+            result = result && moveFileOrDirectory(sourceFileOrDirectory.c_str(), destinationPath.c_str());
         } else if (isDirectory(sourceFileOrDirectory)) {
             // if sourceFile is a directory (needs conditoin handling)
             std::string folderName = getNameFromPath(sourceFileOrDirectory);
@@ -245,7 +245,7 @@ bool moveFilesOrDirectoriesByPattern(const std::string& sourcePathPattern, const
         
             //logMessage("fixedDestinationPath: "+fixedDestinationPath);
         
-            result = moveFileOrDirectory(sourceFileOrDirectory.c_str(), fixedDestinationPath.c_str());
+            result = result && moveFileOrDirectory(sourceFileOrDirectory.c_str(), fixedDestinationPath.c_str());
         }
 
     }
@@ -278,7 +278,7 @@ bool copySingleFile(const std::string& fromFile, const std::string& toFile) {
 }
 
 bool copyFileOrDirectory(const std::string& fromFileOrDirectory, const std::string& toFileOrDirectory) {
-    bool result = false;
+    bool result = true;
     struct stat fromFileOrDirectoryInfo;
     if (stat(fromFileOrDirectory.c_str(), &fromFileOrDirectoryInfo) == 0) {
         if (S_ISREG(fromFileOrDirectoryInfo.st_mode)) {
@@ -367,34 +367,36 @@ bool copyFileOrDirectory(const std::string& fromFileOrDirectory, const std::stri
 
 bool copyFileOrDirectoryByPattern(const std::string& sourcePathPattern, const std::string& toDirectory) {
     std::vector<std::string> fileList = getFilesListByWildcards(sourcePathPattern);
+    bool result = true;
 
     for (const std::string& sourcePath : fileList) {
         //logMessage("sourcePath: "+sourcePath);
         //logMessage("toDirectory: "+toDirectory);
         if (sourcePath != toDirectory){
-            return copyFileOrDirectory(sourcePath, toDirectory);
+            result = result && copyFileOrDirectory(sourcePath, toDirectory);
         } else {
-            return false;
+            result = false;
         }
         
     }
-    return false;
+    return result;
 }
 
 bool mirrorCopyFiles(const std::string& sourcePath, const std::string& targetPath="sdmc:/") {
     std::vector<std::string> fileList = getFilesListFromDirectory(sourcePath);
+    bool result = true;
 
     for (const auto& path : fileList) {
         // Generate the corresponding path in the target directory by replacing the source path
         std::string updatedPath = targetPath + path.substr(sourcePath.size());
         if (path != updatedPath){
             //logMessage("mirror-copy: "+path+" "+updatedPath);
-            return copyFileOrDirectory(path, updatedPath);
+            result = result && copyFileOrDirectory(path, updatedPath);
         } else {
-            return false;
+            result = false;
         }
     }
-    return false;
+    return result;
 }
 
 
