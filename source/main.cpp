@@ -1473,7 +1473,7 @@ private:
     std::string menuMode, defaultMenuMode, inOverlayString, fullPath, optionName, repoUrl;
     int priority;
     bool useDefaultMenu = false, showOverlayVersions = false, showPackageVersions = false;
-    bool coolerMode = false;
+    bool uberhand_updates_only = false;
     bool packageUpdater = true;
     bool overlayUpdater = true;
     bool sorting = false;
@@ -1521,10 +1521,10 @@ public:
                 } else {
                     setIniFileValue(settingsConfigIniPath, "uberhand", "show_pack_versions", "false");
                 }
-                if (uberhandSection["cooler_mode"] == "true"){
-                    coolerMode = true;
+                if (uberhandSection["uberhand_updates_only"] == "true"){
+                    uberhand_updates_only = true;
                 } else {
-                    setIniFileValue(settingsConfigIniPath, "uberhand", "cooler_mode", "false");
+                    setIniFileValue(settingsConfigIniPath, "uberhand", "uberhand_updates_only", "false");
                 }
                 if (!uberhandSection["ovl_repo"].empty()){
                     repoUrl = uberhandSection["ovl_repo"];
@@ -1710,7 +1710,7 @@ public:
                         if (DownloadProcessing) {
                             bool NeedUpdate = false;
                             std::vector<std::map<std::string, std::string>> items;
-                            if (!coolerMode) {
+                            if (!uberhand_updates_only) {
                                 std::vector<std::string> overlays = getFilesListByWildcard("sdmc:/switch/.overlays/*.ovl");
                                 std::map<std::string, std::string> package;
                                 downloadFile(repoUrl, "sdmc:/config/uberhand/Updater.ini");
