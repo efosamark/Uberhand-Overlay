@@ -2201,7 +2201,7 @@ namespace tsl {
              *
              * @param text Initial description text
              */
-            tsl::Color frameColor = (readIniValue("/config/uberhand/config.ini", "uberhand", "showSeparator") == "false") ? tsl::style::color::ColorNoFrame : tsl::style::color::ColorFrame;
+            tsl::Color frameColor = (readIniValue("/config/uberhand/config.ini", "uberhand", "show_separator") == "false") ? tsl::style::color::ColorNoFrame : tsl::style::color::ColorFrame;
 
             ListItem(const std::string& text, const std::string& value = "") 
                 : Element(), m_text(text), m_value(value) {
@@ -2500,6 +2500,7 @@ namespace tsl {
 
         class CategoryHeader : public Element {
         public:
+            tsl::Color frameColor = (readIniValue("/config/uberhand/config.ini", "uberhand", "show_separator") == "false") ? tsl::style::color::ColorNoFrame : tsl::style::color::ColorFrame;
             CategoryHeader(const std::string &title, bool hasSeparator = false) : m_text(title), m_hasSeparator(hasSeparator) {}
             virtual ~CategoryHeader() {}
 
@@ -2508,7 +2509,7 @@ namespace tsl {
                 renderer->drawString(this->m_text.c_str(), false, this->getX() + 13, this->getBottomBound() - 12, 15, a(tsl::style::color::ColorText));
 
                 if (this->m_hasSeparator)
-                    renderer->drawRect(this->getX(), this->getBottomBound(), this->getWidth(), 1, a(tsl::style::color::ColorFrame));
+                    renderer->drawRect(this->getX(), this->getBottomBound(), this->getWidth(), 1, a(frameColor));
             }
 
             virtual void layout(u16 parentX, u16 parentY, u16 parentWidth, u16 parentHeight) override {

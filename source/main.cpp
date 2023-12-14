@@ -1472,8 +1472,10 @@ private:
     std::string packageConfigIniPath = packageDirectory + configFileName;
     std::string menuMode, defaultMenuMode, inOverlayString, fullPath, optionName, repoUrl;
     int priority;
-    bool useDefaultMenu = false, showOverlayVersions = false, showPackageVersions = true;
+    bool useDefaultMenu = false, showOverlayVersions = false, showPackageVersions = false;
     bool coolerMode = false;
+    bool packageUpdater = true;
+    bool overlayUpdater = true;
     bool sorting = false;
     enum Screen {
         Default,
@@ -1514,18 +1516,34 @@ public:
                 } else {
                     setIniFileValue(settingsConfigIniPath, "uberhand", "show_ovl_versions", "false");
                 }
-                if (uberhandSection["show_pack_versions"] == "false") {
-                    showPackageVersions = false;
+                if (uberhandSection["show_pack_versions"] == "true") {
+                    showPackageVersions = true;
                 } else {
-                    setIniFileValue(settingsConfigIniPath, "uberhand", "show_pack_versions", "true");
+                    setIniFileValue(settingsConfigIniPath, "uberhand", "show_pack_versions", "false");
                 }
-                if (uberhandSection["coolerMode"] == "1"){
+                if (uberhandSection["cooler_mode"] == "true"){
                     coolerMode = true;
+                } else {
+                    setIniFileValue(settingsConfigIniPath, "uberhand", "cooler_mode", "false");
                 }
-                if (!uberhandSection["ovlRepo"].empty()){
-                    repoUrl = uberhandSection["ovlRepo"];
+                if (!uberhandSection["ovl_repo"].empty()){
+                    repoUrl = uberhandSection["ovl_repo"];
                 } else {
                     repoUrl = "https://raw.githubusercontent.com/i3sey/uUpdater-ovl-repo/main/main.ini";
+                    setIniFileValue(settingsConfigIniPath, "uberhand", "ovl_repo", repoUrl);
+                }
+                if (uberhandSection["package_updater"] == "false") {
+                    packageUpdater = false;
+                } else {
+                    setIniFileValue(settingsConfigIniPath, "uberhand", "package_updater", "true");
+                }
+                if (uberhandSection["overlay_updater"] == "false") {
+                    overlayUpdater = false;
+                } else {
+                    setIniFileValue(settingsConfigIniPath, "uberhand", "overlay_updater", "true");
+                }
+                if (!(uberhandSection["show_separator"] == "true")) {
+                    setIniFileValue(settingsConfigIniPath, "uberhand", "item_separator", "false");
                 }
             }
         }
@@ -1677,6 +1695,8 @@ public:
             }
 
             //ovl updater section
+            if (overlayUpdater)
+            {
             list->addItem(new tsl::elm::CategoryHeader("Updater", true));
             auto updaterItem = new tsl::elm::ListItem("Check for Overlay Updates");
             updaterItem->setClickListener([this, updaterItem](uint64_t keys) {
@@ -1742,6 +1762,7 @@ public:
                         return false;
                     });
             list->addItem(updaterItem);
+            }
         }
         
         if (menuMode == "packages" ) {
@@ -1866,37 +1887,40 @@ public:
             }
 
             //package updater section
-            list->addItem(new tsl::elm::CategoryHeader("Updater", true));
-            auto updaterItem = new tsl::elm::ListItem("Check for Package Updates");
-            updaterItem->setClickListener([this, subdirectories, updaterItem](uint64_t keys) {
-                        if (keys & KEY_A) {
-                            if (!DownloadProcessing) {
-                                DownloadProcessing = true;
-                                updaterItem->setText("Processing...");
+            if (packageUpdater)
+            {
+                list->addItem(new tsl::elm::CategoryHeader("Updater", true));
+                auto updaterItem = new tsl::elm::ListItem("Check for Package Updates");
+                updaterItem->setClickListener([this, subdirectories, updaterItem](uint64_t keys) {
+                            if (keys & KEY_A) {
+                                if (!DownloadProcessing) {
+                                    DownloadProcessing = true;
+                                    updaterItem->setText("Processing...");
+                                    return true;
+                                }
+                            }
+                            if (DownloadProcessing) {
+                                bool NeedUpdate = false;
+                                std::vector<std::map<std::string, std::string>> items;
+                                for (const auto& taintedSubdirectory : subdirectories) {
+                                    std::map<std::string, std::string> packageInfo = packageUpdateCheck(taintedSubdirectory + "/" + "config.ini");
+                                    if (packageInfo["localVer"] != packageInfo["repoVer"]){
+                                        NeedUpdate = true;
+                                        items.insert(items.end(), packageInfo);
+                                        }
+                                }
+                                if (NeedUpdate){
+                                    DownloadProcessing = false;
+                                    tsl::changeTo<Updater>(items);
+                                }
+                                DownloadProcessing = false;
+                                updaterItem->setText("No updates");
                                 return true;
                             }
-                        }
-                        if (DownloadProcessing) {
-                            bool NeedUpdate = false;
-                            std::vector<std::map<std::string, std::string>> items;
-                            for (const auto& taintedSubdirectory : subdirectories) {
-                                std::map<std::string, std::string> packageInfo = packageUpdateCheck(taintedSubdirectory + "/" + "config.ini");
-                                if (packageInfo["localVer"] != packageInfo["repoVer"]){
-                                    NeedUpdate = true;
-                                    items.insert(items.end(), packageInfo);
-                                    }
-                            }
-                            if (NeedUpdate){
-                                DownloadProcessing = false;
-                                tsl::changeTo<Updater>(items);
-                            }
-                            DownloadProcessing = false;
-                            updaterItem->setText("No updates");
-                            return true;
-                        }
-                        return false;
-                    });
-            list->addItem(updaterItem);
+                            return false;
+                        });
+                list->addItem(updaterItem);
+            }
             count = 0;
             //std::string optionName;
             // Populate the menu with options
