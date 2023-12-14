@@ -1543,7 +1543,7 @@ public:
                     setIniFileValue(settingsConfigIniPath, "uberhand", "overlay_updater", "true");
                 }
                 if (!(uberhandSection["show_separator"] == "true")) {
-                    setIniFileValue(settingsConfigIniPath, "uberhand", "item_separator", "false");
+                    setIniFileValue(settingsConfigIniPath, "uberhand", "show_separator", "false");
                 }
             }
         }
