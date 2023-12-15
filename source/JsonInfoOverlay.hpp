@@ -41,8 +41,9 @@ public:
     }
 
     std::map <std::string,std::string> parseJson (std::string jsonPath, std::string selectedItem, std::vector<std::string> offsets = {"32","48","16","36","52","64","56","68","60","76"}) {
-        std::map <std::string,std::string> newKipdata;
-        std::vector<std::string> offsetStrs = findHexDataOffsets(kipPath, "43555354"); // 43555354 is a CUST
+        std::map <std::string, std::string> newKipdata;
+        const std::string CUST = "43555354";
+        std::vector<size_t> offsetStrs = findHexDataOffsets(kipPath, CUST);
 
         json_t* jsonData = readJsonFromFile(jsonPath);
         if (jsonData) {
@@ -65,7 +66,7 @@ public:
                     
                     if (!offsetStrs.empty()) {
                         for(auto& offset : offsets) {
-                            offset = std::to_string(std::stoi(offset) + std::stoi(offsetStrs[0])); // count from "C" letter
+                            offset = std::to_string(std::stoul(offset) + offsetStrs[0]); // count from "C" letter
                         }
                     }
                     json_object_foreach(item, key, value) {

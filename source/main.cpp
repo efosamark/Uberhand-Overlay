@@ -352,10 +352,16 @@ public:
                                         int hexLength = strlen(valueStr)/2;
                                         hexLength = std::max(hexLength, 2);
                                         if (detectSize) {
-                                            detectSize = false;
-                                            currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", "43555354", offset, hexLength); // Read the data from kip with offset starting from 'C' in 'CUST'
-                                            if (decValue) {
-                                                currentHex = std::to_string(reversedHexToInt(currentHex));
+                                            try {
+                                                detectSize = false;
+                                                const std::string CUST = "43555354";
+                                                currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", CUST, std::stoul(offset), hexLength); // Read the data from kip with offset starting from 'C' in 'CUST'
+                                                if (decValue) {
+                                                    currentHex = std::to_string(reversedHexToInt(currentHex));
+                                                }
+                                            }
+                                            catch (const std::invalid_argument& ex) {
+                                                logMessage("ERROR - " + std::string(__func__) + ":" + std::to_string(__LINE__) + " - invalid offset value: \"" + offset + "\" in \"" + jsonPath + "\"");
                                             }
                                         }
                                         if (valueStr == currentHex) {
@@ -810,9 +816,16 @@ public:
                     json_decref(jsonData);
                     return "\u25B6";
                 }
-                hexLength = strlen(valueStr)/2;
+                hexLength = strlen(valueStr) / 2;
                 hexLength = std::max(hexLength, 2);
-                std::string currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", "43555354", offset, hexLength);
+                std::string currentHex;
+                try {
+                    const std::string CUST = "43555354";
+                    currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", CUST, std::stoul(offset), hexLength);
+                }
+                catch (const std::invalid_argument& ex) {
+                    logMessage("ERROR - " + std::string(__func__) + ":" + std::to_string(__LINE__) + " - invalid offset value: \"" + offset + "\" in \"" + jsonPath + "\"");
+                }
                 if (!currentHex.empty()) {
                     if (searchKey == "dec") {
                         currentHex = std::to_string(reversedHexToInt(currentHex));
@@ -926,7 +939,8 @@ public:
         if (!kipVersion.empty()) {
             constexpr int lineHeight = 20;  // Adjust the line height as needed
             constexpr int fontSize = 19;    // Adjust the font size as needed
-            std::string curKipVer = readHexDataAtOffset("/atmosphere/kips/loader.kip", "43555354", "4", 3);
+            const std::string CUST = "43555354";
+            std::string curKipVer = readHexDataAtOffset("/atmosphere/kips/loader.kip", CUST, 4, 3);
             int i_curKipVer = reversedHexToInt(curKipVer);
             if (std::stoi(kipVersion) != i_curKipVer) {
                 list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {

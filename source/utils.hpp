@@ -493,7 +493,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 offset = removeQuotes(command[2]);
                 hexDataReplacement = removeQuotes(command[3]);
 
-                bool result  = hexEditByOffset(sourcePath.c_str(), offset.c_str(), hexDataReplacement.c_str());
+                bool result = hexEditByOffset(sourcePath, std::stoul(offset), hexDataReplacement);
                 if (!result && catchErrors) {
                     logMessage("Error in " + commandName + " command");
                     return -1;
@@ -598,7 +598,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 sourcePath = preprocessPath(command[1]);
                 offset = removeQuotes(command[2]);
                 hexDataReplacement = decimalToReversedHex(removeQuotes(command[3]));
-                bool result  = hexEditCustOffset(sourcePath, offset, hexDataReplacement);
+                bool result = hexEditCustOffset(sourcePath, std::stoul(offset), hexDataReplacement);
                 if (!result && catchErrors) {
                     logMessage("Error in " + commandName + " command");
                     return -1;
@@ -610,7 +610,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 sourcePath = preprocessPath(command[1]);
                 offset = removeQuotes(command[2]);
                 hexDataReplacement = removeQuotes(command[3]);
-                bool result = hexEditCustOffset(sourcePath, offset, hexDataReplacement);
+                bool result = hexEditCustOffset(sourcePath, std::stoul(offset), hexDataReplacement);
                 if (!result && catchErrors) {
                     logMessage("Error in " + commandName + " command");
                     return -1;
@@ -676,17 +676,16 @@ tsl::PredefinedColors defineColor(std::string strColor) {
 
 std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string kipPath = "/atmosphere/kips/loader.kip", bool spacing = false) {
 
-    std::string custOffset = "";
     std::string currentHex = "";
     std::string extent = "";
     std::string output = "";
     std::string state = "";
     std::string name = "";
-    std::string offset  = "";
+    std::string offsetStr = "";
     std::string increment  = "";
     bool allign = false;
     int checkDefault = 0;
-    int length = 0;
+    size_t length = 0;
     int lineCount = 1;
     bool tableShiftMode = false;
     int tableState;
@@ -702,8 +701,13 @@ std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string
     if (jsonData) {
         size_t arraySize = json_array_size(jsonData);
 
-        std::vector<std::string> offsetStrs = findHexDataOffsets(kipPath.c_str(), "43555354"); // 43555354 is a CUST
-        custOffset = offsetStrs[0];
+        const std::string CUST = "43555354";
+        const std::vector<size_t> offsetStrs = findHexDataOffsets(kipPath, CUST);
+        if (offsetStrs.empty()) {
+            logMessage("CUST not found.");
+            return {};
+        }
+        const size_t custOffset = offsetStrs[0];
         FILE* file = fopen(kipPath.c_str(), "rb");
         if (!file) {
             logMessage("Failed to open the loader.kip.");
@@ -720,7 +724,8 @@ std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string
                     tabBaseCheck = json_string_value(keyValue);
                 if (tabBaseCheck == "TABLE_BASE") {
                     tableShiftMode = true;
-                    std::string tableStateStr = readHexDataAtOffsetF(file, custOffset, "43555354", "44", 1);
+                    const size_t offset = custOffset + 44U;
+                    const std::string tableStateStr = readHexDataAtOffsetF(file, offset, 1);
                     tableState = reversedHexToInt(tableStateStr);
                     //logMessage(tableStateStr);
 
@@ -771,52 +776,52 @@ std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string
                                 return std::make_pair(output, lineCount);
                             }
                             name = json_string_value(keyValue);
-                            offset = json_string_value(j_offset);
+                            offsetStr = json_string_value(j_offset);
                             length = std::stoi(json_string_value(j_length));
                             if (j_extent) {
                                 extent = json_string_value(j_extent);
-                            }
-                            else {
+                            } else {
                                 extent = "";
                             }
 
-                            if (offset.find(',') != std::string::npos) {
-                                std::istringstream iss(offset);
+                            if (offsetStr.find(',') != std::string::npos) {
+                                std::istringstream iss(offsetStr);
                                 std::string offsetItem;
-                                std::vector<std::string> offsetList;
-
-                                // Split the string by commas and store each offset in a vector
+                                std::string current = "";
+                                // Split the string by commas and process each offset
                                 while (std::getline(iss, offsetItem, ',')) {
-                                    offsetList.push_back(offsetItem);
+                                    try {
+                                        const size_t offset = custOffset + std::stoul(offsetItem);
+                                        const std::string tempHex = readHexDataAtOffsetF(file, offset, length); // Read the data from kip
+                                        unsigned int intValue = reversedHexToInt(tempHex);
+                                        current += std::to_string(intValue) + '-';
+                                    }
+                                    catch (const std::invalid_argument& ex) {
+                                        logMessage("ERROR - " + std::string(__func__) + ":" + std::to_string(__LINE__) + " - invalid offset value: \"" + offsetItem + "\" in \"" + jsonPath + "\"");
+                                    }
                                 }
-
-                                currentHex = "";
-                                for (const std::string& offsetItem : offsetList) {
-                                    std::string tempHex = readHexDataAtOffsetF(file, custOffset, "43555354", offsetItem.c_str(), length); // Read the data from kip with offset starting from 'C' in 'CUST'
-                                    unsigned int intValue = reversedHexToInt(tempHex);
-                                    currentHex += std::to_string(intValue) + '-';
-                                }
-                                currentHex.pop_back();
-                                output += name + ": " + currentHex;
+                                current.pop_back();
+                                output += name + ": " + current;
                             } else {
                                 json_t* j_default = json_object_get(item, "default");
                                 if (j_default) {
-                                checkDefault = std::stoi(json_string_value(j_default));
-                                if (checkDefault == 1) {
-                                    std::string offsetDef = std::to_string(std::stoi(offset) + length);
-                                    currentHex = readHexDataAtOffsetF(file, custOffset, "43555354", offsetDef.c_str(), length); // Read next <length> hex chars from specified offset
+                                    checkDefault = std::stoi(json_string_value(j_default));
+                                    if (checkDefault == 1) {
+                                        size_t offsetDef = custOffset + std::stoul(offsetStr) + length;
+                                        currentHex = readHexDataAtOffsetF(file, offsetDef, length); // Read next <length> hex chars from specified offset
+                                    }
                                 }
-                            }
+
                                 if (allign) {
-                                // Format the string to have two columns; Calculate number of spaces needed
-                                size_t found = output.rfind('\n');
-                                int numreps = 33 - (output.length() - found - 1) - name.length() - length - 4;
-                                if (!extent.empty()) {
-                                    numreps -= extent.length();
+                                    // Format the string to have two columns; Calculate number of spaces needed
+                                    size_t found = output.rfind('\n');
+                                    int numreps = 33 - (output.length() - found - 1) - name.length() - length - 4;
+                                    if (!extent.empty()) {
+                                        numreps -= extent.length();
+                                    }
+                                    output.append(numreps, ' ');
+                                    allign = false;
                                 }
-                                output.append(numreps, ' ');
-                                allign = false;
-                            }
 
                                 if (checkDefault && currentHex != "000000") {
                                     output += name + ": " + "Default";
@@ -825,11 +830,13 @@ std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string
                                 } else {
                                     if (tableShiftMode) {
                                         //logMessage(std::to_string(std::stoi(baseList[tableState]) + (std::stoi(offset) * std::stoi(baseIncList[tableState]))));
-                                        std::string findFreq = std::to_string(std::stoi(baseList[tableState]) + (std::stoi(offset) * std::stoi(baseIncList[tableState])));
-                                        currentHex = readHexDataAtOffsetF(file, custOffset, "43555354", findFreq.c_str(), length); // Read the data from kip with offset starting from 'C' in 'CUST'
+                                        const size_t findFreq = std::stoi(baseList[tableState]) + (std::stoul(offsetStr) * std::stoi(baseIncList[tableState]));
+                                        const size_t offset = custOffset + findFreq;
+                                        currentHex = readHexDataAtOffsetF(file, offset, length); // Read the data from kip with offset starting from 'C' in 'CUST'
+                                    } else {
+                                        const size_t offset = custOffset + std::stoul(offsetStr);
+                                        currentHex = readHexDataAtOffsetF(file, offset, length); // Read the data from kip with offset starting from 'C' in 'CUST'
                                     }
-                                    else
-                                        currentHex = readHexDataAtOffsetF(file, custOffset, "43555354", offset.c_str(), length); // Read the data from kip with offset starting from 'C' in 'CUST'
                                     unsigned int intValue = reversedHexToInt(currentHex);
                                     if (j_increment) { // Add increment value from the JSON to the displayed value
                                         intValue += std::stoi(json_string_value(j_increment));
