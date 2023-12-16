@@ -28,26 +28,13 @@ std::string asciiToHex(const std::string& asciiStr) {
 }
 
 std::string decimalToHex(const std::string& decimalStr) {
-    // Convert decimal string to integer
-    int decimalValue = std::stoi(decimalStr);
-
-    // Convert decimal to hexadecimal
-    std::string hexadecimal;
-    while (decimalValue > 0) {
-        int remainder = decimalValue % 16;
-        char hexChar = (remainder < 10) ? ('0' + remainder) : ('A' + remainder - 10);
-        hexadecimal += hexChar;
-        decimalValue /= 16;
-    }
-
-    // Reverse the hexadecimal string
-    std::reverse(hexadecimal.begin(), hexadecimal.end());
+    std::string hexadecimal = (std::stringstream{} << std::hex << std::stoi(decimalStr)).str();
 
     // If the length is odd, add a trailing '0'
     if (hexadecimal.length() % 2 != 0) {
         hexadecimal = '0' + hexadecimal;
     }
-
+    
     return hexadecimal;
 }
 
