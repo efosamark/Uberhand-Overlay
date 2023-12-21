@@ -15,6 +15,7 @@ bool enableConfigNav = false;
 bool showCurInMenu   = false;
 std::string kipVersion = "";
 bool DownloadProcessing = false;
+bool sameKeyCombo = false;
 
 class ConfigOverlay : public tsl::Gui {
 private:
@@ -1620,15 +1621,33 @@ public:
                 if (!(uberhandSection["show_separator"] == "true")) {
                     setIniFileValue(settingsConfigIniPath, "uberhand", "show_separator", "false");
                 }
+                if (uberhandSection["key_combo"].empty())
+                {
+                    copyTeslaKeyComboTouberhand();
+                } else {
+                    if (!isDirectory("sdmc:/config/tesla/")) {
+                        createDirectory("sdmc:/config/tesla/");
+                        setIniFileValue(teslaSettingsConfigIniPath, "tesla", "key_combo", uberhandSection["key_combo"]);
+                    } else if (!sameKeyCombo) {
+                        std::string teslaCombo = readIniValue(teslaSettingsConfigIniPath, "tesla", "key_combo");
+                        if (teslaCombo != uberhandSection["key_combo"]) {
+                            sameKeyCombo = true;
+                            setIniFileValue(teslaSettingsConfigIniPath, "tesla", "key_combo", uberhandSection["key_combo"]);
+                        } else {
+                            sameKeyCombo = true;
+                        }
+                    }
+                }
             }
         }
         
+        if (!isFileOrDirectory("sdmc:/config/tesla/config.ini")) // Create and modify tesla kinfog
+
         if (!settingsLoaded) { // write data if settings are not loaded
             setIniFileValue(settingsConfigIniPath, "uberhand", "default_menu", defaultMenuMode);
             setIniFileValue(settingsConfigIniPath, "uberhand", "last_menu", menuMode);
             setIniFileValue(settingsConfigIniPath, "uberhand", "in_overlay", "false");
         }
-        copyTeslaKeyComboTouberhand();
         //setIniFileValue(settingsConfigIniPath, "uberhand", "in_overlay", "false");
         
         

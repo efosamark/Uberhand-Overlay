@@ -354,6 +354,9 @@ namespace tsl {
 
         namespace ini {
 
+            const char* TESLA_CONFIG = "/config/tesla/config.ini";
+            const char* UBERHAND_CONFIG = "/config/uberhand/config.ini";
+
             /**
              * @brief Ini file type
              */
@@ -362,7 +365,6 @@ namespace tsl {
             /**
              * @brief Tesla config file
              */
-            static const char* CONFIG_FILE = "/config/uberhand/config.ini"; // CUSTOM MODIFICATION
 
             /**
              * @brief Parses a ini string
@@ -416,7 +418,7 @@ namespace tsl {
              *
              * @return Settings data
              */
-            static IniData readOverlaySettings() {
+            static IniData readOverlaySettings(const char* file = UBERHAND_CONFIG) {
                 /* Open Sd card filesystem. */
                 FsFileSystem fsSdmc;
                 if (R_FAILED(fsOpenSdCardFileSystem(&fsSdmc)))
@@ -425,7 +427,7 @@ namespace tsl {
 
                 /* Open config file. */
                 FsFile fileConfig;
-                if (R_FAILED(fsFsOpenFile(&fsSdmc, CONFIG_FILE, FsOpenMode_Read, &fileConfig)))
+                if (R_FAILED(fsFsOpenFile(&fsSdmc, file, FsOpenMode_Read, &fileConfig)))
                     return {};
                 hlp::ScopeGuard fileGuard([&] { fsFileClose(&fileConfig); });
 
@@ -449,7 +451,7 @@ namespace tsl {
              *
              * @param iniData new data
              */
-            static void writeOverlaySettings(IniData const &iniData) {
+            static void writeOverlaySettings(IniData const &iniData, const char* file = UBERHAND_CONFIG ) {
                 /* Open Sd card filesystem. */
                 FsFileSystem fsSdmc;
                 if (R_FAILED(fsOpenSdCardFileSystem(&fsSdmc)))
@@ -458,7 +460,7 @@ namespace tsl {
 
                 /* Open config file. */
                 FsFile fileConfig;
-                if (R_FAILED(fsFsOpenFile(&fsSdmc, CONFIG_FILE, FsOpenMode_Write, &fileConfig)))
+                if (R_FAILED(fsFsOpenFile(&fsSdmc, file, FsOpenMode_Write, &fileConfig)))
                     return;
                 hlp::ScopeGuard fileGuard([&] { fsFileClose(&fileConfig); });
 
@@ -472,14 +474,14 @@ namespace tsl {
              *
              * @param changes setting values to add or update
              */
-            static void updateOverlaySettings(IniData const &changes) {
-                hlp::ini::IniData iniData = hlp::ini::readOverlaySettings();
+            static void updateOverlaySettings(IniData const &changes, const char* file = UBERHAND_CONFIG) {
+                hlp::ini::IniData iniData = hlp::ini::readOverlaySettings(file);
                 for (auto &section : changes) {
                     for (auto &keyValue : section.second) {
                         iniData[section.first][keyValue.first] = keyValue.second;
                     }
                 }
-                writeOverlaySettings(iniData);
+                writeOverlaySettings(iniData, file);
             }
 
         }
@@ -3553,10 +3555,15 @@ namespace tsl {
         [[maybe_unused]] static void updateCombo(u64 keys) {
             tsl::cfg::launchCombo = keys;
             hlp::ini::updateOverlaySettings({
+                { "tesla", { // CUSTOM MODIFICATION
+                    { "key_combo", tsl::hlp::keysToComboString(keys) }
+                }}
+            }, hlp::ini::TESLA_CONFIG);
+            hlp::ini::updateOverlaySettings({
                 { "uberhand", { // CUSTOM MODIFICATION
                     { "key_combo", tsl::hlp::keysToComboString(keys) }
                 }}
-            });
+            }, hlp::ini::UBERHAND_CONFIG);
         }
 
         /**
@@ -3738,8 +3745,7 @@ namespace tsl {
             }
         }
         
-        std::string settingsConfigPath = "sdmc:/config/uberhand/config.ini";
-        std::map<std::string, std::map<std::string, std::string>> settingsData = getParsedDataFromIniFile(settingsConfigPath);
+        std::map<std::string, std::map<std::string, std::string>> settingsData = getParsedDataFromIniFile(hlp::ini::UBERHAND_CONFIG);
         std::string inOverlayString;
 
         if (settingsData.count("uberhand") > 0 && settingsData["uberhand"].count("in_overlay") > 0) {
@@ -3751,7 +3757,7 @@ namespace tsl {
         bool inOverlay = false;
         if (inOverlayString == "true") {
             inOverlay = true;
-            setIniFileValue(settingsConfigPath, "uberhand", "in_overlay", "false");
+            setIniFileValue(hlp::ini::UBERHAND_CONFIG, "uberhand", "in_overlay", "false");
         }
         
         
