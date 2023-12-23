@@ -479,7 +479,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                     }
                 }
 
-                bool result  = setIniFileKey(sourcePath.c_str(), desiredSection.c_str(), desiredKey.c_str(), desiredNewKey.c_str());
+                bool result  = setIniFileKey(sourcePath, desiredSection, desiredKey, desiredNewKey);
                 if (!result && catchErrors) {
                     logMessage("Error in " + commandName + " command");
                     return -1;
@@ -501,7 +501,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 desiredSection = removeQuotes(command[2]);
                 desiredKey = removeQuotes(command[3]);
 
-                bool result  = removeIniFileKey(sourcePath.c_str(), desiredSection.c_str(), desiredKey.c_str());
+                bool result  = removeIniFileKey(sourcePath, desiredSection, desiredKey);
                 if (!result && catchErrors) {
                     logMessage("Error in " + commandName + " command");
                     return -1;
