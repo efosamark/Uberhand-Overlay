@@ -15,6 +15,51 @@ size_t writeCallback(void* contents, size_t size, size_t nmemb, FILE* file) {
     size_t written = fwrite(contents, size, nmemb, file);
     return written;
 }
+size_t WriteCallback(void *contents, size_t size, size_t nmemb, std::string *s) {
+    size_t newLength = size * nmemb;
+    try {
+        s->append((char*)contents, newLength);
+    } catch(std::bad_alloc &e) {
+        // Handle memory allocation exceptions
+        return 0;
+    }
+    return newLength;
+}
+
+json_t* load_json_from_url(const std::string &url) {
+    CURL *curl;
+    CURLcode res;
+    std::string readBuffer;
+
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    curl = curl_easy_init();
+
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+
+        if(res != CURLE_OK) {
+            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            return nullptr;
+        }
+    }
+
+    curl_global_cleanup();
+
+    // Parse JSON data
+    json_error_t error;
+    json_t* root = json_loads(readBuffer.c_str(), 0, &error);
+
+    if (!root) {
+        fprintf(stderr, "error: on line %d: %s\n", error.line, error.text);
+        return nullptr;
+    }
+
+    return root;
+}
 
 
 bool downloadFile(const std::string& url, const std::string& toDestination) {

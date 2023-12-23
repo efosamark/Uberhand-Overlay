@@ -352,16 +352,10 @@ public:
                                         int hexLength = strlen(valueStr)/2;
                                         hexLength = std::max(hexLength, 2);
                                         if (detectSize) {
-                                            try {
-                                                detectSize = false;
-                                                const std::string CUST = "43555354";
-                                                currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", CUST, std::stoul(offset), hexLength); // Read the data from kip with offset starting from 'C' in 'CUST'
-                                                if (decValue) {
-                                                    currentHex = std::to_string(reversedHexToInt(currentHex));
-                                                }
-                                            }
-                                            catch (const std::invalid_argument& ex) {
-                                                logMessage("ERROR - " + std::string(__func__) + ":" + std::to_string(__LINE__) + " - invalid offset value: \"" + offset + "\" in \"" + jsonPath + "\"");
+                                            detectSize = false;
+                                            currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", "43555354", offset, hexLength); // Read the data from kip with offset starting from 'C' in 'CUST'
+                                            if (decValue) {
+                                                currentHex = std::to_string(reversedHexToInt(currentHex));
                                             }
                                         }
                                         if (valueStr == currentHex) {
@@ -816,16 +810,9 @@ public:
                     json_decref(jsonData);
                     return "\u25B6";
                 }
-                hexLength = strlen(valueStr) / 2;
+                hexLength = strlen(valueStr)/2;
                 hexLength = std::max(hexLength, 2);
-                std::string currentHex;
-                try {
-                    const std::string CUST = "43555354";
-                    currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", CUST, std::stoul(offset), hexLength);
-                }
-                catch (const std::invalid_argument& ex) {
-                    logMessage("ERROR - " + std::string(__func__) + ":" + std::to_string(__LINE__) + " - invalid offset value: \"" + offset + "\" in \"" + jsonPath + "\"");
-                }
+                std::string currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", "43555354", offset, hexLength);
                 if (!currentHex.empty()) {
                     if (searchKey == "dec") {
                         currentHex = std::to_string(reversedHexToInt(currentHex));
@@ -939,8 +926,7 @@ public:
         if (!kipVersion.empty()) {
             constexpr int lineHeight = 20;  // Adjust the line height as needed
             constexpr int fontSize = 19;    // Adjust the font size as needed
-            const std::string CUST = "43555354";
-            std::string curKipVer = readHexDataAtOffset("/atmosphere/kips/loader.kip", CUST, 4, 3);
+            std::string curKipVer = readHexDataAtOffset("/atmosphere/kips/loader.kip", "43555354", "4", 3);
             int i_curKipVer = reversedHexToInt(curKipVer);
             if (std::stoi(kipVersion) != i_curKipVer) {
                 list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
@@ -1821,39 +1807,27 @@ public:
                             if (!uberhand_updates_only) {
                                 std::vector<std::string> overlays = getFilesListByWildcard("sdmc:/switch/.overlays/*.ovl");
                                 std::map<std::string, std::string> package;
-                                if (downloadFile(repoUrl, "sdmc:/config/uberhand/Updater.ini")) {
-                                    auto options = loadOptionsFromIni("sdmc:/config/uberhand/Updater.ini");
+                                downloadFile(repoUrl, "sdmc:/config/uberhand/Updater.ini");
+                                std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> options = loadOptionsFromIni("sdmc:/config/uberhand/Updater.ini");
+                                for (const auto& option : options) {
                                     for (const std::string& overlay : overlays) {
                                         std::string uoverlay = dropExtension(getNameFromPath(overlay));
-                                        for (const auto& [name, parameters] : options) {
-                                            if (uoverlay == name) {
-                                                auto [result, overlayName, overlayVersion] = getOverlayInfo(overlay);
-                                                if (result != ResultSuccess)
-                                                    continue;
-                                                package["name"] = overlayName;
-                                                if (parameters.size() > 1 && parameters[1].size() > 0 && parameters[1][0].starts_with("link=")) {
-                                                    package["link"] = parameters[1][0].substr(5); // skip "link="
-                                                } else {
-                                                    logMessage("Overlay Updater:ERROR: link not found for item \"" + overlayName + "\"");
-                                                    break;
-                                                }
-                                                package["localVer"] = overlayVersion;
-                                                if (parameters.size() > 0 && parameters[0].size() > 0 && parameters[0][0].starts_with("downloadEntry=")) {
-                                                    package["downloadEntry"] = parameters[0][0].substr(14); // skip "downloadEntry="
-                                                } else {
-                                                    logMessage("Overlay Updater:ERROR: downloadEntry not found for item \"" + overlayName + "\"");
-                                                    break;
-                                                }
-                                                std::map<std::string, std::string> resultUpdate = ovlUpdateCheck(package);
-                                                if (!resultUpdate.empty()) {
-                                                    NeedUpdate = true;
-                                                    items.insert(items.end(), resultUpdate);
-                                                }
+                                        if (uoverlay == option.first) {
+                                            auto [result, overlayName, overlayVersion] = getOverlayInfo(overlay);
+                                            if (result != ResultSuccess)
+                                                continue;
+                                            package["name"] = overlayName;
+                                            package["link"] = option.second.at(1).front().substr(5);
+                                            package["localVer"] = overlayVersion;
+                                            package["downloadEntry"] = option.second.front().front().substr(14);
+                                            std::map<std::string, std::string> resultUpdate = ovlUpdateCheck(package);
+                                            if (!resultUpdate.empty()) {
+                                                NeedUpdate = true;
+                                                items.insert(items.end(), resultUpdate);
                                             }
                                         }
                                     }
-                                } else {
-                                    logMessage("Overlay Updater:ERROR: Failed to download Updater.ini");
+                                    
                                 }
                             } else {
                                 auto [result, overlayName, overlayVersion] = getOverlayInfo("sdmc:/switch/.overlays/ovlmenu.ovl");
@@ -1862,7 +1836,7 @@ public:
                                 std::map<std::string, std::string> ovlmenu;
                                 ovlmenu["name"] = overlayName;
                                 ovlmenu["localVer"] = overlayVersion;
-                                ovlmenu["link"] = "https://api.github.com/repos/efosamark/Uberhand-Overlay/releases?per_page=1";
+                                ovlmenu["link"] = "https://api.github.com/repos/efosamark/Uberhand-Overlay/releases";
                                 ovlmenu["downloadEntry"] = "1";
                                 std::map<std::string, std::string> resultUpdate = ovlUpdateCheck(ovlmenu);
                                 if (!resultUpdate.empty()) {
