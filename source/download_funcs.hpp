@@ -10,12 +10,12 @@
 //#include "json_funcs.hpp"
 
 
-size_t writeCallback(void* contents, size_t size, size_t nmemb, FILE* file) {
+size_t writeCallbackFile(void* contents, size_t size, size_t nmemb, FILE* file) {
     // Callback function to write received data to a file
     size_t written = fwrite(contents, size, nmemb, file);
     return written;
 }
-size_t WriteCallback(void *contents, size_t size, size_t nmemb, std::string *s) {
+size_t writeCallbackJson(void *contents, size_t size, size_t nmemb, std::string *s) {
     size_t newLength = size * nmemb;
     try {
         s->append((char*)contents, newLength);
@@ -26,7 +26,7 @@ size_t WriteCallback(void *contents, size_t size, size_t nmemb, std::string *s) 
     return newLength;
 }
 
-json_t* load_json_from_url(const std::string &url) {
+json_t* loadJsonFromUrl(const std::string &url) {
     CURL *curl;
     CURLcode res;
     std::string readBuffer;
@@ -36,7 +36,7 @@ json_t* load_json_from_url(const std::string &url) {
 
     if(curl) {
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallbackJson);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
         res = curl_easy_perform(curl);
         curl_easy_cleanup(curl);
@@ -110,7 +110,7 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
     }
 
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallbackFile);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
 
     // Set a user agent

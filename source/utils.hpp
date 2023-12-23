@@ -972,7 +972,7 @@ std::vector<std::string> parseString(const std::string& str, char delimiter) {
 std::string getversion(json_t* json) {
     json_t* error = json_object_get(json, "message");
     if (json_string_length(error) != 0) {
-        json_decref(json);~~
+        json_decref(json);
         logMessage("API limit reached");
         return "ApiLimit";
     }
@@ -1008,7 +1008,7 @@ std::map<std::string, std::string> packageUpdateCheck(std::string subConfigIniPa
         packageInfo["localVer"] = packageHeader.version;
         packageInfo["link"] = packageHeader.github;
         packageInfo["name"] = subConfigIniPath.substr(0, subConfigIniPath.find("/config.ini"));
-        json_t* git_json = load_json_from_url(packageInfo["link"]);
+        json_t* git_json = loadJsonFromUrl(packageInfo["link"]);
         if (!git_json) {
             packageInfo.clear();
             return packageInfo;
@@ -1034,7 +1034,7 @@ std::map<std::string, std::string> packageUpdateCheck(std::string subConfigIniPa
 
 std::map<std::string, std::string> ovlUpdateCheck(std::map<std::string, std::string> currentOverlay) {
     std::map<std::string, std::string> ovlItemToUpdate;
-    json_t* git_json = load_json_from_url(currentOverlay["link"]);
+    json_t* git_json = loadJsonFromUrl(currentOverlay["link"]);
     if (!git_json) {
         ovlItemToUpdate.clear();
         return ovlItemToUpdate;
