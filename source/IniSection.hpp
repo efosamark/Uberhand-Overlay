@@ -46,11 +46,20 @@ void writeIniFile(const std::string& filename, const IniSectionInput& iniData) {
 }
 
 // Update values in the INI data
-void updateIniData(IniSectionInput& iniData, const IniSectionInput& updates) {
-    for (const auto& [section, kvPairs] : updates) {
-        for (const auto& [key, value] : kvPairs) {
+void updateIniData(IniSectionInput& iniData, const IniSectionInput& updates, bool remove=false) {
+    if (remove) {
+        for (const auto& [section, kvPairs] : updates) {
+            for (const auto& [key, value] : kvPairs) {
+            //logMessage(iniData[section][key]);
+            iniData[section].erase(key);
+            }
+        }
+    } else {
+        for (const auto& [section, kvPairs] : updates) {
+            for (const auto& [key, value] : kvPairs) {
             //logMessage(iniData[section][key]);
             iniData[section][key] = value;
+            }
         }
     }
 }

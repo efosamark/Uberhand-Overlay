@@ -549,6 +549,44 @@ bool setIniFileKey(const std::string& fileToEdit, const std::string& desiredSect
     return result;
 }
 
+bool removeIniFileKey(const std::string& fileToEdit, const std::string& desiredSection, const std::string& desiredKey) {
+  std::ifstream file(fileToEdit);
+  std::string line, currentSection;
+  bool sectionFound = false;
+  std::vector<std::string> newLines;
+
+  while (std::getline(file, line)) {
+    // Remove leading and trailing whitespace
+    line.erase(0, line.find_first_not_of(" \r\n"));
+    line.erase(line.find_last_not_of(" \r\n") + 1);
+
+    if (!line.empty()) {
+      if (line[0] == '[' && line.back() == ']') {
+        currentSection = line.substr(1, line.length() - 2);
+        sectionFound = (currentSection == desiredSection);
+      } else if (sectionFound) {
+        size_t equalsPos = line.find('=');
+        if (equalsPos != std::string::npos) {
+          std::string keyInFile = line.substr(0, equalsPos - 1);
+          if (keyInFile == desiredKey) {
+            continue;
+          }
+        }
+      }
+      newLines.push_back(line);
+    }
+  }
+
+  file.close();
+  std::ofstream outfile(fileToEdit);
+  for (const auto& line : newLines) {
+    outfile << line << std::endl;
+  }
+  outfile.close();
+
+  return true;
+}
+
 std::string readIniValue(std::string filePath, std::string section, std::string key) {
     std::ifstream file(filePath);
     std::string line, currentSection;

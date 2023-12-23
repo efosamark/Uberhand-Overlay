@@ -485,6 +485,28 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                     return -1;
                 }
             }
+        } else if (commandName == "remove-ini-key") {
+            // Edit command
+            if (command.size() == 3) {
+                sourcePath = preprocessPath(command[1]);
+                // logMessage(command[2]);
+                IniSectionInput iniData = readIniFile(sourcePath);
+                IniSectionInput desiredData = parseDesiredData(command[2]);
+                updateIniData(iniData, desiredData, true);
+                writeIniFile(sourcePath, iniData);
+
+            } else if (command.size() >= 4) {
+                sourcePath = preprocessPath(command[1]);
+
+                desiredSection = removeQuotes(command[2]);
+                desiredKey = removeQuotes(command[3]);
+
+                bool result  = removeIniFileKey(sourcePath.c_str(), desiredSection.c_str(), desiredKey.c_str());
+                if (!result && catchErrors) {
+                    logMessage("Error in " + commandName + " command");
+                    return -1;
+                }
+            }
         } else if (commandName == "hex-by-offset") {
             // Edit command
             if (command.size() >= 4) {
