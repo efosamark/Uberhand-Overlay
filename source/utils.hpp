@@ -96,7 +96,7 @@ void scrollListItems(tsl::Gui* gui, ShiftFocusMode mode) {
 
 void copyTeslaKeyComboTouberhand() {
     std::string keyCombo;
-    std::map<std::string, std::map<std::string, std::string>> parsedData;
+    IniData parsedData;
     
     if (isFileOrDirectory(teslaSettingsConfigIniPath)) {
         parsedData = getParsedDataFromIniFile(teslaSettingsConfigIniPath);

@@ -142,36 +142,31 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
     return packageHeader;
 }
 
-static std::vector<std::string> split(const std::string& str, char delim = ' ') {
-    std::vector<std::string> out;
+using KeyValueData = std::map<std::string, std::string>;
+using IniData = std::map<std::string, KeyValueData>;
 
-    std::size_t current, previous = 0;
-    current = str.find(delim);
-    while (current != std::string::npos) {
-        out.push_back(str.substr(previous, current - previous));
-        previous = current + 1;
-        current = str.find(delim, previous);
-    }
-    out.push_back(str.substr(previous, current - previous));
+static IniData parseIni(std::istream& str) {
+    IniData iniData;
 
-    return out;
-}
+    std::string section = "";
+    std::string line;
+    while (std::getline(str, line)) {
+        trimInPlace(line);
 
-static std::map<std::string, std::map<std::string, std::string>> parseIni(const std::string &str) {
-    std::map<std::string, std::map<std::string, std::string>> iniData;
+        if (line.empty() || line[0] == ';') { // Empty or comment. Skip it
+            continue;
 
-    auto lines = split(str, '\n');
+        } else if (line[0] == '[' && line[line.size() - 1] == ']') { // Section
+            section = line.substr(1, line.size() - 2);
+            iniData.emplace(section, KeyValueData{});
 
-    std::string lastHeader = "";
-    for (auto& line : lines) {
-        line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
+        } else if (size_t equalsPos = line.find('='); equalsPos != std::string::npos) { // Key = Value
+            std::string key = trim(line.substr(0, equalsPos));
+            std::string value = trim(line.substr(equalsPos + 1));
+            iniData[section].emplace(key, value);
 
-        if (line[0] == '[' && line[line.size() - 1] == ']') {
-            lastHeader = line.substr(1, line.size() - 2);
-            iniData.emplace(lastHeader, std::map<std::string, std::string>{});
-        }
-        else if (auto keyValuePair = split(line, '='); keyValuePair.size() == 2) {
-            iniData[lastHeader].emplace(keyValuePair[0], keyValuePair[1]);
+        } else { // Malformed string
+            logMessage("parseIni: Malformed string \"" + line + "\"");
         }
     }
 
@@ -179,36 +174,9 @@ static std::map<std::string, std::map<std::string, std::string>> parseIni(const 
 }
 
 // Custom utility function for parsing an ini file
-std::map<std::string, std::map<std::string, std::string>> getParsedDataFromIniFile(const std::string& configIniPath) {
-    std::map<std::string, std::map<std::string, std::string>> parsedData;
-
-    FILE* configFileIn = fopen(configIniPath.c_str(), "rb");
-    if (!configFileIn) {
-        return parsedData;
-    }
-
-    // Determine the size of the INI file
-    fseek(configFileIn, 0, SEEK_END);
-    long fileSize = ftell(configFileIn);
-    rewind(configFileIn);
-
-    // Read the contents of the INI file
-    char* fileData = new char[fileSize + 1];
-    fread(fileData, sizeof(char), fileSize, configFileIn);
-    fileData[fileSize] = '\0';  // Add null-terminator to create a C-string
-    fclose(configFileIn);
-
-    // Parse the INI data
-    std::string fileDataString(fileData, fileSize);
-
-    // Normalize line endings to \n
-    fileDataString.erase(std::remove(fileDataString.begin(), fileDataString.end(), '\r'), fileDataString.end());
-
-    parsedData = parseIni(fileDataString);
-
-    delete[] fileData;
-
-    return parsedData;
+IniData getParsedDataFromIniFile(const std::string& configIniPath) {
+    std::ifstream iniFile(configIniPath);
+    return parseIni(iniFile);
 }
 
 bool isMarikoHWType()

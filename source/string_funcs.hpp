@@ -1,14 +1,38 @@
 #pragma once
 #include <string>
 
-// String functions
+constexpr const char* WhitespaceCharacters = " \t\n\r\f\v";
+
 // Trim leading and trailing whitespaces from a string
-std::string trim(const std::string& str) {
-    size_t first = str.find_first_not_of(" \t\n\r\f\v");
-    size_t last = str.find_last_not_of(" \t\n\r\f\v");
-    if (first == std::string::npos || last == std::string::npos)
+static std::string trim(const std::string& str) {
+    size_t first = str.find_first_not_of(WhitespaceCharacters);
+    size_t last = str.find_last_not_of(WhitespaceCharacters);
+    if (first == std::string::npos || last == std::string::npos) {
         return "";
+    }
     return str.substr(first, last - first + 1);
+}
+
+// In-place trimming of whitespace characters for rvalue strings
+static inline std::string trim(std::string&& str) {
+    const size_t first = str.find_first_not_of(WhitespaceCharacters);
+    if (first == std::string::npos) {
+        return "";
+    }
+    str.erase(0, first);
+    str.erase(str.find_last_not_of(WhitespaceCharacters) + 1);
+    return str;
+}
+
+// In-place trimming of whitespace characters
+static inline void trimInPlace(std::string& str) {
+    const size_t first = str.find_first_not_of(WhitespaceCharacters);
+    if (first == std::string::npos) {
+        str.erase();
+        return;
+    }
+    str.erase(0, first);
+    str.erase(str.find_last_not_of(WhitespaceCharacters) + 1);
 }
 
 std::string removeQuotes(const std::string& str) {
