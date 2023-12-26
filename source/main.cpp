@@ -1415,7 +1415,7 @@ public:
             return true;
         }
         if ((keysDown & KEY_B)) {
-            tsl::changeTo<MainMenu>();
+            tsl::resetWith<MainMenu>();
             return true;
         }
         return false;
@@ -1547,7 +1547,7 @@ public:
             return true;
         }
         if (keysDown & KEY_B) {
-            tsl::changeTo<MainMenu>();
+            tsl::resetWith<MainMenu>();
             return true;
         }
 
@@ -1782,13 +1782,13 @@ public:
                             std::map<std::string, std::map<std::string, std::string>> overlaysIniData = getParsedDataFromIniFile(overlaysIniFilePath);
                             localPriority = std::stoi(overlaysIniData[overlayFileName]["priority"])+1;
                             setIniFileValue(overlaysIniFilePath, overlayFileName, "priority", std::to_string(localPriority));
-                            tsl::changeTo<MainMenu>(Soverlays);
+                            tsl::replaceWith<MainMenu>(Soverlays);
                             return true;
                         } else if (key & KEY_MINUS) {
                             std::map<std::string, std::map<std::string, std::string>> overlaysIniData = getParsedDataFromIniFile(overlaysIniFilePath);
                             localPriority = std::stoi(overlaysIniData[overlayFileName]["priority"])-1;
                             setIniFileValue(overlaysIniFilePath, overlayFileName, "priority", std::to_string(localPriority));
-                            tsl::changeTo<MainMenu>(Soverlays);
+                            tsl::replaceWith<MainMenu>(Soverlays);
                             return true;
                         }
                         return false;
@@ -1972,7 +1972,7 @@ public:
                             std::remove(subWithoutSpaces.begin(), subWithoutSpaces.end(), ' ');
                             localPriority = std::stoi(packagesIniData[subWithoutSpaces]["priority"])+1;
                             setIniFileValue(packagesIniFilePath, subWithoutSpaces, "priority", std::to_string(localPriority));
-                            tsl::changeTo<MainMenu>(Spackages);
+                            tsl::replaceWith<MainMenu>(Spackages);
                             return true;
                         } else if (keys & KEY_MINUS) {
                             std::map<std::string, std::map<std::string, std::string>> packagesIniData = getParsedDataFromIniFile(packagesIniFilePath);
@@ -1980,7 +1980,7 @@ public:
                             std::remove(subWithoutSpaces.begin(), subWithoutSpaces.end(), ' ');
                             localPriority = std::stoi(packagesIniData[subWithoutSpaces]["priority"])-1;
                             setIniFileValue(packagesIniFilePath, subWithoutSpaces, "priority", std::to_string(localPriority));
-                            tsl::changeTo<MainMenu>(Spackages);
+                            tsl::replaceWith<MainMenu>(Spackages);
                             return true;
                         }
                         if (DownloadProcessing) {
@@ -2162,14 +2162,14 @@ public:
         if ((keysDown & KEY_DRIGHT) && !(keysHeld & ~KEY_DRIGHT)) {
             if (menuMode != "packages") {
                 setIniFileValue(settingsConfigIniPath, "uberhand", "last_menu", "packages");
-                tsl::changeTo<MainMenu>();
+                tsl::replaceWith<MainMenu>();
                 return true;
             }
         }
         if ((keysDown & KEY_DLEFT) && !(keysHeld & ~KEY_DLEFT)) {
             if (menuMode != "overlays") {
                 setIniFileValue(settingsConfigIniPath, "uberhand", "last_menu", "overlays");
-                tsl::changeTo<MainMenu>();
+                tsl::replaceWith<MainMenu>();
                 return true;
             }
         }
