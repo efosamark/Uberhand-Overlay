@@ -30,6 +30,7 @@ json_t* loadJsonFromUrl(const std::string &url) {
     CURL *curl;
     CURLcode res;
     std::string readBuffer;
+    readBuffer.reserve(5 * 1024);
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
