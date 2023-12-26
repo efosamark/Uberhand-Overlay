@@ -991,10 +991,9 @@ std::vector<std::string> parseString(const std::string& str, char delimiter) {
     return result;
 }
 
-std::string getversion(json_t* json) {
+std::string getVersion(json_t* json) {
     json_t* error = json_object_get(json, "message");
     if (json_string_length(error) != 0) {
-        json_decref(json);
         logMessage("API limit reached");
         return "ApiLimit";
     }
@@ -1004,7 +1003,6 @@ std::string getversion(json_t* json) {
         json_decref(tarballUrlObj);
         return getSubstringAfterLastSlash(tarballUrl);
     }
-    json_decref(json);
     return "Error";
 }
 
@@ -1013,7 +1011,6 @@ std::string getLinkOnLatest(json_t* json, int dEntry = 1) {
     json_t* link = json_object_get(json_array_get(assets, dEntry-1), "browser_download_url");
     if (link && json_is_string(link)) {
         const std::string linkS = json_string_value(link);
-        // json_decref(json);
         json_decref(assets);
         json_decref(link);
         return linkS;
@@ -1035,7 +1032,7 @@ std::map<std::string, std::string> packageUpdateCheck(std::string subConfigIniPa
             packageInfo.clear();
             return packageInfo;
         }   
-        packageInfo["repoVer"] = getversion(git_json);
+        packageInfo["repoVer"] = getVersion(git_json);
         if (packageInfo["repoVer"] == "ApiLimit" || packageInfo["repoVer"] == "Error") {
             json_decref(git_json);
             packageInfo.clear();
@@ -1061,7 +1058,7 @@ std::map<std::string, std::string> ovlUpdateCheck(std::map<std::string, std::str
         ovlItemToUpdate.clear();
         return ovlItemToUpdate;
     }
-    ovlItemToUpdate["repoVer"]= getversion(git_json);
+    ovlItemToUpdate["repoVer"] = getVersion(git_json);
     if (ovlItemToUpdate["repoVer"] == "ApiLimit" || ovlItemToUpdate["repoVer"] == "Error") {
         json_decref(git_json);
         ovlItemToUpdate.clear();
