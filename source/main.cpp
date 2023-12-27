@@ -168,7 +168,6 @@ public:
         }
         return false;
     }
-    virtual std::string getClass() {return "ConfigOverlay";}
 };
 
 class SelectionOverlay : public tsl::Gui {
@@ -696,7 +695,7 @@ public:
             }
         }
         if (resetValue && keysDown) {
-            if (this->getFocusedElement()->getClass()  == "ListItem" ){
+            if (this->getFocusedElement()->getClass() == tsl::Class::ListItem) {
                 tsl::elm::ListItem* focusedItem = dynamic_cast<tsl::elm::ListItem*>(this->getFocusedElement());
                 if (focusedItem->getValue() == "APPLIED") {
                     focusedItem->setValue(prevValue);
@@ -774,8 +773,6 @@ public:
         }
         return false;
     }
-
-    virtual std::string getClass() {return "SelectionOverlay";}
 };
 
 
@@ -1267,7 +1264,7 @@ public:
 
     virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
         if (resetValue && keysDown) {
-            if (this->getFocusedElement()->getClass()  == "ListItem" ){
+            if (this->getFocusedElement()->getClass() == tsl::Class::ListItem) {
                 tsl::elm::ListItem* focusedItem = dynamic_cast<tsl::elm::ListItem*>(this->getFocusedElement());
                 if (focusedItem->getValue() == "APPLIED") {
                     focusedItem->setValue(prevValue);
@@ -1339,7 +1336,6 @@ public:
         }
         return false;
     }
-    virtual std::string getClass() {return "SubMenu";}
 };
 
 class MainMenu;
@@ -1420,8 +1416,6 @@ public:
         }
         return false;
     }
-    virtual std::string getClass() {return "Package";}
-
 };
 
 class Updater : public tsl::Gui {
@@ -2179,7 +2173,6 @@ public:
         }
         return false;
     }
-    virtual std::string getClass() {return "MainMenu";}
 };
 
 class Overlay : public tsl::Overlay {

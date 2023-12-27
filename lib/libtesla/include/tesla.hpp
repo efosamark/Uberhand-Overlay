@@ -94,7 +94,13 @@ namespace tsl {
         Custom,
         DefaultText
     };
-    
+
+    enum class Class {
+        Element,
+        ListItem,
+        TrackBar
+    };
+
     namespace cfg {
 
         constexpr u32 ScreenWidth = 1920;       ///< Width of the Screen
@@ -1535,7 +1541,7 @@ namespace tsl {
 
             static void setInputMode(InputMode mode) { Element::s_inputMode = mode; }
 
-            virtual std::string getClass() {return "Element";}
+            virtual Class getClass() { return Class::Element; }
 
         protected:
             constexpr static inline auto a = &gfx::Renderer::a;
@@ -2403,9 +2409,8 @@ namespace tsl {
                 return this->m_value;
             }
 
-            virtual std::string getClass() {
-                return "ListItem";
-            }
+            Class getClass() override { return Class::ListItem; }
+
         protected:
             std::string m_text;
             std::string m_value = "";
@@ -2763,9 +2768,8 @@ namespace tsl {
                 this->m_valueChangedListener = valueChangedListener;
             }
             
-            virtual std::string getClass() {
-                return "TrackBar";
-            }
+            Class getClass() override { return Class::TrackBar; }
+
         protected:
             const char *m_icon = nullptr;
             s16 m_value = 0;
@@ -2938,8 +2942,6 @@ namespace tsl {
          *
          */
         virtual void update() {}
-
-        virtual std::string getClass() {return "GUI";}
 
         /**
          * @brief Called once per frame with the latest HID inputs

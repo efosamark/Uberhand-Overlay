@@ -100,7 +100,7 @@ public:
                 size_t sliderIndex = list->getIndexInList(slider);
                     if (sliderIndex != 0) {
                         for (size_t i = 0; i < sliderIndex; i++) {
-                            if (list->getItemAtIndex(i)->getClass()  == "TrackBar") {
+                            if (list->getItemAtIndex(i)->getClass() == tsl::Class::TrackBar) {
                                 tsl::elm::StepTrackBar* prevSlider = dynamic_cast<tsl::elm::StepTrackBar*>(list->getItemAtIndex(i));
                                 if (prevSlider->getProgress() > val)
                                 {
@@ -110,7 +110,7 @@ public:
                         }
                     }
                     for (size_t i = sliderIndex; i < listSize; i++) {
-                        if (list->getItemAtIndex(i)->getClass()  == "TrackBar") {
+                        if (list->getItemAtIndex(i)->getClass() == tsl::Class::TrackBar) {
                             tsl::elm::StepTrackBar* curSlider = dynamic_cast<tsl::elm::StepTrackBar*>(list->getItemAtIndex(i));
                             if (curSlider->getProgress() < val)
                                 curSlider->setProgress(val);
@@ -122,7 +122,7 @@ public:
                     std::vector<int> values;
                     size_t listSize = list->getSize();
                     for (size_t i = 0; i < listSize; i++) {
-                        if (list->getItemAtIndex(i)->getClass()  == "TrackBar") {
+                        if (list->getItemAtIndex(i)->getClass() == tsl::Class::TrackBar) {
                             values.push_back(int(double(dynamic_cast<tsl::elm::StepTrackBar*>(list->getItemAtIndex(i))->getProgress())*12.75));
                         }
                     }
