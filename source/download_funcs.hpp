@@ -40,6 +40,8 @@ json_t* loadJsonFromUrl(const std::string &url) {
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallbackJson);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion");
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
         res = curl_easy_perform(curl);
         curl_easy_cleanup(curl);
 
