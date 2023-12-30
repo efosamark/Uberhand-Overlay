@@ -132,7 +132,7 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
                 // Value not enclosed in quotes
                 packageHeader.github = strLine.substr(repoPos, endPos - repoPos);
             }
-            if (packageHeader.github.substr(packageHeader.github.length() - 11, 11) != "?per_page=1") {
+            if (!packageHeader.github.ends_with("?per_page=1")) {
                 packageHeader.github += "?per_page=1";
             }
         }
