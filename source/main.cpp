@@ -348,8 +348,8 @@ public:
                                         } else if (decValue) {
                                             valueStr = json_string_value(decValue);
                                         }
-                                        int hexLength = strlen(valueStr)/2;
-                                        hexLength = std::max(hexLength, 2);
+                                        int hexLength = strlen(valueStr) / 2;
+                                        hexLength = std::max(hexLength, 1);
                                         if (detectSize) {
                                             try {
                                                 detectSize = false;
@@ -814,7 +814,7 @@ public:
                     return "\u25B6";
                 }
                 hexLength = strlen(valueStr) / 2;
-                hexLength = std::max(hexLength, 2);
+                hexLength = std::max(hexLength, 1);
                 std::string currentHex;
                 try {
                     const std::string CUST = "43555354";
