@@ -786,7 +786,6 @@ public:
 
     std::string findCurrentKip(std::string jsonPath, std::string offset) {
         std::string dispValue, searchKey;
-        int hexLength;
         const char* valueStr;
 
         json_t* jsonData = readJsonFromFile(jsonPath);
@@ -801,20 +800,22 @@ public:
                 std::string name;
                 json_t* hexValue = json_object_get(item, "hex");
                 json_t* decValue = json_object_get(item, "dec");
+                int hexLength = 0;
                 if ((hexValue && json_is_string(hexValue))) {
                     valueStr = json_string_value(hexValue);
                     searchKey = "hex";
+                    hexLength = strlen(valueStr) / 2;
+                    hexLength = std::max(hexLength, 1);
                 }
                 else if ((decValue && json_is_string(decValue))) {
                     valueStr = json_string_value(decValue);
                     searchKey = "dec";
+                    hexLength = 4;
                 }
                 else {
                     json_decref(jsonData);
                     return "\u25B6";
                 }
-                hexLength = strlen(valueStr) / 2;
-                hexLength = std::max(hexLength, 1);
                 std::string currentHex;
                 try {
                     const std::string CUST = "43555354";

@@ -326,6 +326,7 @@ bool hexEditCustOffset(const std::string& filePath, const size_t offsetFromCust,
 
 int reversedHexToInt(const std::string& hex_str) {
     std::string reversedHex;
+    reversedHex.reserve(hex_str.size());
 
     for (int i = hex_str.length() - 2; i >= 0; i -= 2) {
         reversedHex += hex_str.substr(i, 2);
