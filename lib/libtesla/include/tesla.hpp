@@ -514,7 +514,7 @@ namespace tsl {
          */
         static u64 comboStringToKeys(const std::string &value) {
             u64 keyCombo = 0x00;
-            for (std::string key : hlp::split(value, '+')) {
+            for (const std::string &key : hlp::split(value, '+')) {
                 keyCombo |= hlp::stringToKeyCode(key);
             }
             return keyCombo;
@@ -2362,7 +2362,7 @@ namespace tsl {
                 this->m_maxWidth = 0;
             }
 
-            inline void setColor(tsl::PredefinedColors col=tsl::PredefinedColors::Gray, std::string hexString = "") {
+            inline void setColor(tsl::PredefinedColors col=tsl::PredefinedColors::Gray, const std::string& hexString = "") {
                 switch (col) 
                 {
                     case tsl::PredefinedColors::Green:
@@ -3722,7 +3722,7 @@ namespace tsl {
         Overlay::get()->goBack();
     }
 
-    static void setNextOverlay(const std::string& ovlPath, std::string origArgs) {
+    static void setNextOverlay(const std::string& ovlPath, const std::string origArgs) {
 
         //std::string args = std::filesystem::path(ovlPath).filename();
         std::string args = getNameFromPath(ovlPath); // CUSTOM MODIFICATION

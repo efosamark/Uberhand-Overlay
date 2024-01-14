@@ -484,7 +484,7 @@ public:
             parentDirName = getParentDirNameFromPath(file);
             if (useSplitHeader && (lastParentDirName.empty() || (lastParentDirName != parentDirName))){
                 list->addItem(new tsl::elm::CategoryHeader(removeQuotes(parentDirName)));
-                lastParentDirName = parentDirName.c_str();
+                lastParentDirName = parentDirName;
             }
 
             if (!useToggle) {
@@ -501,7 +501,7 @@ public:
                     }
                     if (pos != std::string::npos) {
                         footer = optionName.substr(pos + 2); // Assign the part after "&&" as the footer
-                        optionName = optionName.substr(0, pos); // Strip the "&&" and everything after it
+                        optionName.resize(pos); // Strip the "&&" and everything after it
                     }
                     if (pos2 == 0) { // separator
                         if (isFirst) {
@@ -784,8 +784,8 @@ public:
     SubMenu(const std::string& path) : subPath(path) {}
     ~SubMenu() {}
 
-    std::string findCurrentKip(std::string jsonPath, std::string offset) {
-        std::string dispValue, searchKey;
+    std::string findCurrentKip(const std::string& jsonPath, const std::string& offset) {
+        std::string searchKey;
         const char* valueStr;
 
         json_t* jsonData = readJsonFromFile(jsonPath);
@@ -797,7 +797,6 @@ public:
             }
             json_t* item = json_array_get(jsonData, 1);
             if (item && json_is_object(item)) {
-                std::string name;
                 json_t* hexValue = json_object_get(item, "hex");
                 json_t* decValue = json_object_get(item, "dec");
                 int hexLength = 0;
@@ -838,7 +837,7 @@ public:
                                     std::string cur_name = json_string_value(name);
                                     size_t footer_pos = cur_name.find(" - ");
                                     if (footer_pos != std::string::npos) {
-                                        cur_name = cur_name.substr(0, footer_pos);
+                                        cur_name.resize(footer_pos);
                                     }
                                     json_decref(jsonData);
                                     return cur_name;
@@ -853,8 +852,8 @@ public:
         return "\u25B6";
     }
 
-    std::string findCurrentIni(std::string jsonPath, std::string iniPath, std::string section, std::string key) {
-        std::string dispValue, searchKey;
+    std::string findCurrentIni(const std::string& jsonPath, const std::string& iniPath, const std::string& section, const std::string& key) {
+        std::string searchKey;
 
         json_t* jsonData = readJsonFromFile(jsonPath);
         if (jsonData && json_is_array(jsonData)) {
@@ -865,7 +864,6 @@ public:
             }
             json_t* item = json_array_get(jsonData, 1);
             if (item && json_is_object(item)) {
-                std::string name;
                 json_t* hexValue = json_object_get(item, "hex");
                 json_t* decValue = json_object_get(item, "dec");
                 json_t* otherValue = json_object_get(item, "value");
@@ -894,7 +892,7 @@ public:
                                     std::string cur_name = json_string_value(name);
                                     size_t footer_pos = cur_name.find(" - ");
                                     if (footer_pos != std::string::npos) {
-                                        cur_name = cur_name.substr(0, footer_pos);
+                                        cur_name.resize(footer_pos);
                                     }
                                     json_decref(jsonData);
                                     return cur_name;
@@ -1033,14 +1031,14 @@ public:
                 size_t pos = optionName.find(" - ");
                 if (pos != std::string::npos) {
                     footer = optionName.substr(pos + 2); // Assign the part after "&&" as the footer
-                    optionName = optionName.substr(0, pos); // Strip the "&&" and everything after it
+                    optionName.resize(pos); // Strip the "&&" and everything after it
                 }
             }
 
             size_t pos = optionName.find(" ;; "); // Find the custom display header
             if (pos!= std::string::npos) {
                 headerName = optionName.substr(pos + 4); // Strip the item name
-                optionName = optionName.substr(0, pos); // Strip the displayName
+                optionName.resize(pos); // Strip the displayName
             } else {
                 headerName = optionName;
             }
@@ -1220,10 +1218,10 @@ public:
         
         // Remove trailing newline character
         if ((packageSectionString != "") && (packageSectionString.back() == '\n')) {
-            packageSectionString = packageSectionString.substr(0, packageSectionString.size() - 1);
+            packageSectionString.resize(packageSectionString.size() - 1);
         }
         if ((packageInfoString != "") && (packageInfoString.back() == '\n')) {
-            packageInfoString = packageInfoString.substr(0, packageInfoString.size() - 1);
+            packageInfoString.resize(packageInfoString.size() - 1);
         }
         
         
@@ -1662,7 +1660,7 @@ public:
         
         if ((defaultMenuMode == "overlays") || (defaultMenuMode == "packages")) {
             if (defaultMenuLoaded) {
-                menuMode = defaultMenuMode.c_str();
+                menuMode = defaultMenuMode;
                 defaultMenuLoaded = false;
             }
         } else {

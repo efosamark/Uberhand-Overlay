@@ -145,7 +145,7 @@ public:
     return rootFrame;
     }
 
-    std::string formString(std::vector<int> newValues, std::vector<std::vector<int>> initialData) {
+    std::string formString(std::vector<int> newValues, const std::vector<std::vector<int>>& initialData) {
 
         std::stringstream result;
         result << "\"str!\"[[";

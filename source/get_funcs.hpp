@@ -14,7 +14,7 @@ constexpr int OverlayLoaderModuleId = 348;
 constexpr Result ResultSuccess = MAKERESULT(0, 0);
 constexpr Result ResultParseError = MAKERESULT(OverlayLoaderModuleId, 1);
 
-std::tuple<Result, std::string, std::string> getOverlayInfo(std::string filePath) {
+std::tuple<Result, std::string, std::string> getOverlayInfo(const std::string& filePath) {
     FILE* file = fopen(filePath.c_str(), "r");
 
     NroHeader nroHeader;
@@ -241,7 +241,7 @@ std::vector<std::string> getFilesListByWildcard(const std::string& pathPattern) 
 
     bool isFolderWildcard = wildcard.back() == '/';
     if (isFolderWildcard) {
-        wildcard = wildcard.substr(0, wildcard.size() - 1);  // Remove the trailing slash
+        wildcard.resize(wildcard.size() - 1);  // Remove the trailing slash
     }
 
     //logMessage("isFolderWildcard: " + std::to_string(isFolderWildcard));
@@ -268,7 +268,7 @@ std::vector<std::string> getFilesListByWildcard(const std::string& pathPattern) 
                 std::size_t wildcardPos = wildcard.find('*');
                 if (wildcardPos != std::string::npos) {
                     std::string prefix = wildcard.substr(0, wildcardPos);
-                    if (entryName.find(prefix) == 0) {
+                    if (entryName.starts_with(prefix)) {
                         std::string suffix = wildcard.substr(wildcardPos + 1);
                         if (entryName.size() >= suffix.size() && entryName.compare(entryName.size() - suffix.size(), suffix.size(), suffix) == 0) {
                             fileList.push_back(entryPath);

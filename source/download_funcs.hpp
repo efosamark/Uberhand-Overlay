@@ -65,7 +65,7 @@ json_t* loadJsonFromUrl(const std::string &url) {
 
 
 bool downloadFile(const std::string& url, const std::string& toDestination) {
-    std::string destination = toDestination.c_str();
+    std::string destination = toDestination;
     // Check if the destination ends with "/"
     if (destination.back() == '/') {
         createDirectory(destination);
@@ -135,15 +135,15 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
     }
 
     curl_easy_cleanup(curl);
-    fclose(file);;
     // Check if the file is empty
     long fileSize = ftell(file);
     if (fileSize == 0) {
         logMessage(std::string("Error downloading file: Empty file"));
         std::remove(destination.c_str());
+        fclose(file);
         return false;
     }
-
+    fclose(file);
     return true;
 }
 

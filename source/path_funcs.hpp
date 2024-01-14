@@ -141,7 +141,7 @@ bool moveFileOrDirectory(const std::string& sourcePath, const std::string& desti
         bool destinationExists = (stat(getParentDirFromPath(destinationPath).c_str(), &destinationInfo) == 0);
         if (!destinationExists) {
             // Create the destination directory
-            createDirectory(getParentDirFromPath(destinationPath).c_str());
+            createDirectory(getParentDirFromPath(destinationPath));
         } 
 
         if (S_ISDIR(sourceInfo.st_mode)) {
@@ -179,7 +179,7 @@ bool moveFileOrDirectory(const std::string& sourcePath, const std::string& desti
             return true;
         } else {
             // Source path is a regular file
-            std::string filename = getNameFromPath(sourcePath.c_str());
+            std::string filename = getNameFromPath(sourcePath);
 
             std::string destinationFilePath = destinationPath;
 
@@ -222,7 +222,7 @@ bool moveFilesOrDirectoriesByPattern(const std::string& sourcePathPattern, const
         // if sourceFile is a file (Needs condition handling)
         if (!isDirectory(sourceFileOrDirectory)) {
             //logMessage("destinationPath: "+destinationPath);
-            result = result && moveFileOrDirectory(sourceFileOrDirectory.c_str(), destinationPath.c_str());
+            result = result && moveFileOrDirectory(sourceFileOrDirectory, destinationPath);
             if (!result) {
                 return result;
             }
@@ -233,7 +233,7 @@ bool moveFilesOrDirectoriesByPattern(const std::string& sourcePathPattern, const
         
             //logMessage("fixedDestinationPath: "+fixedDestinationPath);
         
-            result = result && moveFileOrDirectory(sourceFileOrDirectory.c_str(), fixedDestinationPath.c_str());
+            result = result && moveFileOrDirectory(sourceFileOrDirectory, fixedDestinationPath);
             if (!result) {
                 return result;
             }
@@ -440,6 +440,6 @@ bool generateBackup() {
 
     std::string backupName = "/atmosphere/kips/.bak/Backup [" + std::to_string(highestNumber + 1) + "].kip";
     // Save current kip with the unique name
-    bool result = copyFileOrDirectory("/atmosphere/kips/loader.kip", backupName.c_str());
+    bool result = copyFileOrDirectory("/atmosphere/kips/loader.kip", backupName);
     return result;
 }

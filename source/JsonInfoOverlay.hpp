@@ -7,7 +7,7 @@ private:
     std::string kipPath = "/atmosphere/kips/loader.kip";
 
 public:
-    JsonInfoOverlay(std::string jsonPath, std::string specficKey) : jsonPath(jsonPath), specficKey(specficKey) {}
+    JsonInfoOverlay(const std::string& jsonPath, const std::string& specficKey) : jsonPath(jsonPath), specficKey(specficKey) {}
     ~JsonInfoOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
@@ -40,7 +40,8 @@ public:
         return rootFrame;
     }
 
-    std::map <std::string,std::string> parseJson (std::string jsonPath, std::string selectedItem, std::vector<std::string> offsets = {"32","48","16","36","52","64","56","68","60","76"}) {
+    std::map <std::string,std::string> parseJson (const std::string& jsonPath, const std::string& selectedItem, std::vector<std::string> offsets = {"32","48","16","36","52","64","56","68","60","76"}) {
+
         std::map <std::string, std::string> newKipdata;
         const std::string CUST = "43555354";
         std::vector<size_t> offsetStrs = findHexDataOffsets(kipPath, CUST);

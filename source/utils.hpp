@@ -155,7 +155,7 @@ bool isDangerousCombination(const std::string& patternPath) {
 
     // Check if the patternPath is an ultra protected folder
     for (const std::string& ultraProtectedFolder : ultraProtectedFolders) {
-        if (patternPath.find(ultraProtectedFolder) == 0) {
+        if (patternPath.starts_with(ultraProtectedFolder)) {
             return true; // Pattern path is an ultra protected folder
         }
     }
@@ -167,7 +167,7 @@ bool isDangerousCombination(const std::string& patternPath) {
         }
 
         // Check if the patternPath starts with a protected folder and includes a dangerous pattern
-        if (patternPath.find(protectedFolder) == 0) {
+        if (patternPath.starts_with(protectedFolder)) {
             std::string relativePath = patternPath.substr(protectedFolder.size());
 
             // Split the relativePath by '/' to handle multiple levels of wildcards
@@ -208,7 +208,7 @@ bool isDangerousCombination(const std::string& patternPath) {
     }
 
     // Check if the patternPath is a dangerous pattern
-    if (patternPath.find("sdmc:/") == 0) {
+    if (patternPath.starts_with("sdmc:/")) {
         std::string relativePath = patternPath.substr(6); // Remove "sdmc:/"
 
         // Split the relativePath by '/' to handle multiple levels of wildcards
@@ -458,7 +458,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                     }
                 }
 
-                bool result = setIniFileValue(sourcePath.c_str(), desiredSection.c_str(), desiredKey.c_str(), desiredValue.c_str());
+                bool result = setIniFileValue(sourcePath, desiredSection, desiredKey, desiredValue);
                 if (!result && catchErrors) {
                     logMessage("Error in " + commandName + " command");
                     return -1;
@@ -679,7 +679,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
     return 0;
 }
 
-tsl::PredefinedColors defineColor(std::string strColor) {
+tsl::PredefinedColors defineColor(const std::string& strColor) {
     // logMessage ("string color: " + strColor);
     if (strColor == "Green") {
         return tsl::PredefinedColors::Green;
@@ -696,7 +696,7 @@ tsl::PredefinedColors defineColor(std::string strColor) {
     } 
 }
 
-std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string kipPath = "/atmosphere/kips/loader.kip", bool spacing = false) {
+std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std::string& kipPath = "/atmosphere/kips/loader.kip", bool spacing = false) {
 
     std::string currentHex = "";
     std::string extent = "";
@@ -905,7 +905,7 @@ std::pair<std::string, int> dispCustData(const std::string jsonPath, std::string
     return std::make_pair(output, lineCount);
 }
 
-std::pair<std::string, int> dispRAMTmpl(std::string dataPath, std::string selectedItem) {
+std::pair<std::string, int> dispRAMTmpl(const std::string& dataPath, const std::string& selectedItem) {
 
     std::stringstream output;
     std::string name = "";
@@ -1020,7 +1020,7 @@ std::string getLinkOnLatest(json_t* json, int dEntry = 1) {
 }
 
 
-std::map<std::string, std::string> packageUpdateCheck(std::string subConfigIniPath) {
+std::map<std::string, std::string> packageUpdateCheck(const std::string& subConfigIniPath) {
     std::map<std::string, std::string> packageInfo;
     PackageHeader packageHeader = getPackageHeaderFromIni("sdmc:/switch/.packages/" + subConfigIniPath);
     if (packageHeader.version != "" && packageHeader.github != "") {

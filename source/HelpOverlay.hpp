@@ -6,7 +6,7 @@ private:
     bool isInSection, inQuotes;
 
 public:
-    HelpOverlay(std::string helpPath) : helpPath(helpPath) {}
+    HelpOverlay(const std::string& helpPath) : helpPath(helpPath) {}
     ~HelpOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {

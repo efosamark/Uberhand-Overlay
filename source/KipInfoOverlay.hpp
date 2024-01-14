@@ -8,8 +8,8 @@ private:
     bool isFirstPage = true;
 
 public:
-    KipInfoOverlay(std::vector<std::string> kipInfoCommand) : kipInfoCommand(kipInfoCommand), showBackup(true) {}
-    KipInfoOverlay(std::vector<std::string> kipInfoCommand, bool showBackup, bool isFirstPage = true) : kipInfoCommand(kipInfoCommand), showBackup(showBackup), isFirstPage(isFirstPage) {}
+    KipInfoOverlay(const std::vector<std::string>& kipInfoCommand) : kipInfoCommand(kipInfoCommand), showBackup(true) {}
+    KipInfoOverlay(const std::vector<std::string>& kipInfoCommand, bool showBackup, bool isFirstPage = true) : kipInfoCommand(kipInfoCommand), showBackup(showBackup), isFirstPage(isFirstPage) {}
     ~KipInfoOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
