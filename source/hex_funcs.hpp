@@ -28,13 +28,9 @@ std::string asciiToHex(const std::string& asciiStr) {
 }
 
 std::string decimalToHex(const std::string& decimalStr) {
-    std::string hexadecimal = (std::stringstream{} << std::hex << std::stoi(decimalStr)).str();
+    // assumes the decimal is a 32-bit integer
+    std::string hexadecimal = (std::stringstream{} << std::hex << std::setw(8) << std::setfill('0') << std::stoi(decimalStr)).str();
 
-    // If the length is odd, add a trailing '0'
-    if (hexadecimal.length() % 2 != 0) {
-        hexadecimal = '0' + hexadecimal;
-    }
-    
     return hexadecimal;
 }
 
@@ -43,6 +39,7 @@ std::string decimalToReversedHex(const std::string& decimalStr, int order = 2) {
 
     // Reverse the hexadecimal string in groups of order
     std::string reversedHex;
+    reversedHex.reserve(hexadecimal.size());
     for (int i = hexadecimal.length() - order; i >= 0; i -= order) {
         reversedHex += hexadecimal.substr(i, order);
     }
