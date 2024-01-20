@@ -9,6 +9,7 @@
 #include "debug_funcs.hpp"
 //#include "json_funcs.hpp"
 
+const size_t downloadBufferSize = 5 * 1024;
 
 size_t writeCallbackFile(void* contents, size_t size, size_t nmemb, FILE* file) {
     // Callback function to write received data to a file
@@ -108,9 +109,11 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
     FILE* file = fopen(destination.c_str(), "wb");
     if (!file) {
         logMessage(std::string("Error opening file: ") + destination);
+        curl_easy_cleanup(curl);
         return false;
     }
 
+    curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, downloadBufferSize);
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallbackFile);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
@@ -125,25 +128,23 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
     // curl_easy_setopt(curl, CURLOPT_CAINFO, "sdmc:/config/uberhand/cacert.pem");
 
     CURLcode result = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    fclose(file);
+
     if (result != CURLE_OK) {
         logMessage(std::string("Error downloading file: ") + curl_easy_strerror(result));
-        curl_easy_cleanup(curl);
-        fclose(file);
         // Delete the file if nothing was written to it
         std::remove(destination.c_str());
         return false;
     }
 
-    curl_easy_cleanup(curl);
     // Check if the file is empty
     long fileSize = ftell(file);
     if (fileSize == 0) {
         logMessage(std::string("Error downloading file: Empty file"));
         std::remove(destination.c_str());
-        fclose(file);
         return false;
     }
-    fclose(file);
     return true;
 }
 
