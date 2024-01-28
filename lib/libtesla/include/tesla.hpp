@@ -134,7 +134,7 @@ namespace tsl {
 
             ss << std::hex << hexString.substr(5,2);
             ss >> b;
-            // logMessage("rgb = " + std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) + ", ");
+            // log("rgb = " + std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) + ", ");
             return tsl::Color(r, g, b, 0xF);
         }
         union {

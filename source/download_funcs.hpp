@@ -78,7 +78,7 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
             std::string filename = url.substr(lastSlash + 1);
             destination += filename;
         } else {
-            logMessage(std::string("Invalid URL: ") + url);
+            log("Invalid URL: %s", url.c_str());
             return false;
         }
     } else {
@@ -98,18 +98,18 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
         } else {
             // Failed initialization, increment retry count and try again
             retryCount++;
-            logMessage("Error initializing curl. Retrying...");
+            log("Error initializing curl. Retrying...");
         }
     }
     if (!curl) {
         // Failed to initialize curl after multiple attempts
-        logMessage("Error initializing curl after multiple retries.");
+        log("Error initializing curl after multiple retries.");
         return false;
     }
     
     FILE* file = fopen(destination.c_str(), "wb");
     if (!file) {
-        logMessage(std::string("Error opening file: ") + destination);
+        log("Error opening file: %s", destination.c_str());
         return false;
     }
 
@@ -128,7 +128,7 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
 
     CURLcode result = curl_easy_perform(curl);
     if (result != CURLE_OK) {
-        logMessage(std::string("Error downloading file: ") + curl_easy_strerror(result));
+        log("Error downloading file: %s", curl_easy_strerror(result));
         curl_easy_cleanup(curl);
         fclose(file);
         // Delete the file if nothing was written to it
@@ -140,7 +140,7 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
     // Check if the file is empty
     long fileSize = ftell(file);
     if (fileSize == 0) {
-        logMessage(std::string("Error downloading file: Empty file"));
+        log("Error downloading file: Empty file");
         std::remove(destination.c_str());
         fclose(file);
         return false;
@@ -153,7 +153,7 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
 bool unzipFile(const std::string& zipFilePath, const std::string& toDestination) {
     ZZIP_DIR* dir = zzip_dir_open(zipFilePath.c_str(), nullptr);
     if (!dir) {
-        logMessage(std::string("Error opening zip file: ") + zipFilePath);
+        log("Error opening file: %s; error: %s", zipFilePath.c_str(), zzip_strerror_of(dir));
         return false;
     }
 
@@ -180,12 +180,12 @@ bool unzipFile(const std::string& zipFilePath, const std::string& toDestination)
         }
         
         if (isDirectory(directoryPath)) {
-            //logMessage("directoryPath: success");
+            //log("directoryPath: success");
         } else {
-            logMessage("directoryPath: failure");
+            log("directoryPath: failure");
         }
         
-        //logMessage(std::string("directoryPath: ") + directoryPath);
+        //log(std::string("directoryPath: ") + directoryPath);
 
         ZZIP_FILE* file = zzip_file_open(dir, entry.d_name, 0);
         if (file) {
@@ -201,13 +201,13 @@ bool unzipFile(const std::string& zipFilePath, const std::string& toDestination)
 
                 fclose(outputFile);
             } else {
-                logMessage(std::string("Error opening output file: ") + extractedFilePath);
+                log("Error opening output file: %s", extractedFilePath.c_str());
                 success = false;
             }
 
             zzip_file_close(file);
         } else {
-            logMessage(std::string("Error opening file in zip: ") + fileName);
+            log("Error opening file in zip: %s", entry.d_name);
             success = false;
         }
     }

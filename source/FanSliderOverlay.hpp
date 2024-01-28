@@ -18,7 +18,7 @@ public:
     ~FanSliderOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
-        // logMessage ("FanSliderOverlay");
+        // log ("FanSliderOverlay");
 
         size_t fifthSlashPos = filePath.find('/', filePath.find('/', filePath.find('/', filePath.find('/') + 1) + 1) + 1);
         bool hasHelp = false;

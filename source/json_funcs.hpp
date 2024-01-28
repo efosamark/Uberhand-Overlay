@@ -22,14 +22,14 @@ SafeJson readJsonFromFile(const std::string& filePath) {
     // Check if the file exists
     struct stat fileStat;
     if (stat(filePath.c_str(), &fileStat) != 0) {
-        logMessage("ERROR: readJsonFromFile: failed to get stat for file \"" + filePath + '"');
+        log("ERROR: readJsonFromFile: failed to get stat for file \"%s\"", filePath.c_str());
         return nullptr;
     }
 
     // Open the file
     FILE* file = fopen(filePath.c_str(), "r");
     if (!file) {
-        logMessage("ERROR: readJsonFromFile: failed to open file \"" + filePath + '"');
+        log("ERROR: readJsonFromFile: failed to open file \"%s\"", filePath.c_str());
         return nullptr;
     }
 
@@ -37,7 +37,7 @@ SafeJson readJsonFromFile(const std::string& filePath) {
     json_t* root = json_loadf(file, JSON_DECODE_ANY, &error);
     if (!root) {
         fclose(file);
-        logMessage("ERROR: readJsonFromFile: failed to load file as json \"" + filePath + '"');
+        log("ERROR: readJsonFromFile: failed to load file as json \"%s\"", filePath.c_str());
         return nullptr;
     }
 
@@ -48,12 +48,12 @@ SafeJson readJsonFromFile(const std::string& filePath) {
 }
 
 // int editJSONfile (const char* jsonFilePath, const std::string& offsetStr) {
-//     // logMessage("Entered editJSONfile");
+//     // log("Entered editJSONfile");
 
 //     // Step 0: Read the contents of loader.kip to determine the hex value
 //     std::string selectedHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", "43555354", offsetStr);
-//     logMessage("selectedHex: ");
-//     logMessage(selectedHex);
+//     log("selectedHex: ");
+//     log(selectedHex);
 //     selectedHex = "600027";
 
 //     // Step 1: Read the JSON file into a Jansson JSON object
@@ -62,7 +62,7 @@ SafeJson readJsonFromFile(const std::string& filePath) {
 
 //     FILE* jsonFile = fopen(jsonFilePath, "r");
 //     if (!jsonFile) {
-//         logMessage("Failed to open JSON file.");
+//         log("Failed to open JSON file.");
 //         return 1;
 //     }
 
@@ -70,8 +70,8 @@ SafeJson readJsonFromFile(const std::string& filePath) {
 //     fclose(jsonFile);
 
 //     if (!root) {
-//         logMessage("Error parsing JSON:");
-//         logMessage(error.text);
+//         log("Error parsing JSON:");
+//         log(error.text);
 //         return 1;
 //     }
 
@@ -91,20 +91,20 @@ SafeJson readJsonFromFile(const std::string& filePath) {
 //             }
 //         }
 //     } else {
-//         // logMessage("JSON file does not contain an array at the root level.");
+//         // log("JSON file does not contain an array at the root level.");
 //         json_decref(root);
 //         return 1;
 //     }
 //     int dotPosition = std::string(jsonFilePath).rfind('.');
 //     const std::string selJsonFile = std::string(jsonFilePath).substr(0, dotPosition) + "-sel.json";
-//     logMessage(selJsonFile);
+//     log(selJsonFile);
 
 //     // Step 3: Write the updated JSON object back to the file
-//     logMessage(std::to_string(json_dump_file(root, selJsonFile.c_str(), JSON_INDENT(4))));
+//     log(std::to_string(json_dump_file(root, selJsonFile.c_str(), JSON_INDENT(4))));
 
 //     // Cleanup
 //     json_decref(root);
 
-//     // logMessage("JSON file updated successfully.");
+//     // log("JSON file updated successfully.");
 //     return 0;
 // }

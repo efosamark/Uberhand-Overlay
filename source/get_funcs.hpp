@@ -236,8 +236,8 @@ std::vector<std::string> getFilesListByWildcard(const std::string& pathPattern) 
         dirPath = pathPattern + "/";
     }
 
-    //logMessage("dirPath: " + dirPath);
-    //logMessage("wildcard: " + wildcard);
+    //log("dirPath: " + dirPath);
+    //log("wildcard: " + wildcard);
 
     std::vector<std::string> fileList;
 
@@ -246,7 +246,7 @@ std::vector<std::string> getFilesListByWildcard(const std::string& pathPattern) 
         wildcard.resize(wildcard.size() - 1);  // Remove the trailing slash
     }
 
-    //logMessage("isFolderWildcard: " + std::to_string(isFolderWildcard));
+    //log("isFolderWildcard: " + std::to_string(isFolderWildcard));
 
     DIR* dir = opendir(dirPath.c_str());
     if (dir != nullptr) {
@@ -257,10 +257,10 @@ std::vector<std::string> getFilesListByWildcard(const std::string& pathPattern) 
 
             bool isEntryDirectory = isDirectory(entryPath);
 
-            //logMessage("entryName: " + entryName);
-            //logMessage("entryPath: " + entryPath);
-            //logMessage("isFolderWildcard: " + std::to_string(isFolderWildcard));
-            //logMessage("isEntryDirectory: " + std::to_string(isEntryDirectory));
+            //log("entryName: " + entryName);
+            //log("entryPath: " + entryPath);
+            //log("isFolderWildcard: " + std::to_string(isFolderWildcard));
+            //log("isEntryDirectory: " + std::to_string(isEntryDirectory));
 
             if (isFolderWildcard && isEntryDirectory && fnmatch(wildcard.c_str(), entryName.c_str(), FNM_NOESCAPE) == 0) {
                 if (entryName != "." && entryName != "..") {
@@ -288,7 +288,7 @@ std::vector<std::string> getFilesListByWildcard(const std::string& pathPattern) 
     //for (const std::string& filePath : fileList) {
     //    fileListAsString += filePath + "\n";
     //}
-    //logMessage("File List:\n" + fileListAsString);
+    //log("File List:\n" + fileListAsString);
 
     return fileList;
 }
@@ -460,35 +460,35 @@ std::vector<std::vector<std::string>> getModifyCommands(const std::vector<std::v
                 //        }
                 //        
                 //        replacement = replaceJsonSourcePlaceholder(replacement, jsonPath, true);
-                //        //logMessage2("replacement: "+replacement);
-                //        //logMessage2("pre-arg: "+arg);
+                //        //log2("replacement: "+replacement);
+                //        //log2("pre-arg: "+arg);
                 //        arg.replace(startPos, endPos - startPos + 2, replacement);
                 //    }
                 } else if (usingJsonSource && (arg.find("{json_source(") != std::string::npos)) {
                     std::string countStr = file;
                     
-                    // logMessage(std::string("count: ")+countStr);
-                    // logMessage(std::string("pre arg: ") + arg);
+                    // log(std::string("count: ")+countStr);
+                    // log(std::string("pre arg: ") + arg);
                     arg = replacePlaceholder(arg, "*", file);
-                    // logMessage(std::string("post arg: ") + arg);
+                    // log(std::string("post arg: ") + arg);
 
                     
                     size_t startPos = arg.find("{json_source(");
                     size_t endPos = arg.find(")}");
                     if (endPos != std::string::npos && endPos > startPos) {
                         replacement = replaceJsonSourcePlaceholder(arg.substr(startPos, endPos - startPos + 2), jsonPath, "{json_source(");
-                        //logMessage2("replacement: "+replacement);
-                        //logMessage2("pre-arg: "+arg);
+                        //log2("replacement: "+replacement);
+                        //log2("pre-arg: "+arg);
                         arg.replace(startPos, endPos - startPos + 2, replacement);
-                        //logMessage2("post-arg: "+arg);
+                        //log2("post-arg: "+arg);
                     }
                 } else if (usingJsonSource && (arg.find("{json_mark_cur_kip(") != std::string::npos)) {
                     std::string countStr = file;
                     
-                    // logMessage(std::string("count: ")+countStr);
-                    // logMessage(std::string("pre arg: ") + arg);
+                    // log(std::string("count: ")+countStr);
+                    // log(std::string("pre arg: ") + arg);
                     arg = replacePlaceholder(arg, "*", file);
-                    // logMessage(std::string("post arg: ") + arg);
+                    // log(std::string("post arg: ") + arg);
 
                     
                     size_t startPos = arg.find("{json_mark_cur_kip(");
@@ -500,20 +500,20 @@ std::vector<std::vector<std::string>> getModifyCommands(const std::vector<std::v
                 } else if (usingJsonSource && (arg.find("{json_mark_cur_ini(") != std::string::npos)) {
                     std::string countStr = file;
                     
-                    // logMessage(std::string("count: ")+countStr);
-                    // logMessage(std::string("pre arg: ") + arg);
+                    // log(std::string("count: ")+countStr);
+                    // log(std::string("pre arg: ") + arg);
                     arg = replacePlaceholder(arg, "*", file);
-                    // logMessage(std::string("post arg: ") + arg);
+                    // log(std::string("post arg: ") + arg);
 
                     
                     size_t startPos = arg.find("{json_mark_cur_ini(");
                     size_t endPos = arg.find(")}");
                     if (endPos != std::string::npos && endPos > startPos) {
                         replacement = replaceJsonSourcePlaceholder(arg.substr(startPos, endPos - startPos + 2), jsonPath, "{json_mark_cur_ini(");
-                        //logMessage2("replacement: "+replacement);
-                        //logMessage2("pre-arg: "+arg);
+                        //log2("replacement: "+replacement);
+                        //log2("pre-arg: "+arg);
                         arg.replace(startPos, endPos - startPos + 2, replacement);
-                        //logMessage2("post-arg: "+arg);
+                        //log2("post-arg: "+arg);
                     }
                 }
             }

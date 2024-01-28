@@ -27,7 +27,7 @@ public:
     ~ConfigOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
-        // logMessage ("ConfigOverlay");
+        // log ("ConfigOverlay");
         auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(filePath), "Uberhand Config");
         auto list = new tsl::elm::List();
 
@@ -185,7 +185,7 @@ public:
     ~SelectionOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
-        // logMessage ("SelectionOverlay");
+        // log ("SelectionOverlay");
 
         bool hasHelp = false;
         std::string helpPath;
@@ -360,7 +360,7 @@ public:
                                                 }
                                             }
                                             catch (const std::invalid_argument& ex) {
-                                                logMessage("ERROR - " + std::string(__func__) + ":" + std::to_string(__LINE__) + " - invalid offset value: \"" + offset + "\" in \"" + jsonPath + "\"");
+                                                log("ERROR - %s:%d  - invalid offset value: \"%s\" in \"%s\"", __func__, __LINE__, offset.c_str(), jsonPath.c_str());
                                             }
                                         }
                                         if (valueStr == currentHex) {
@@ -816,7 +816,7 @@ public:
                     currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", CUST, std::stoul(offset), hexLength);
                 }
                 catch (const std::invalid_argument& ex) {
-                    logMessage("ERROR - " + std::string(__func__) + ":" + std::to_string(__LINE__) + " - invalid offset value: \"" + offset + "\" in \"" + jsonPath + "\"");
+                    log("ERROR - %s:%d - invalid offset value: \"%s\" in \"%s\"", __func__, __LINE__, offset.c_str(), jsonPath.c_str());
                 }
                 if (!currentHex.empty()) {
                     if (searchKey == "dec") {
@@ -897,7 +897,7 @@ public:
     }
 
     virtual tsl::elm::Element* createUI() override {
-        // logMessage ("SubMenu");
+        // log ("SubMenu");
 
         int numSlashes = count(subPath.begin(), subPath.end(), '/');
         bool integrityCheck = verifyIntegrity(subPath);
@@ -1560,7 +1560,7 @@ public:
     ~MainMenu() {}
 
     virtual tsl::elm::Element* createUI() override {
-        // logMessage ("MainMenu");
+        // log ("MainMenu");
 
         defaultMenuMode = "overlays";
         menuMode = "overlays";
@@ -1816,14 +1816,14 @@ public:
                                                 if (parameters.size() > 1 && parameters[1].size() > 0 && parameters[1][0].starts_with("link=")) {
                                                     package["link"] = parameters[1][0].substr(5); // skip "link="
                                                 } else {
-                                                    logMessage("Overlay Updater:ERROR: link not found for item \"" + overlayName + "\"");
+                                                    log("Overlay Updater:ERROR: link not found for item \"%s\"", overlayName.c_str());
                                                     break;
                                                 }
                                                 package["localVer"] = overlayVersion;
                                                 if (parameters.size() > 0 && parameters[0].size() > 0 && parameters[0][0].starts_with("downloadEntry=")) {
                                                     package["downloadEntry"] = parameters[0][0].substr(14); // skip "downloadEntry="
                                                 } else {
-                                                    logMessage("Overlay Updater:ERROR: downloadEntry not found for item \"" + overlayName + "\"");
+                                                    log("Overlay Updater:ERROR: downloadEntry not found for item \"%s\"", overlayName.c_str());
                                                     break;
                                                 }
                                                 std::map<std::string, std::string> resultUpdate = ovlUpdateCheck(package);
@@ -1835,7 +1835,7 @@ public:
                                         }
                                     }
                                 } else {
-                                    logMessage("Overlay Updater:ERROR: Failed to download Updater.ini");
+                                    log("Overlay Updater:ERROR: Failed to download Updater.ini");
                                 }
                             } else {
                                 auto [result, overlayName, overlayVersion] = getOverlayInfo("sdmc:/switch/.overlays/ovlmenu.ovl");
@@ -1900,7 +1900,7 @@ public:
                     } else
                         setIniFileValue(packagesIniFilePath, subWithoutSpaces, "priority", "0");  
                 }
-                // logMessage("priority, taintedSubdirectory: "+std::to_string(priority)+subWithoutSpaces);
+                // log("priority, taintedSubdirectory: "+std::to_string(priority)+subWithoutSpaces);
                 order.emplace(priority, taintedSubdirectory);
             }
 
@@ -1969,7 +1969,7 @@ public:
                             std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> options = loadOptionsFromIni(subPath + "/init.ini");
                                 for (const auto& option : options) {
                                     if (interpretAndExecuteCommand(getModifyCommands(option.second, subPath + option.first)) == -1) {
-                                        logMessage("Init failed!");
+                                        log("Init failed!");
                                         DownloadProcessing = false;
                                         listItem->setValue("FAIL", tsl::PredefinedColors::Red);
                                     } else {

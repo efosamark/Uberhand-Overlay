@@ -13,7 +13,7 @@ public:
     ~KipInfoOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
-        // logMessage ("KipInfoOverlay");
+        // log ("KipInfoOverlay");
 
         std::pair<std::string, int> textDataPair;
         constexpr int lineHeight = 20;  // Adjust the line height as needed

@@ -10,7 +10,7 @@ public:
     ~HelpOverlay() {}
 
     virtual tsl::elm::Element* createUI() override {
-        // logMessage ("HelpOverlay");
+        // log ("HelpOverlay");
 
         std::pair<std::string, int> textDataPair;
         constexpr int lineHeight = 20;  // Adjust the line height as needed

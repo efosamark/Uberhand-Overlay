@@ -4,7 +4,7 @@
 #include <utility>
 
 std::pair<std::string, int> readTextFromFile (const std::string& filePath) {
-    // logMessage("Entered readTextFromFile");
+    // log("Entered readTextFromFile");
 
     std::string lines;
     std::string currentLine;

@@ -275,8 +275,8 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
 
         // Get the command name (first part of the command)
         commandName = unmodifiedCommand[0];
-        //logMessage(commandName);
-        //logMessage(command[1]);
+        //log(commandName);
+        //log(command[1]);
         
         
         std::vector<std::string> command;
@@ -325,7 +325,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                     createDirectory(sourcePath);
                 }
             } else if (catchErrors) {
-                    logMessage("Warning in " + commandName + " command: path is empty. Command is ignored");
+                log("Warning in %s command: path is empty. Command is ignored", commandName.c_str());
             }
             // Perform actions based on the command name
         } else if (commandName == "copy" || commandName == "cp") {
@@ -342,11 +342,11 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                         result = copyFileOrDirectory(sourcePath, destinationPath);
                     }
                     if (!result && catchErrors) {
-                        logMessage("Error in " + commandName + " command");
+                        log("Error in %s command", commandName.c_str());
                         return -1;
                     }
                 } else if (catchErrors) {
-                    logMessage("Warning in " + commandName + " command: source or target is empty. Command is ignored");
+                    log("Warning in %s command: source or target is empty. Command is ignored", commandName.c_str());
                 }
             }
         } else if (commandName == "mirror_copy" || commandName == "mirror_cp") {
@@ -361,7 +361,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                     result = mirrorCopyFiles(sourcePath);
                 }
                 if (!result && catchErrors) {
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command", commandName.c_str());
                     return -1;
                 }
             }
@@ -379,11 +379,11 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                             result = deleteFileOrDirectory(sourcePath);
                         }
                         if (!result && catchErrors) {
-                            logMessage("There is no " + command[1] + " file.");
+                            log("There is no %s file.", command[1].c_str());
                         }
                     }
                 } else if (catchErrors) {
-                    logMessage("Warning in " + commandName + " command: path is empty. Command is ignored");
+                    log("Warning in %s command: path is empty. Command is ignored", commandName.c_str());
                 }
             }
         } else if (commandName == "mirror_delete" || commandName == "mirror_del") {
@@ -397,7 +397,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                     result = mirrorDeleteFiles(sourcePath);
                 }
                 if (!result && catchErrors) {
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command", commandName.c_str());
                     return -1;
                 }
             }
@@ -407,8 +407,8 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 bool result;
                 sourcePath = preprocessPath(command[1]);
                 destinationPath = preprocessPath(command[2]);
-                //logMessage("sourcePath: "+sourcePath);
-                //logMessage("destinationPath: "+destinationPath);
+                //log("sourcePath: "+sourcePath);
+                //log("destinationPath: "+destinationPath);
                 
                 if (!isDangerousCombination(sourcePath)) {
                     if (sourcePath.find('*') != std::string::npos) {
@@ -419,26 +419,23 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                         result = moveFileOrDirectory(sourcePath, destinationPath);
                     }
                     if (!result && catchErrors) {
-                        logMessage("Error in " + commandName + " command");
+                        log("Error in %s command", commandName.c_str());
                         return -1;
                     }
                 } else if (catchErrors) {
-                    //logMessage( "Dangerous combo.");
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command: Dangerous path \"%s\"", commandName.c_str(), sourcePath.c_str());
                     return -1;
                 }
             } else if (catchErrors) {
-                logMessage("Error in " + commandName + " command");
+                log("Error in %s command: expected 2 argunemts, got %ld", commandName.c_str(), command.size() - 1);
                 return -1;
-                //logMessage( "Invalid move command.");
-                logMessage("Invalid move command. Usage: move <source_path> <destination_path>");
             }
 
         } else if (commandName == "set-ini-val" || commandName == "set-ini-value") {
             // Edit command
             if (command.size() == 3) {
                 sourcePath = preprocessPath(command[1]);
-                // logMessage(command[2]);
+                // log(command[2]);
                 IniSectionInput iniData = readIniFile(sourcePath);
                 IniSectionInput desiredData = parseDesiredData(command[2]);
                 updateIniData(iniData, desiredData);
@@ -460,7 +457,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
 
                 bool result = setIniFileValue(sourcePath, desiredSection, desiredKey, desiredValue);
                 if (!result && catchErrors) {
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command", commandName.c_str());
                     return -1;
                 }
             }
@@ -481,7 +478,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
 
                 bool result  = setIniFileKey(sourcePath, desiredSection, desiredKey, desiredNewKey);
                 if (!result && catchErrors) {
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command", commandName.c_str());
                     return -1;
                 }
             }
@@ -489,7 +486,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             // Edit command
             if (command.size() == 3) {
                 sourcePath = preprocessPath(command[1]);
-                // logMessage(command[2]);
+                // log(command[2]);
                 IniSectionInput iniData = readIniFile(sourcePath);
                 IniSectionInput desiredData = parseDesiredData(command[2]);
                 updateIniData(iniData, desiredData, true);
@@ -503,7 +500,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
 
                 bool result  = removeIniFileKey(sourcePath, desiredSection, desiredKey);
                 if (!result && catchErrors) {
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command", commandName.c_str());
                     return -1;
                 }
             }
@@ -517,7 +514,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
 
                 bool result = hexEditByOffset(sourcePath, std::stoul(offset), hexDataReplacement);
                 if (!result && catchErrors) {
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command", commandName.c_str());
                     return -1;
                 }
             }
@@ -536,7 +533,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                     result  = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement);
                 }
                 if (!result && catchErrors) {
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command", commandName.c_str());
                     return -1;
                 }
             }
@@ -547,8 +544,8 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 bool result;
                 hexDataToReplace = asciiToHex(removeQuotes(command[2]));
                 hexDataReplacement = asciiToHex(removeQuotes(command[3]));
-                //logMessage("hexDataToReplace: "+hexDataToReplace);
-                //logMessage("hexDataReplacement: "+hexDataReplacement);
+                //log("hexDataToReplace: "+hexDataToReplace);
+                //log("hexDataReplacement: "+hexDataReplacement);
                 
                 // Fix miss-matched string sizes
                 if (hexDataReplacement.length() < hexDataToReplace.length()) {
@@ -566,7 +563,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                     result  = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement);
                 }
                 if (!result && catchErrors) {
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command", commandName.c_str());
                     return -1;
                 }
             }
@@ -577,20 +574,19 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 bool result;
                 hexDataToReplace = decimalToHex(removeQuotes(command[2]));
                 hexDataReplacement = decimalToHex(removeQuotes(command[3]));
-                //logMessage("hexDataToReplace: "+hexDataToReplace);
-                //logMessage("hexDataReplacement: "+hexDataReplacement);
+                //log("hexDataToReplace: "+hexDataToReplace);
+                //log("hexDataReplacement: "+hexDataReplacement);
 
                 if (command.size() >= 5) {
                     occurrence = removeQuotes(command[4]);
-                    result  = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement, occurrence);
+                    result = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement, occurrence);
                 } else {
-                    result  = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement);
-                    
+                    result = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement);
                 }
                 if (!result && catchErrors) {
-                        logMessage("Error in " + commandName + " command");
-                        return -1;
-                    }
+                    log("Error in %s command", commandName.c_str());
+                    return -1;
+                }
             }
         } else if (commandName == "hex-by-rdecimal") {
             // Edit command - Hex data replacement with occurrence
@@ -599,20 +595,19 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 bool result;
                 hexDataToReplace = decimalToReversedHex(removeQuotes(command[2]));
                 hexDataReplacement = decimalToReversedHex(removeQuotes(command[3]));
-                //logMessage("hexDataToReplace: "+hexDataToReplace);
-                //logMessage("hexDataReplacement: "+hexDataReplacement);
+                //log("hexDataToReplace: "+hexDataToReplace);
+                //log("hexDataReplacement: "+hexDataReplacement);
 
                 if (command.size() >= 5) {
                     occurrence = removeQuotes(command[4]);
-                    result  = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement, occurrence);
+                    result = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement, occurrence);
                 } else {
-                    result  = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement);
-                    
+                    result = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement);
                 }
                 if (!result && catchErrors) {
-                        logMessage("Error in " + commandName + " command");
-                        return -1;
-                    }
+                    log("Error in %s command", commandName.c_str());
+                    return -1;
+                }
             }
         } else if (commandName == "hex-by-cust-offset-dec") {
             // Edit command - Hex data replacement with offset from CUST (decimal)
@@ -622,7 +617,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 hexDataReplacement = decimalToReversedHex(removeQuotes(command[3]));
                 bool result = hexEditCustOffset(sourcePath, std::stoul(offset), hexDataReplacement);
                 if (!result && catchErrors) {
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command", commandName.c_str());
                     return -1;
                 }
             }
@@ -634,7 +629,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 hexDataReplacement = removeQuotes(command[3]);
                 bool result = hexEditCustOffset(sourcePath, std::stoul(offset), hexDataReplacement);
                 if (!result && catchErrors) {
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command", commandName.c_str());
                     return -1;
                 }
             }
@@ -643,10 +638,10 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             if (command.size() >= 3) {
                 fileUrl = preprocessUrl(command[1]);
                 destinationPath = preprocessPath(command[2]);
-                //logMessage("fileUrl: "+fileUrl);
+                //log("fileUrl: "+fileUrl);
                 bool result = downloadFile(fileUrl, destinationPath);
                 if (!result && catchErrors) {
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command", commandName.c_str());
                     return -1;
                 }
             }
@@ -657,7 +652,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 destinationPath = preprocessPath(command[2]);
                 bool result = unzipFile(sourcePath, destinationPath);
                 if (!result && catchErrors) {
-                    logMessage("Error in " + commandName + " command");
+                    log("Error in %s command", commandName.c_str());
                     return -1;
                 }
             }
@@ -680,7 +675,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
 }
 
 tsl::PredefinedColors defineColor(const std::string& strColor) {
-    // logMessage ("string color: " + strColor);
+    // log ("string color: " + strColor);
     if (strColor == "Green") {
         return tsl::PredefinedColors::Green;
     } else if (strColor == "Red") {
@@ -726,13 +721,13 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
         const std::string CUST = "43555354";
         const std::vector<size_t> offsetStrs = findHexDataOffsets(kipPath, CUST);
         if (offsetStrs.empty()) {
-            logMessage("CUST not found.");
+            log("CUST not found.");
             return {};
         }
         const size_t custOffset = offsetStrs[0];
         FILE* file = fopen(kipPath.c_str(), "rb");
         if (!file) {
-            logMessage("Failed to open the loader.kip.");
+            log("Failed to open the loader.kip.");
             return std::make_pair(output, lineCount);
         }
 
@@ -740,7 +735,7 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
             json_t* item = json_array_get(jsonData, i);
             if (item && json_is_object(item)) {
                 json_t* keyValue = json_object_get(item, "name");
-                // logMessage(json_string_value(keyValue));
+                // log(json_string_value(keyValue));
                 std::string tabBaseCheck;
                 if (keyValue)
                     tabBaseCheck = json_string_value(keyValue);
@@ -749,7 +744,7 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                     const size_t offset = custOffset + 44U;
                     const std::string tableStateStr = readHexDataAtOffsetF(file, offset, 1);
                     tableState = reversedHexToInt(tableStateStr);
-                    //logMessage(tableStateStr);
+                    //log(tableStateStr);
 
                     json_t* j_base = json_object_get(item, "base");
                     std::string base = json_string_value(j_base);
@@ -819,7 +814,7 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                                         current += std::to_string(intValue) + '-';
                                     }
                                     catch (const std::invalid_argument& ex) {
-                                        logMessage("ERROR - " + std::string(__func__) + ":" + std::to_string(__LINE__) + " - invalid offset value: \"" + offsetItem + "\" in \"" + jsonPath + "\"");
+                                        log("ERROR - %s:%d - invalid offset value: \"%s\" in \"%s\"", __func__, __LINE__, offsetItem.c_str(), jsonPath.c_str());
                                     }
                                 }
                                 current.pop_back();
@@ -851,7 +846,7 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                                     checkDefault = 0;
                                 } else {
                                     if (tableShiftMode) {
-                                        //logMessage(std::to_string(std::stoi(baseList[tableState]) + (std::stoi(offset) * std::stoi(baseIncList[tableState]))));
+                                        //log(std::to_string(std::stoi(baseList[tableState]) + (std::stoi(offset) * std::stoi(baseIncList[tableState]))));
                                         const size_t findFreq = std::stoi(baseList[tableState]) + (std::stoul(offsetStr) * std::stoi(baseIncList[tableState]));
                                         const size_t offset = custOffset + findFreq;
                                         currentHex = readHexDataAtOffsetF(file, offset, length); // Read the data from kip with offset starting from 'C' in 'CUST'
@@ -993,7 +988,7 @@ std::vector<std::string> parseString(const std::string& str, char delimiter) {
 std::string getVersion(json_t* json) {
     json_t* error = json_object_get(json, "message");
     if (json_string_length(error) != 0) {
-        logMessage("API limit reached");
+        log("API limit reached");
         return "ApiLimit";
     }
     json_t* tarballUrlObj = json_object_get(json_array_get(json, 0), "tarball_url");
@@ -1035,10 +1030,10 @@ std::map<std::string, std::string> packageUpdateCheck(const std::string& subConf
         if (packageInfo["repoVer"][0] == 'v') {
             packageInfo["repoVer"] = packageInfo["repoVer"].substr(1);
         }
-        //logMessage("672: "+ getLinkOnLatest("/config/uberhand/downloads/temp.json"));
+        //log("672: "+ getLinkOnLatest("/config/uberhand/downloads/temp.json"));
         packageInfo["link"] = getLinkOnLatest(git_json);
-        //logMessage("repoVer " + packageInfo["repoVer"]);
-        //logMessage("localVer " + packageInfo["localVer"]);
+        //log("repoVer " + packageInfo["repoVer"]);
+        //log("localVer " + packageInfo["localVer"]);
         packageInfo["type"] = "pkgzip";
     }
     return packageInfo;
@@ -1056,7 +1051,7 @@ std::map<std::string, std::string> ovlUpdateCheck(std::map<std::string, std::str
         ovlItemToUpdate.clear();
         return ovlItemToUpdate;
     }
-    //logMessage("repoVerovl: "+ovlItemToUpdate["repoVer"]);
+    //log("repoVerovl: "+ovlItemToUpdate["repoVer"]);
     if (ovlItemToUpdate["repoVer"][0] == 'v') {
             ovlItemToUpdate["repoVer"] = ovlItemToUpdate["repoVer"].substr(1);
         }

@@ -50,14 +50,14 @@ void updateIniData(IniSectionInput& iniData, const IniSectionInput& updates, boo
     if (remove) {
         for (const auto& [section, kvPairs] : updates) {
             for (const auto& [key, value] : kvPairs) {
-            //logMessage(iniData[section][key]);
+            //log(iniData[section][key]);
             iniData[section].erase(key);
             }
         }
     } else {
         for (const auto& [section, kvPairs] : updates) {
             for (const auto& [key, value] : kvPairs) {
-            //logMessage(iniData[section][key]);
+            //log(iniData[section][key]);
             iniData[section][key] = value;
             }
         }

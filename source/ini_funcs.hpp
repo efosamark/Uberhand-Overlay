@@ -169,7 +169,7 @@ static IniData parseIni(std::istream& str) {
             iniData[section].emplace(key, value);
 
         } else { // Malformed string
-            logMessage("parseIni: Malformed string \"" + line + "\"");
+            log("parseIni: Malformed string \"%s\"", line.c_str());
         }
     }
 
@@ -187,11 +187,11 @@ bool isMarikoHWType()
     u64 hardware_type = -1;
     auto rc = splGetConfig(SplConfigItem_HardwareType, &hardware_type);
     if (R_FAILED(rc)) {
-        logMessage("ERROR: splGetConfig failed to fetch HardwareType");
+        log("ERROR: splGetConfig failed to fetch HardwareType");
         return false;
     }
 
-    // logMessage("INFO: HardwareType: " + std::to_string(hardware_type));
+    // log("INFO: HardwareType: " + std::to_string(hardware_type));
 
     switch (hardware_type) {
     case 0: // Icosa
@@ -203,7 +203,7 @@ bool isMarikoHWType()
     case 5: // Aula
         return true; // Mariko
     default:
-        logMessage("ERROR: unknown HardwareType: " + std::to_string(hardware_type));
+        log("ERROR: unknown HardwareType: %ld", hardware_type);
         throw std::runtime_error("ERROR: unknown HardwareType: " + std::to_string(hardware_type));
         return false;
     }
@@ -411,7 +411,7 @@ bool setIniFile(const std::string& fileToEdit, const std::string& desiredSection
         // The INI file doesn't exist, create a new file and add the section and key-value pair
         configFile = fopen(fileToEdit.c_str(), "w");
         if (!configFile) {
-            logMessage("Failed to create the file");
+            log("Failed to create the file");
             // Handle the error accordingly
             return false;
         }
@@ -502,7 +502,7 @@ bool setIniFile(const std::string& fileToEdit, const std::string& desiredSection
         // printf("INI file updated successfully.\n");
         return true;
     } else {
-        logMessage("Failed to create temporary file.");
+        log("Failed to create temporary file.");
         return false;
     }
     return false;
