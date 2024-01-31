@@ -17,6 +17,14 @@ std::string kipVersion = "";
 bool DownloadProcessing = false;
 bool sameKeyCombo = false;
 
+enum Screen {
+    Default,
+    Overlays,
+    Packages,
+    Soverlays,
+    Spackages
+};
+
 class ConfigOverlay : public tsl::Gui {
 private:
     std::string filePath, specificKey;
@@ -1399,7 +1407,7 @@ public:
             return true;
         }
         if ((keysDown & KEY_B)) {
-            tsl::resetWith<MainMenu>();
+            tsl::resetWith<MainMenu>(Packages);
             return true;
         }
         return false;
@@ -1409,9 +1417,10 @@ public:
 class Updater : public tsl::Gui {
 protected:
     std::vector<std::map<std::string, std::string>> uitems;
+    Screen prevMenu;
 
 public:
-    Updater(const std::vector<std::map<std::string, std::string>>& items) : uitems(items) {}
+    Updater(const std::vector<std::map<std::string, std::string>>& items, Screen mode = Overlays) : uitems(items), prevMenu(mode) {}
 
     tsl::elm::Element* createUI() override {
         auto rootFrame = new tsl::elm::OverlayFrame("Updates available", "Updater");
@@ -1433,22 +1442,49 @@ public:
                     std::string name = item.at("name");
 
                     if (type == "ovl") {
+                        std::string fullPath = "sdmc:/switch/.overlays/" + name;
+
+                        if (!moveFileOrDirectory(fullPath, fullPath + "_old")) {
+                            listItem->setValue("FAIL", tsl::PredefinedColors::Red);
+                            log("Update: Error during rename of %s", fullPath.c_str());
+                            DownloadProcessing = false;
+                            return false;
+                        }
                         if (downloadFile(link, "sdmc:/switch/.overlays/")) {
                             listItem->setText(name);
                             listItem->setValue("DONE", tsl::PredefinedColors::Green);
                             DownloadProcessing = false;
+                            deleteFileOrDirectory(fullPath + "_old");
                             return true;
+                        } else {
+                            log("Update: Error during download");
+                            if (!moveFileOrDirectory(fullPath + "_old", fullPath)) {
+                                log("Update: Rollback failed");
+                            }
                         }
                     } else if (type == "pkgzip") {
                         std::string tempZipPath = "sdmc:/switch/.packages/temp.zip";
                         std::string destFolderPath = "sdmc:/switch/.packages/";
+                        std::string fullPath = destFolderPath + name;
 
+                        if (!moveFileOrDirectory(fullPath, fullPath + "_old")) {
+                            listItem->setValue("FAIL", tsl::PredefinedColors::Red);
+                            log("Update: Error during rename of %s", fullPath.c_str());
+                            DownloadProcessing = false;
+                            return false;
+                        }
                         if (downloadFile(link, tempZipPath) && unzipFile(tempZipPath, destFolderPath)) {
                             deleteFileOrDirectory(tempZipPath);
                             listItem->setText(name);
                             listItem->setValue("DONE", tsl::PredefinedColors::Green);
+                            deleteFileOrDirectory(fullPath + "_old");
                             DownloadProcessing = false;
                             return true;
+                        } else {
+                            log("Update: Error during download");
+                            if (!moveFileOrDirectory(fullPath + "_old", fullPath)) {
+                                log("Update: Rollback failed");
+                            }
                         }
                     } else if (type == "ovlzip") {
                         std::string tempZipPath = "sdmc:/switch/.packages/temp.zip";
@@ -1529,7 +1565,7 @@ public:
             return true;
         }
         if (keysDown & KEY_B) {
-            tsl::resetWith<MainMenu>();
+            tsl::resetWith<MainMenu>(this->prevMenu);
             return true;
         }
 
@@ -1549,11 +1585,6 @@ private:
     bool packageUpdater = true;
     bool overlayUpdater = true;
     bool sorting = false;
-    enum Screen {
-        Default,
-        Soverlays,
-        Spackages
-    };
     Screen ForMode;
 public:
     MainMenu(const Screen& curScreen=Default) : ForMode(curScreen){}
@@ -1669,6 +1700,14 @@ public:
                 break;
             case Spackages:
                 sorting = true;
+                menuMode = "packages";
+                break;
+            case Overlays:
+                sorting = false;
+                menuMode = "overlays";
+                break;
+            case Packages:
+                sorting = false;
                 menuMode = "packages";
                 break;
             case Default:
@@ -2144,14 +2183,14 @@ public:
         if ((keysDown & KEY_DRIGHT) && !(keysHeld & ~KEY_DRIGHT)) {
             if (menuMode != "packages") {
                 setIniFileValue(settingsConfigIniPath, "uberhand", "last_menu", "packages");
-                tsl::replaceWith<MainMenu>();
+                tsl::replaceWith<MainMenu>(Packages);
                 return true;
             }
         }
         if ((keysDown & KEY_DLEFT) && !(keysHeld & ~KEY_DLEFT)) {
             if (menuMode != "overlays") {
                 setIniFileValue(settingsConfigIniPath, "uberhand", "last_menu", "overlays");
-                tsl::replaceWith<MainMenu>();
+                tsl::replaceWith<MainMenu>(Overlays);
                 return true;
             }
         }
