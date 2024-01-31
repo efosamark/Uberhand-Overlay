@@ -209,6 +209,13 @@ bool isMarikoHWType()
     }
 }
 
+
+bool isLineBlank(const std::string& line) {
+    return std::all_of(line.begin(), line.end(), [](char c) {
+        return c == '\n' || c == '\r';
+    });
+}
+
 std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadOptionsFromIni(const std::string& configIniPath, bool makeConfig = false) {
     std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> options;
 
@@ -528,17 +535,21 @@ bool removeIniFileKey(const std::string& fileToEdit, const std::string& desiredS
 
   while (std::getline(file, line)) {
     // Remove leading and trailing whitespace
-    line.erase(0, line.find_first_not_of(" \r\n"));
-    line.erase(line.find_last_not_of(" \r\n") + 1);
+    if (!isLineBlank(line)) {
+        line.erase(0, line.find_first_not_of(" \r\n"));
+        line.erase(line.find_last_not_of(" \r\n") + 1);
+    }
 
     if (!line.empty()) {
       if (line[0] == '[' && line.back() == ']') {
         currentSection = line.substr(1, line.length() - 2);
         sectionFound = (currentSection == desiredSection);
+        log("Searching section %s, section found = %d", desiredSection.c_str(), sectionFound);
       } else if (sectionFound) {
         size_t equalsPos = line.find('=');
         if (equalsPos != std::string::npos) {
-          std::string keyInFile = line.substr(0, equalsPos - 1);
+          std::string keyInFile = line.substr(0, equalsPos);
+          log("Looking for %s, current key is %s", desiredKey.c_str(), keyInFile.c_str());
           if (keyInFile == desiredKey) {
             continue;
           }
