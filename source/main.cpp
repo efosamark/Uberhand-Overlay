@@ -1598,7 +1598,27 @@ public:
         
         createDirectory(packageDirectory);
         createDirectory(settingsPath);
-        
+
+        switch (ForMode) {
+           case Soverlays:
+               sorting = true;
+               menuMode = "overlays";
+               break;
+           case Spackages:
+               sorting = true;
+               menuMode = "packages";
+               break;
+           case Overlays:
+               sorting = false;
+               menuMode = "overlays";
+               break;
+           case Packages:
+               sorting = false;
+               menuMode = "packages";
+               break;
+           case Default:
+               break;
+        }
         
         bool settingsLoaded = false;
         if (isFileOrDirectory(settingsConfigIniPath)) {
@@ -1693,26 +1713,6 @@ public:
         auto list = new tsl::elm::List();
 
         //loadOverlayFiles(list);
-        switch (ForMode) {
-            case Soverlays:
-                sorting = true;
-                menuMode = "overlays";
-                break;
-            case Spackages:
-                sorting = true;
-                menuMode = "packages";
-                break;
-            case Overlays:
-                sorting = false;
-                menuMode = "overlays";
-                break;
-            case Packages:
-                sorting = false;
-                menuMode = "packages";
-                break;
-            case Default:
-                break;
-        }
 
         int count = 0;
         
