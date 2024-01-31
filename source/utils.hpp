@@ -1012,7 +1012,7 @@ std::string getLinkOnLatest(json_t* json, int dEntry = 1) {
 
 std::map<std::string, std::string> packageUpdateCheck(const std::string& subConfigIniPath) {
     std::map<std::string, std::string> packageInfo;
-    PackageHeader packageHeader = getPackageHeaderFromIni("sdmc:/switch/.packages/" + subConfigIniPath);
+    PackageHeader packageHeader = getPackageHeaderFromIni(packageDirectory + subConfigIniPath);
     if (packageHeader.version != "" && packageHeader.github != "") {
         packageInfo["localVer"] = packageHeader.version;
         packageInfo["link"] = packageHeader.github;

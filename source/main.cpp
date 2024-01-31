@@ -1462,8 +1462,7 @@ public:
                             }
                         }
                     } else if (type == "pkgzip") {
-                        std::string tempZipPath = "sdmc:/switch/.packages/temp.zip";
-                        std::string destFolderPath = "sdmc:/switch/.packages/";
+                        std::string tempZipPath = packageDirectory + "temp.zip";
 
                         if (!moveFileOrDirectory(fullPath, fullPath + "_old")) {
                             listItem->setValue("FAIL", tsl::PredefinedColors::Red);
@@ -1471,7 +1470,7 @@ public:
                             DownloadProcessing = false;
                             return false;
                         }
-                        if (downloadFile(link, tempZipPath) && unzipFile(tempZipPath, destFolderPath)) {
+                        if (downloadFile(link, tempZipPath) && unzipFile(tempZipPath, packageDirectory)) {
                             deleteFileOrDirectory(tempZipPath);
                             listItem->setText(name);
                             listItem->setValue("DONE", tsl::PredefinedColors::Green);
@@ -1485,7 +1484,7 @@ public:
                             }
                         }
                     } else if (type == "ovlzip") {
-                        std::string tempZipPath = "sdmc:/switch/.packages/temp.zip";
+                        std::string tempZipPath = packageDirectory + "temp.zip";
                         std::string destFolderPath = "sdmc:/";
 
                         if (downloadFile(link, tempZipPath) && unzipFile(tempZipPath, destFolderPath)) {
@@ -2046,7 +2045,7 @@ public:
                                     std::map<std::string, std::string> packageInfo = packageUpdateCheck(taintedSubdirectory + "/config.ini");
                                     if (packageInfo["localVer"] != packageInfo["repoVer"]) {
                                         NeedUpdate = true;
-                                        packageInfo["filename"] = "sdmc:/switch/.packages/" + taintedSubdirectory;
+                                        packageInfo["filename"] = packageDirectory + taintedSubdirectory;
                                         items.insert(items.end(), packageInfo);
                                     }
                                 }
