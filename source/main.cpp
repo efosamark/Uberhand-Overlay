@@ -1442,7 +1442,7 @@ public:
                     std::string name = item.at("name");
 
                     if (type == "ovl") {
-                        std::string fullPath = "sdmc:/switch/.overlays/" + name;
+                        std::string fullPath = item.at("filename");
 
                         if (!moveFileOrDirectory(fullPath, fullPath + "_old")) {
                             listItem->setValue("FAIL", tsl::PredefinedColors::Red);
@@ -1465,7 +1465,7 @@ public:
                     } else if (type == "pkgzip") {
                         std::string tempZipPath = "sdmc:/switch/.packages/temp.zip";
                         std::string destFolderPath = "sdmc:/switch/.packages/";
-                        std::string fullPath = destFolderPath + name;
+                        std::string fullPath = destFolderPath + item.at("filename");
 
                         if (!moveFileOrDirectory(fullPath, fullPath + "_old")) {
                             listItem->setValue("FAIL", tsl::PredefinedColors::Red);
@@ -1852,6 +1852,7 @@ public:
                                                 if (result != ResultSuccess)
                                                     continue;
                                                 package["name"] = overlayName;
+                                                package["filename"] = overlay;
                                                 if (parameters.size() > 1 && parameters[1].size() > 0 && parameters[1][0].starts_with("link=")) {
                                                     package["link"] = parameters[1][0].substr(5); // skip "link="
                                                 } else {
@@ -2044,11 +2045,12 @@ public:
                                 bool NeedUpdate = false;
                                 std::vector<std::map<std::string, std::string>> items;
                                 for (const auto& taintedSubdirectory : subdirectories) {
-                                    std::map<std::string, std::string> packageInfo = packageUpdateCheck(taintedSubdirectory + "/" + "config.ini");
-                                    if (packageInfo["localVer"] != packageInfo["repoVer"]){
+                                    std::map<std::string, std::string> packageInfo = packageUpdateCheck(taintedSubdirectory + "/config.ini");
+                                    if (packageInfo["localVer"] != packageInfo["repoVer"]) {
                                         NeedUpdate = true;
+                                        packageInfo["filename"] = taintedSubdirectory;
                                         items.insert(items.end(), packageInfo);
-                                        }
+                                    }
                                 }
                                 if (NeedUpdate){
                                     DownloadProcessing = false;

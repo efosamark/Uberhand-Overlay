@@ -1063,6 +1063,7 @@ std::map<std::string, std::string> ovlUpdateCheck(std::map<std::string, std::str
         } else {
             ovlItemToUpdate["type"] = "ovl";
         }
+        ovlItemToUpdate["filename"] = currentOverlay["filename"];
         // deleteFileOrDirectory("sdmc:/config/uberhand/downloads/temp.json");
         return ovlItemToUpdate;
     }
