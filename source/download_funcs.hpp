@@ -9,6 +9,8 @@
 #include "debug_funcs.hpp"
 #include "json_funcs.hpp"
 
+const char* userAgent = "Mozilla/5.0 (Nintendo Switch; WebApplet) AppleWebKit/609.4 (KHTML, like Gecko) NF/6.0.2.21.3 NintendoBrowser/5.1.0.22474";
+
 size_t writeCallbackFile(void* contents, size_t size, size_t nmemb, FILE* file) {
     // Callback function to write received data to a file
     size_t written = fwrite(contents, size, nmemb, file);
@@ -39,7 +41,7 @@ SafeJson loadJsonFromUrl(const std::string& url) {
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallbackJson);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (platform; rv:geckoversion) Gecko/geckotrail Firefox/firefoxversion");
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, userAgent);
         res = curl_easy_perform(curl);
         curl_easy_cleanup(curl);
 
@@ -116,7 +118,7 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
 
     // Set a user agent
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, userAgent);
 
     // Enable following redirects
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
