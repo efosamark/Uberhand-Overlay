@@ -1440,10 +1440,9 @@ public:
                     std::string type = item.at("type");
                     std::string link = item.at("link");
                     std::string name = item.at("name");
+                    std::string fullPath = item.at("filename");
 
                     if (type == "ovl") {
-                        std::string fullPath = item.at("filename");
-
                         if (!moveFileOrDirectory(fullPath, fullPath + "_old")) {
                             listItem->setValue("FAIL", tsl::PredefinedColors::Red);
                             log("Update: Error during rename of %s", fullPath.c_str());
@@ -1465,7 +1464,6 @@ public:
                     } else if (type == "pkgzip") {
                         std::string tempZipPath = "sdmc:/switch/.packages/temp.zip";
                         std::string destFolderPath = "sdmc:/switch/.packages/";
-                        std::string fullPath = destFolderPath + item.at("filename");
 
                         if (!moveFileOrDirectory(fullPath, fullPath + "_old")) {
                             listItem->setValue("FAIL", tsl::PredefinedColors::Red);
@@ -2048,7 +2046,7 @@ public:
                                     std::map<std::string, std::string> packageInfo = packageUpdateCheck(taintedSubdirectory + "/config.ini");
                                     if (packageInfo["localVer"] != packageInfo["repoVer"]) {
                                         NeedUpdate = true;
-                                        packageInfo["filename"] = taintedSubdirectory;
+                                        packageInfo["filename"] = "sdmc:/switch/.packages/" + taintedSubdirectory;
                                         items.insert(items.end(), packageInfo);
                                     }
                                 }
