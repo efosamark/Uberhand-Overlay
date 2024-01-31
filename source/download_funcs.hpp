@@ -7,15 +7,15 @@
 #include "get_funcs.hpp"
 #include "path_funcs.hpp"
 #include "debug_funcs.hpp"
-//#include "json_funcs.hpp"
-
+#include "json_funcs.hpp"
 
 size_t writeCallbackFile(void* contents, size_t size, size_t nmemb, FILE* file) {
     // Callback function to write received data to a file
     size_t written = fwrite(contents, size, nmemb, file);
     return written;
 }
-size_t writeCallbackJson(void *contents, size_t size, size_t nmemb, std::string *s) {
+
+size_t writeCallbackJson(void* contents, size_t size, size_t nmemb, std::string* s) {
     size_t newLength = size * nmemb;
     try {
         s->append((char*)contents, newLength);
@@ -26,7 +26,7 @@ size_t writeCallbackJson(void *contents, size_t size, size_t nmemb, std::string 
     return newLength;
 }
 
-json_t* loadJsonFromUrl(const std::string &url) {
+SafeJson loadJsonFromUrl(const std::string& url) {
     CURL *curl;
     CURLcode res;
     std::string readBuffer;

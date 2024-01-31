@@ -326,7 +326,7 @@ public:
                     bool detectSize = true;
                     searchCurrent = markCurKip || markCurIni ? true : false;
                     // create list of data in the json 
-                    json_t* jsonData = readJsonFromFile(jsonPath);
+                    auto jsonData = readJsonFromFile(jsonPath);
                     if (jsonData && json_is_array(jsonData)) {
                         size_t arraySize = json_array_size(jsonData);
                         for (size_t i = 0; i < arraySize; ++i) {
@@ -407,9 +407,6 @@ public:
                                 }
                             }
                         }
-                    }
-                    if (jsonData) {
-                        json_decref(jsonData);
                     }
                 }
             } else if (useFilter || useSource) {
@@ -788,11 +785,10 @@ public:
         std::string searchKey;
         const char* valueStr;
 
-        json_t* jsonData = readJsonFromFile(jsonPath);
+        auto jsonData = readJsonFromFile(jsonPath);
         if (jsonData && json_is_array(jsonData)) {
             size_t arraySize = json_array_size(jsonData);
             if (arraySize < 2) {
-                json_decref(jsonData);
                 return "\u25B6";
             }
             json_t* item = json_array_get(jsonData, 1);
@@ -812,7 +808,6 @@ public:
                     hexLength = 4;
                 }
                 else {
-                    json_decref(jsonData);
                     return "\u25B6";
                 }
                 std::string currentHex;
@@ -839,7 +834,6 @@ public:
                                     if (footer_pos != std::string::npos) {
                                         cur_name.resize(footer_pos);
                                     }
-                                    json_decref(jsonData);
                                     return cur_name;
                                 }
                             }
@@ -847,7 +841,6 @@ public:
                     }
                 }
             }
-            json_decref(jsonData);
         }
         return "\u25B6";
     }
@@ -855,11 +848,10 @@ public:
     std::string findCurrentIni(const std::string& jsonPath, const std::string& iniPath, const std::string& section, const std::string& key) {
         std::string searchKey;
 
-        json_t* jsonData = readJsonFromFile(jsonPath);
+        auto jsonData = readJsonFromFile(jsonPath);
         if (jsonData && json_is_array(jsonData)) {
             size_t arraySize = json_array_size(jsonData);
             if (arraySize < 2) {
-                json_decref(jsonData);
                 return "\u25B6";
             }
             json_t* item = json_array_get(jsonData, 1);
@@ -877,7 +869,6 @@ public:
                     searchKey = "value";
                 }
                 else {
-                    json_decref(jsonData);
                     return "\u25B6";
                 }
                 std::string iniValue = readIniValue(iniPath, section, key);
@@ -894,7 +885,6 @@ public:
                                     if (footer_pos != std::string::npos) {
                                         cur_name.resize(footer_pos);
                                     }
-                                    json_decref(jsonData);
                                     return cur_name;
                                 }
                             }
@@ -902,7 +892,6 @@ public:
                     }
                 }
             }
-            json_decref(jsonData);
         }
         return "\u25B6";
     }

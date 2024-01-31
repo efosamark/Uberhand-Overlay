@@ -46,7 +46,7 @@ public:
         const std::string CUST = "43555354";
         std::vector<size_t> offsetStrs = findHexDataOffsets(kipPath, CUST);
 
-        json_t* jsonData = readJsonFromFile(jsonPath);
+        auto jsonData = readJsonFromFile(jsonPath);
         if (jsonData) {
             size_t arraySize = json_array_size(jsonData);
 

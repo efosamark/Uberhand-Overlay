@@ -719,7 +719,7 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
     if (!isFileOrDirectory(jsonPath)) {
         return std::make_pair(output, lineCount);
     }
-    json_t* jsonData = readJsonFromFile(jsonPath);
+    auto jsonData = readJsonFromFile(jsonPath);
     if (jsonData) {
         size_t arraySize = json_array_size(jsonData);
 
@@ -900,7 +900,6 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
             }
         }
         fclose(file);
-        json_decref(jsonData);
     }
     return std::make_pair(output, lineCount);
 }
@@ -917,7 +916,7 @@ std::pair<std::string, int> dispRAMTmpl(const std::string& dataPath, const std::
     if (!isFileOrDirectory(dataPath)) {
         return std::make_pair(output.str(), nItems/2);
     }
-    json_t* jsonData = readJsonFromFile(dataPath);
+    auto jsonData = readJsonFromFile(dataPath);
     if (jsonData) {
         size_t arraySize = json_array_size(jsonData);
 
@@ -1000,7 +999,6 @@ std::string getVersion(json_t* json) {
     json_t* tarballUrlObj = json_object_get(json_array_get(json, 0), "tarball_url");
     if (tarballUrlObj && json_is_string(tarballUrlObj)) {
         const std::string tarballUrl = json_string_value(tarballUrlObj);
-        json_decref(tarballUrlObj);
         return getSubstringAfterLastSlash(tarballUrl);
     }
     return "Error";
@@ -1011,11 +1009,8 @@ std::string getLinkOnLatest(json_t* json, int dEntry = 1) {
     json_t* link = json_object_get(json_array_get(assets, dEntry-1), "browser_download_url");
     if (link && json_is_string(link)) {
         const std::string linkS = json_string_value(link);
-        json_decref(assets);
-        json_decref(link);
         return linkS;
     }
-    json_decref(json);
     return "Error";
 }
 
@@ -1027,14 +1022,13 @@ std::map<std::string, std::string> packageUpdateCheck(const std::string& subConf
         packageInfo["localVer"] = packageHeader.version;
         packageInfo["link"] = packageHeader.github;
         packageInfo["name"] = subConfigIniPath.substr(0, subConfigIniPath.find("/config.ini"));
-        json_t* git_json = loadJsonFromUrl(packageInfo["link"]);
+        auto git_json = loadJsonFromUrl(packageInfo["link"]);
         if (!git_json) {
             packageInfo.clear();
             return packageInfo;
         }   
         packageInfo["repoVer"] = getVersion(git_json);
         if (packageInfo["repoVer"] == "ApiLimit" || packageInfo["repoVer"] == "Error") {
-            json_decref(git_json);
             packageInfo.clear();
             return packageInfo;
         }
@@ -1043,7 +1037,6 @@ std::map<std::string, std::string> packageUpdateCheck(const std::string& subConf
         }
         //logMessage("672: "+ getLinkOnLatest("/config/uberhand/downloads/temp.json"));
         packageInfo["link"] = getLinkOnLatest(git_json);
-        json_decref(git_json);
         //logMessage("repoVer " + packageInfo["repoVer"]);
         //logMessage("localVer " + packageInfo["localVer"]);
         packageInfo["type"] = "pkgzip";
@@ -1053,14 +1046,13 @@ std::map<std::string, std::string> packageUpdateCheck(const std::string& subConf
 
 std::map<std::string, std::string> ovlUpdateCheck(std::map<std::string, std::string> currentOverlay) {
     std::map<std::string, std::string> ovlItemToUpdate;
-    json_t* git_json = loadJsonFromUrl(currentOverlay["link"]);
+    auto git_json = loadJsonFromUrl(currentOverlay["link"]);
     if (!git_json) {
         ovlItemToUpdate.clear();
         return ovlItemToUpdate;
     }
     ovlItemToUpdate["repoVer"] = getVersion(git_json);
     if (ovlItemToUpdate["repoVer"] == "ApiLimit" || ovlItemToUpdate["repoVer"] == "Error") {
-        json_decref(git_json);
         ovlItemToUpdate.clear();
         return ovlItemToUpdate;
     }
@@ -1076,11 +1068,9 @@ std::map<std::string, std::string> ovlUpdateCheck(std::map<std::string, std::str
         } else {
             ovlItemToUpdate["type"] = "ovl";
         }
-        json_decref(git_json);
         // deleteFileOrDirectory("sdmc:/config/uberhand/downloads/temp.json");
         return ovlItemToUpdate;
     }
-    json_decref(git_json);
     // deleteFileOrDirectory("sdmc:/config/uberhand/downloads/temp.json");
     ovlItemToUpdate.clear();
     return ovlItemToUpdate;

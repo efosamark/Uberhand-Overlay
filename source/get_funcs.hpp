@@ -1,11 +1,13 @@
 #pragma once
-#include <sys/stat.h>
+
+#include "debug_funcs.hpp"
+#include "json_funcs.hpp"
 #include <dirent.h>
 #include <fnmatch.h>
 #include <jansson.h>
-#include <string_funcs.hpp>
-#include "debug_funcs.hpp"
 #include <regex>
+#include <string_funcs.hpp>
+#include <sys/stat.h>
 
 // Get functions
 
@@ -341,9 +343,8 @@ std::string replacePlaceholder(const std::string& input, const std::string& plac
 
 std::string replaceJsonSourcePlaceholder(const std::string& placeholder, const std::string& jsonPath, std::string searchString = "{json_data(") {
     // Load JSON data from the provided file
-    json_t* root;
     json_error_t error;
-    root = json_load_file(jsonPath.c_str(), 0, &error);
+    SafeJson root = json_load_file(jsonPath.c_str(), 0, &error);
 
     if (!root) {
         // Handle JSON parsing error
@@ -387,14 +388,12 @@ std::string replaceJsonSourcePlaceholder(const std::string& placeholder, const s
                     } else {
                         // Handle invalid JSON array index
                         // printf("Invalid JSON array index: %s\n", key.c_str());
-                        json_decref(root);
                         return placeholder;  // Return the original placeholder if JSON array index is invalid
                     }
                 }
             } else {
                 // Handle invalid JSON structure or key
                 // printf("Invalid JSON structure or key: %s\n", key.c_str());
-                json_decref(root);
                 return placeholder;  // Return the original placeholder if JSON structure or key is invalid
             }
         }
@@ -406,7 +405,6 @@ std::string replaceJsonSourcePlaceholder(const std::string& placeholder, const s
         }
     }
 
-    json_decref(root);
     return replacement;
 }
 
