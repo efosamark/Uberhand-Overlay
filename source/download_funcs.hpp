@@ -151,9 +151,10 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
 
 
 bool unzipFile(const std::string& zipFilePath, const std::string& toDestination) {
-    ZZIP_DIR* dir = zzip_dir_open(zipFilePath.c_str(), nullptr);
+    zzip_error_t errorCode{ ZZIP_NO_ERROR };
+    ZZIP_DIR* dir = zzip_dir_open(zipFilePath.c_str(), &errorCode);
     if (!dir) {
-        log("Error opening file: %s; error: %s", zipFilePath.c_str(), zzip_strerror_of(dir));
+        log("Error opening file: %s; error: %s", zipFilePath.c_str(), zzip_strerror(errorCode));
         return false;
     }
 
