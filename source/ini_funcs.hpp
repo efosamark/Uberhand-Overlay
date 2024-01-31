@@ -326,8 +326,6 @@ std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadO
     return options;
 }
 
-
-
 void cleanIniFormatting(const std::string& filePath) {
     FILE* inputFile = fopen(filePath.c_str(), "r");
     if (!inputFile) {
@@ -528,8 +526,9 @@ bool removeIniFileKey(const std::string& fileToEdit, const std::string& desiredS
 
   while (std::getline(file, line)) {
     // Remove leading and trailing whitespace
-    line.erase(0, line.find_first_not_of(" \r\n"));
-    line.erase(line.find_last_not_of(" \r\n") + 1);
+    if (line.find_first_not_of(" \r\n") != std::string::npos) {
+        trimInPlace(line);
+    }
 
     if (!line.empty()) {
       if (line[0] == '[' && line.back() == ']') {
@@ -538,7 +537,8 @@ bool removeIniFileKey(const std::string& fileToEdit, const std::string& desiredS
       } else if (sectionFound) {
         size_t equalsPos = line.find('=');
         if (equalsPos != std::string::npos) {
-          std::string keyInFile = line.substr(0, equalsPos - 1);
+          std::string keyInFile = line.substr(0, equalsPos);
+          trimInPlace(keyInFile);
           if (keyInFile == desiredKey) {
             continue;
           }
