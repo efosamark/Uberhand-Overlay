@@ -351,13 +351,15 @@ public:
                                     json_t* colorValue = json_object_get(item, "color");
                                     if (markCurKip && hexOrDec && searchCurrent) {
                                         const char* valueStr;
+                                        int hexLength;
                                         if (hexValue) {
                                             valueStr = json_string_value(hexValue);
+                                            hexLength = strlen(valueStr) / 2;
+                                            hexLength = std::max(hexLength, 1);
                                         } else if (decValue) {
                                             valueStr = json_string_value(decValue);
+                                            hexLength = 4;
                                         }
-                                        int hexLength = strlen(valueStr) / 2;
-                                        hexLength = std::max(hexLength, 1);
                                         if (detectSize) {
                                             try {
                                                 detectSize = false;
