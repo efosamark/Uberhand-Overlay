@@ -1,0 +1,14 @@
+BasedOnStyle: Webkit
+
+Language: Cpp
+AlignAfterOpenBracket: Align
+AllowShortEnumsOnASingleLine: true
+
+IncludeBlocks:   Regroup
+IncludeCategories:
+  - Regex:           '^".+\.(h|hh|hpp|hxx)"$'
+    Priority:        1
+  - Regex:           '^<.+\.(h|hh|hpp|hxx)>$'
+    Priority:        2
+  - Regex:           '^<[^.]+>$'
+    Priority:        3

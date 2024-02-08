@@ -173,7 +173,11 @@ $(BUILD):
 clean:
 	@rm -fr $(BUILD) $(TARGET).ovl $(TARGET).nro $(TARGET).nacp $(TARGET).elf
 
+formatcheck:
+	clang-format --Werror --dry-run source/*
 
+codeformat:
+	clang-format -i source/*
 #---------------------------------------------------------------------------------
 else
 .PHONY: all
