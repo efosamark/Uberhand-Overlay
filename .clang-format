@@ -1,0 +1,5 @@
+BasedOnStyle: Webkit
+
+Language: Cpp
+AlignAfterOpenBracket: Align
+AllowShortEnumsOnASingleLine: true
