@@ -953,9 +953,12 @@ public:
                 if (isFileOrDirectory(subPath + subDirectory + '/' + configFileName)) {
                     auto item = new tsl::elm::ListItem(subDirectory);
                     item->setValue("\u25B6", tsl::PredefinedColors::White);
-                    item->setClickListener([&, subDirectory](u64 keys)->bool {
+                    item->setClickListener([&, subDirectory, helpPath](u64 keys)->bool {
                         if (keys & KEY_A) {
                             tsl::changeTo<SubMenu>(subPath + subDirectory + '/');
+                            return true;
+                        } else if (keys & KEY_Y && !helpPath.empty()) {
+                            tsl::changeTo<HelpOverlay>(helpPath);
                             return true;
                         }
                         return false;
@@ -1004,13 +1007,16 @@ public:
                 auto subDirectory = optionName.substr(1);
                 auto item = new tsl::elm::ListItem(subDirectory);
                 item->setValue("\u25B6", tsl::PredefinedColors::White);
-                item->setClickListener([&, subDirectory, item](u64 keys)->bool {
+                item->setClickListener([&, subDirectory, item, helpPath](u64 keys)->bool {
                     if (keys & KEY_A) {
                         if (!isDirectory(subPath + subDirectory + '/')) {
                             item->setValue("FAIL", tsl::PredefinedColors::Red);
                             return true;
                         }
                         tsl::changeTo<SubMenu>(subPath + subDirectory + '/');
+                        return true;
+                    } else if (keys & KEY_Y && !helpPath.empty()) {
+                        tsl::changeTo<HelpOverlay>(helpPath);
                         return true;
                     }
                     return false;
