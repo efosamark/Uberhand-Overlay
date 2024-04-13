@@ -38,7 +38,7 @@ void writeIniFile(const std::string& filename, const IniSectionInput& iniData) {
     for (const auto& [section, kvPairs] : iniData) {
         outFile << "[" << section << "]\n";
         for (const auto& [key, value] : kvPairs) {
-            outFile << key << " = " << value << "\n";
+            outFile << key << "=" << value << "\n";
         }
         outFile << "\n";
     }
