@@ -508,25 +508,23 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             // Edit command
             if (command.size() == 3) {
                 sourcePath = preprocessPath(command[1]);
-
-            bool result  = remove_txt(sourcePath, removeQuotes(command[2]));
-            // log(command[2]);
-            if (!result && catchErrors) {
-                                log("Error in %s command", commandName.c_str());
-                                return -1;
-                            }
+                bool result  = remove_txt(sourcePath, removeQuotes(command[2]));
+                // log(command[2]);
+                if (!result && catchErrors) {
+                    log("Error in %s command", commandName.c_str());
+                    return -1;
+                }
             }
         } else if (commandName == "add-txt-str") {
             // Edit command
             if (command.size() == 3) {
                 sourcePath = preprocessPath(command[1]);
-
-            bool result  = write_to_file(sourcePath, removeQuotes(command[2]));
-            // log(command[2]);
-            if (!result && catchErrors) {
-                                log("Error in %s command", commandName.c_str());
-                                return -1;
-                            }
+                bool result  = write_to_file(sourcePath, removeQuotes(command[2]));
+                // log(command[2]);
+                if (!result && catchErrors) {
+                    log("Error in %s command", commandName.c_str());
+                    return -1;
+                }
             }
         } else if (commandName == "hex-by-offset") {
             // Edit command

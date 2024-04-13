@@ -57,7 +57,6 @@ bool write_to_file(const std::string& file_path, const std::string& line) {
       return false;
     }
     output_file << line << std::endl;
-    output_file.close();
     return true;
   }
 
@@ -83,7 +82,6 @@ bool write_to_file(const std::string& file_path, const std::string& line) {
   for (const auto& existing_line : existing_lines) {
     output_file << existing_line << std::endl;
   }
-  output_file.close();
   return true;
 }
 
@@ -91,7 +89,7 @@ bool remove_txt(const std::string& file_path, const std::string& pattern) {
   std::vector<std::string> lines;
   std::ifstream file(file_path);
   if (!file.is_open()) {
-    log("There is no %s in %s",pattern.c_str(), file_path.c_str());
+    log("File %s not found", file_path.c_str());
     return true;
   }
 
@@ -105,13 +103,12 @@ bool remove_txt(const std::string& file_path, const std::string& pattern) {
 
   std::ofstream output_file(file_path);
   if (!output_file.is_open()) {
-    log("There is no %s in %s",pattern.c_str(), file_path.c_str());
+    log("File %s can't be created", file_path.c_str());
     return true;
   }
 
   for (const auto& line : lines) {
     output_file << line << std::endl;
   }
-  output_file.close();
   return true;
 }
