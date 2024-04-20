@@ -258,7 +258,12 @@ bool isDangerousCombination(const std::string& patternPath) {
     return false; // Pattern path is not a protected folder, a dangerous pattern, or includes a wildcard at the root level
 }
 
-
+struct ThreadArgs {
+    bool* exitMT;
+    std::vector<std::vector<std::string>> commands;
+    tsl::elm::ListItem* listItem;
+    int* errCode;
+};
 
 // Main interpreter
 int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& commands) {
@@ -694,6 +699,23 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
         }
     }
     return 0;
+}
+
+void MTinterpretAndExecute(void* args){
+    // Accept pointers to the exit flag and a vector with commands
+    ThreadArgs* threadArgs = static_cast<ThreadArgs*>(args);
+    tsl::elm::ListItem* listItem = threadArgs->listItem;
+    bool* exitMT = threadArgs->exitMT;
+    int* errCode = threadArgs->errCode;
+    std::vector<std::vector<std::string>> commands = threadArgs->commands;
+    *errCode = interpretAndExecuteCommand(commands);
+    // Mark function as done
+    if (*errCode == 0) {
+        listItem->setValue("DONE", tsl::PredefinedColors::Green);
+    } else if (*errCode != 1) {
+        listItem->setValue("FAIL", tsl::PredefinedColors::Red);
+    }
+    *exitMT = true;
 }
 
 tsl::PredefinedColors defineColor(const std::string& strColor) {

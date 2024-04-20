@@ -6,7 +6,7 @@
 #include <KipInfoOverlay.hpp>
 #include <JsonInfoOverlay.hpp>
 #include <utils.hpp>
-
+#include <switch/kernel/thread.h>
 
 // Overlay booleans
 static bool defaultMenuLoaded = true;
@@ -16,6 +16,10 @@ bool showCurInMenu   = false;
 std::string kipVersion = "";
 bool DownloadProcessing = false;
 bool sameKeyCombo = false;
+bool exitMT = false;
+bool Mtrun = false;
+int errCode = -2;
+Thread threadMT;
 
 enum Screen {
     Default,
@@ -171,7 +175,9 @@ public:
             return true;
         }
         if (keysDown & KEY_B) {
-            tsl::goBack();
+            if (!Mtrun) {
+                tsl::goBack();
+            }
             return true;
         }
         return false;
@@ -761,7 +767,9 @@ public:
             return true;
         }
         if (keysDown & KEY_B) {
-            tsl::goBack();
+            if (!Mtrun) {
+                tsl::goBack();
+            }
             return true;
         } else if ((applied || deleted) && !keysDown) {
             deleted = false;
@@ -1095,9 +1103,19 @@ public:
                     }
                 }
                 
-                //std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(option.second, pathReplace);
                 listItem->setClickListener([command = option.second, keyName = headerName, subPath = this->subPath, usePattern, listItem, helpPath, useSlider](uint64_t keys) {
-                    if (keys & KEY_A) {
+                    if (exitMT){
+                        // Means that commands was executed
+                        threadClose(&threadMT);
+                        exitMT = false;
+                        Mtrun = false;
+                        log(std::to_string(errCode).c_str());
+                        if (errCode == 1) {
+                            tsl::goBack();
+                            return true;
+                        }
+                    }
+                    if (keys & KEY_A && !Mtrun) {
                         if (listItem->getValue() == "APPLIED" && !prevValue.empty()) {
                             listItem->setValue(prevValue);
                             prevValue = "";
@@ -1108,22 +1126,28 @@ public:
                         } else if (useSlider) {
                             tsl::changeTo<FanSliderOverlay>(subPath, keyName, command);
                         } else {
-                            // Interpret and execute the command
-                            int result = interpretAndExecuteCommand(command);
-                            if (result == 0) {
-                                listItem->setValue("DONE", tsl::PredefinedColors::Green);
-                            } else if (result == 1) {
-                                tsl::goBack();
-                            } else {
-                                listItem->setValue("FAIL", tsl::PredefinedColors::Red);
+                            ThreadArgs args;
+                            args.exitMT = &exitMT;
+                            args.commands = command;
+                            args.listItem = listItem;
+                            args.errCode = &errCode;
+                            Result rc = threadCreate(&threadMT, MTinterpretAndExecute, &args, NULL, 0x10000, 0x2C, -2);
+                            if (R_FAILED(rc)) {
+                                log("error in thread create");
                             }
+                            Result rcs = threadStart(&threadMT);
+                            if (R_FAILED(rcs)) {
+                                log("error in thread start");
+                            }
+                            Mtrun = true;
+                            listItem->setValue("In work", tsl::PredefinedColors::Green);
                         }
                         return true;
-                    } else if (keys & KEY_X) {
+                    } else if (keys & KEY_X && !Mtrun) {
                         listItem->setValue("");
                         tsl::changeTo<ConfigOverlay>(subPath, keyName);
                         return true;
-                    }else if (keys & KEY_Y && !helpPath.empty()) {
+                    }else if (keys & KEY_Y && !helpPath.empty() && !Mtrun) {
                         tsl::changeTo<HelpOverlay>(helpPath);
                     } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
                         listItem->setValue("");
@@ -1326,8 +1350,10 @@ public:
             scrollListItems(this, ShiftFocusMode::DownMax);
             return true;
         }
-        if ((keysDown & KEY_B)) {
-            tsl::goBack();
+        if (keysDown & KEY_B) {
+            if (!Mtrun) {
+                tsl::goBack();
+            }
             return true;
         } else if (applied && !keysDown) {
             applied = false;
@@ -1414,7 +1440,7 @@ public:
             scrollListItems(this, ShiftFocusMode::DownMax);
             return true;
         }
-        if ((keysDown & KEY_B)) {
+        if (keysDown & KEY_B) {
             tsl::resetWith<MainMenu>(Packages);
             return true;
         }

@@ -193,7 +193,7 @@ bool unzipFile(const std::string& zipFilePath, const std::string& toDestination)
             FILE* outputFile = fopen(extractedFilePath.c_str(), "wb");
             if (outputFile) {
                 zzip_ssize_t bytesRead;
-                const zzip_ssize_t bufferSize = 131072;
+                const zzip_ssize_t bufferSize = 8192;
                 char buffer[bufferSize];
 
                 while ((bytesRead = zzip_file_read(file, buffer, bufferSize)) > 0) {
