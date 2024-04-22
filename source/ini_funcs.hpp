@@ -587,7 +587,7 @@ std::string readIniValue(std::string filePath, std::string section, std::string 
     return ""; // Key not found
 }
 
- std::vector<std::vector<int>> parseIntIniData (std::string input, bool skipFirstItem = true) {
+std::vector<std::vector<int>> parseIntIniData (std::string input, bool skipFirstItem = true) {
     // Remove outer brackets
     input = input.substr(6, input.length() - 3);
 
@@ -617,4 +617,24 @@ std::string readIniValue(std::string filePath, std::string section, std::string 
 
 
     return result;
+}
+
+bool isLineExistInIni(const std::string& filename, const std::string& lineToFind) {
+    std::ifstream infile(filename);
+    std::string line;
+    
+    if (!infile) {
+        log("isLineExistInIni: Failed to open file: %s", filename.c_str());
+        return false;
+    }
+
+    while (std::getline(infile, line)) {
+        if (line == lineToFind) {
+            infile.close();
+            return true;
+        }
+    }
+
+    infile.close();
+    return false;
 }

@@ -1023,6 +1023,9 @@ public:
             bool usePattern = false;
             bool useSlider  = false;
             bool useSliderItem  = false;
+            std::string toggleMode;
+            std::string toggleVerPath;
+            std::string toggleVerLine;
             std::string headerName;
             if (optionName[0] == '@') { // a subdirectory. add a menu item and skip to the next command
                 std::vector<std::string> tmpldir = option.second[0];
@@ -1091,6 +1094,7 @@ public:
 
             // Extract the path pattern from commands
             bool useToggle = false;
+            bool useAdvToggle = false;
             bool isSeparator = false;
             for (const auto& cmd : option.second) {
                 if(cmd[0] == "separator"){
@@ -1106,8 +1110,14 @@ public:
                     } else if (cmd[0] == "source_off") {
                         pathReplaceOff = cmd[1];
                         useToggle = true;
+                    } else if (cmd[0] == "toggle_state") {
+                        toggleMode = cmd[1];
+                        toggleVerPath = cmd[2];
+                        if (cmd.size() > 3) {
+                            toggleVerLine = cmd[3];
+                        }
+                        useAdvToggle = true;
                     }
-
                 } 
             }
 
@@ -1117,6 +1127,35 @@ public:
             } else if (useSliderItem) {
                 auto item = addSliderItem(option.second[0]);
                 list->addItem(item);
+            } else if (useAdvToggle) {
+                bool toggleStateOn = false;
+                if (toggleMode == "file_exists") {
+                    toggleStateOn = isFileOrDirectory(toggleVerPath);
+                } else if (toggleMode == "has_line") {
+                    toggleStateOn = isLineExistInIni(toggleVerPath, toggleVerLine);
+                }
+                auto toggleListItem = new tsl::elm::ToggleListItem(optionName, toggleStateOn, "On", "Off");
+                std::vector<std::vector<std::string>> toggleOn;
+                std::vector<std::vector<std::string>> toggleOff;
+
+                for (auto command : option.second) {
+                    if (command[0] == "toggle_on") {
+                        toggleOn.push_back(std::vector<std::string>(command.begin() + 1, command.end()));
+                    } else if (command[0] == "toggle_off") {
+                        toggleOff.push_back(std::vector<std::string>(command.begin() + 1, command.end()));
+                    }
+                }
+
+                toggleListItem->setStateChangedListener([toggleListItem, toggleOn, toggleOff, toggleStateOn, this](bool state) {
+                    if (state) {
+                        std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(toggleOn, "", false, true, true);
+                        interpretAndExecuteCommand(modifiedCommands);
+                    } else {
+                        std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(toggleOff, "", false, true, true);
+                        interpretAndExecuteCommand(modifiedCommands);
+                    }
+                });
+                list->addItem(toggleListItem);
             } else if (usePattern || !useToggle || useSlider) {
                 auto listItem = static_cast<tsl::elm::ListItem*>(nullptr);
                 if ((footer == "\u25B6") || (footer.empty())) {
