@@ -125,8 +125,67 @@ std::string readHexDataAtOffset(const std::string& filePath, const std::string& 
     return result;
 }
 
+std::string readStringHexDataAtOffset(const std::string& hexString, const std::string& hexData, const size_t offsetFromData, size_t length) {
+    // log("Entered readHexDataAtOffset");
+
+    if (length > hexString.size()) {
+      throw std::invalid_argument("Length exceeds string size");
+    }
+
+    std::stringstream hexStream;
+
+    // Iterate up to the specified length
+    for (size_t i = 0; i < length; ++i) {
+      hexStream << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(toupper(hexString[i]));
+    }
+
+    return hexStream.str();
+}
+
 std::string readHexDataAtOffsetF(FILE* const file, const size_t offset, const size_t length) {
     // log("Entered readHexDataAtOffsetF");
+
+    if (fseek(file, offset, SEEK_SET) != 0) {
+        log("Error seeking to offset.");
+        return "";
+    }
+
+    char hexBuffer[length];
+    std::stringstream hexStream;
+    if (fread(hexBuffer, 1, length, file) == length) {
+        for (size_t i = 0; i < length; ++i) {
+            hexStream << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(hexBuffer[i]);
+        }
+    } else {
+        if (feof(file)) {
+            log("End of file reached.");
+        } else if (ferror(file)) {
+            log("Error reading data from file: %s", strerror(errno));
+        }
+    }
+
+    std::string result = "";
+    char lowerToUpper;
+    while (hexStream.get(lowerToUpper)) {
+        result += std::toupper(lowerToUpper);
+    }
+
+    // log("Hex data at offset:" + result);
+
+    return result;
+}
+
+std::string readHexDataAtOffsetF (FILE* const file, const std::string& hexData, const size_t offsetFromData, size_t length) {
+    // log("Entered readHexDataAtOffsetF");
+
+    const std::vector<std::size_t> dataOffsets = findHexDataOffsetsF(file, hexData);
+    if (dataOffsets.empty()) {
+        log("readHexDataAtOffset: data \"%s\" not found.", hexData.c_str());
+        fclose(file);
+        return "";
+    }
+
+    const size_t offset = dataOffsets[0] + offsetFromData;
 
     if (fseek(file, offset, SEEK_SET) != 0) {
         log("Error seeking to offset.");
