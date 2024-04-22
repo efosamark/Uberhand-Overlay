@@ -619,7 +619,8 @@ std::vector<std::vector<int>> parseIntIniData (std::string input, bool skipFirst
     return result;
 }
 
-bool isLineExistInIni(const std::string& filename, const std::string& lineToFind) {
+
+bool isLineExistInIni(const std::string& filename, std::string& lineToFind) {
     std::ifstream infile(filename);
     std::string line;
     
@@ -628,10 +629,23 @@ bool isLineExistInIni(const std::string& filename, const std::string& lineToFind
         return false;
     }
 
+    // Replace * with .* for regex (any num of any symbols) if not escaped (not "\*")
+    size_t pos = 0;
+    while ((pos = lineToFind.find("*", pos)) != std::string::npos) {
+        if (pos > 0 && lineToFind[pos - 1] == '\\') {
+            ++pos; // Move past the escaped *
+        } else {
+            lineToFind.replace(pos, 1, ".*");
+            pos += 2; // Move past the replaced ".*"
+        }
+    }
+
+    std::regex pattern(lineToFind);
+
     while (std::getline(infile, line)) {
-        if (line == lineToFind) {
-            infile.close();
-            return true;
+        if (std::regex_match(line, pattern)) {
+          infile.close();
+          return true;
         }
     }
 
