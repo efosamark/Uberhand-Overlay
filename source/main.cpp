@@ -791,6 +791,47 @@ public:
     SubMenu(const std::string& path) : subPath(path) {}
     ~SubMenu() {}
 
+    auto addSliderItem(auto& sliderOption)
+    {
+        const std::string& sliderName = sliderOption[1];
+        const int low  = std::stoi(sliderOption[2]);
+        const int high = std::stoi(sliderOption[3]);
+        const int step = std::stoi(sliderOption[4]);
+        const std::string& offset = sliderOption[5];
+        std::vector<std::string> myArray;
+        const std::string CUST = "43555354";
+        std::string header;
+
+        for (int i = low; i <= high; i = i + step) {
+            header = sliderName + std::to_string(i);
+            myArray.push_back(header);
+        }
+
+        myArray.shrink_to_fit();
+        auto slider = new tsl::elm::NamedStepTrackBar(" ",myArray);
+        // auto slider = new tsl::elm::NamedStepTrackBar(" ",{"1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1"});
+
+        std::string currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", CUST, std::stoul(offset), 4);
+
+        int initProgress = (reversedHexToInt(currentHex) - low)/step;
+
+        slider->setProgress(initProgress);
+
+        slider->setClickListener([this, slider, offset, low, step](uint64_t keys) { // Add 'command' to the capture list
+            if (keys & KEY_A) {
+                int value = low + (step * slider->getProgressStep());
+                auto hexData = decimalToReversedHex(std::to_string(value));
+                hexEditCustOffset("/atmosphere/kips/loader.kip", std::stoul(offset), hexData);
+                slider->setColor(tsl::PredefinedColors::Green);
+                return true;
+            } else if (keys){
+                slider->setColor();
+            }
+            return false;
+        });
+        return slider;
+    }
+
     std::string findCurrentKip(const std::string& jsonPath, const std::string& offset) {
         std::string searchKey;
         const char* valueStr;
@@ -981,6 +1022,7 @@ public:
             std::string footer; 
             bool usePattern = false;
             bool useSlider  = false;
+            bool useSliderItem  = false;
             std::string headerName;
             if (optionName[0] == '@') { // a subdirectory. add a menu item and skip to the next command
                 std::vector<std::string> tmpldir = option.second[0];
@@ -1019,9 +1061,14 @@ public:
                 continue;
             }
             else if (optionName[0] == '*') {
-                usePattern = true;
-                optionName = optionName.substr(1); // Strip the "*" character on the left
-                footer = "\u25B6";
+                if (option.second[0][0] == "slider_kip") {
+                    useSliderItem = true;
+                    footer = "";
+                } else {
+                    usePattern = true;
+                    footer = "\u25B6";
+                }
+                optionName = optionName.substr(1); // Strip the "-" character on the left
             } else if (optionName[0] == '-') {
                 useSlider = true;
                 optionName = optionName.substr(1); // Strip the "-" character on the left
@@ -1060,11 +1107,15 @@ public:
                         pathReplaceOff = cmd[1];
                         useToggle = true;
                     }
+
                 } 
             }
 
             if (isSeparator) {
                 auto item = new tsl::elm::CategoryHeader(optionName, true);
+                list->addItem(item);
+            } else if (useSliderItem) {
+                auto item = addSliderItem(option.second[0]);
                 list->addItem(item);
             } else if (usePattern || !useToggle || useSlider) {
                 auto listItem = static_cast<tsl::elm::ListItem*>(nullptr);

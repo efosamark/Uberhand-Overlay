@@ -101,29 +101,30 @@ public:
                     if (sliderIndex != 0) {
                         for (size_t i = 0; i < sliderIndex; i++) {
                             if (list->getItemAtIndex(i)->getClass() == tsl::Class::TrackBar) {
-                                tsl::elm::StepTrackBar* prevSlider = dynamic_cast<tsl::elm::StepTrackBar*>(list->getItemAtIndex(i));
+                                tsl::elm::NamedStepTrackBar* prevSlider = dynamic_cast<tsl::elm::NamedStepTrackBar*>(list->getItemAtIndex(i));
                                 if (prevSlider->getProgress() > val)
                                 {
-                                    prevSlider->setProgress(val);
+                                    prevSlider->setProgressVal(val);
                                 }
                             }
                         }
                     }
                     for (size_t i = sliderIndex; i < listSize; i++) {
                         if (list->getItemAtIndex(i)->getClass() == tsl::Class::TrackBar) {
-                            tsl::elm::StepTrackBar* curSlider = dynamic_cast<tsl::elm::StepTrackBar*>(list->getItemAtIndex(i));
+                            tsl::elm::NamedStepTrackBar* curSlider = dynamic_cast<tsl::elm::NamedStepTrackBar*>(list->getItemAtIndex(i));
                             if (curSlider->getProgress() < val)
-                                curSlider->setProgress(val);
+                                curSlider->setProgressVal(val);
                         }
                     }
             });
-            slider->setClickListener([this, list, iniString, sourceIni, iniValues, fanMode](uint64_t keys) { // Add 'command' to the capture list
+            slider->setClickListener([this, list, iniString, sourceIni, iniValues, fanMode, stepSize](uint64_t keys) { // Add 'command' to the capture list
                 if (keys & KEY_A) {
                     std::vector<int> values;
                     size_t listSize = list->getSize();
                     for (size_t i = 0; i < listSize; i++) {
                         if (list->getItemAtIndex(i)->getClass() == tsl::Class::TrackBar) {
-                            values.push_back(int(double(dynamic_cast<tsl::elm::StepTrackBar*>(list->getItemAtIndex(i))->getProgress())*12.75));
+                            log("value to set = %d", int(double(dynamic_cast<tsl::elm::NamedStepTrackBar*>(list->getItemAtIndex(i))->getProgressStep())*stepSize));
+                            values.push_back(int(double(dynamic_cast<tsl::elm::NamedStepTrackBar*>(list->getItemAtIndex(i))->getProgressStep())*stepSize));
                         }
                     }
                     if (fanMode == fanModes::Both) {
