@@ -166,6 +166,7 @@ namespace tsl {
             constexpr Color ColorDescription      = { 0xA, 0xA, 0xA, 0xF };   ///< Description text color
             constexpr Color ColorHeaderBar        = { 0xC, 0xC, 0xC, 0xF };   ///< Category header rectangle color
             constexpr Color ColorClickAnimation   = { 0x0, 0x2, 0x2, 0xF };   ///< Element click animation color
+            constexpr Color ColorSuccess          = { 0x0, 0xF, 0xD, 0xF };   ///< Green color on successful operation
         }
     }
 
@@ -2669,15 +2670,15 @@ namespace tsl {
             }
 
             virtual void draw(gfx::Renderer *renderer) override {
-                renderer->drawRect(this->getX(), this->getY(), this->getWidth() - 20 , 1, a(tsl::style::color::ColorFrame));
-                renderer->drawRect(this->getX(), this->getBottomBound(), this->getWidth()- 20, 1, a(tsl::style::color::ColorFrame));
+                renderer->drawRect(this->getX(), this->getY(), this->getWidth() , 1, a(tsl::style::color::ColorFrame));
+                renderer->drawRect(this->getX(), this->getBottomBound(), this->getWidth(), 1, a(tsl::style::color::ColorFrame));
 
                 renderer->drawString(this->m_icon, false, this->getX() + 15, this->getY() + 50, 23, a(tsl::style::color::ColorText));
 
                 u16 handlePos = (this->getWidth() - 20) * static_cast<float>(this->m_value) / 100;
                 renderer->drawCircle(this->getX() + 10, this->getY() + 42, 2, true, a(tsl::style::color::ColorHighlight));
                 renderer->drawCircle(this->getX() + 10 + this->getWidth(), this->getY() + 42, 2, true, a(tsl::style::color::ColorFrame));
-                renderer->drawRect(this->getX() + 10 + handlePos, this->getY() + 40, this->getWidth() - 95 - handlePos, 5, a(tsl::style::color::ColorFrame));
+                renderer->drawRect(this->getX() + 10 + handlePos, this->getY() + 40, this->getWidth() - handlePos, 5, a(tsl::style::color::ColorFrame));
                 renderer->drawRect(this->getX() + 10, this->getY() + 40, handlePos, 5, a(tsl::style::color::ColorHighlight));
 
                 renderer->drawCircle(this->getX() + 10 + handlePos, this->getY() + 42, 10, true, a(tsl::style::color::ColorHandle));
@@ -2792,9 +2793,42 @@ namespace tsl {
              * @param numSteps Number of steps the track bar has
              */
             StepTrackBar(const char icon[3], size_t numSteps)
-                : TrackBar(icon), m_numSteps(numSteps) { }
+                : TrackBar(icon), m_numSteps(numSteps) {this->stepSizes = calculateStepSizes(); }
 
             virtual ~StepTrackBar() {}
+            
+            std::vector<int> calculateStepSizes() {
+                std::vector<int> randomizer;
+
+                int initialStepSize = 100 / this->m_numSteps;
+
+                int remainingUnits = 100 % this->m_numSteps;
+
+                std::vector<int> stepSizes(this->m_numSteps);
+
+                if (remainingUnits > 0) {
+                    std::srand(std::time(nullptr));
+
+                    while (int(randomizer.size()) < remainingUnits) {
+                        int randomNumber = std::rand() % (this->m_numSteps + 1);
+                        if (std::find(randomizer.begin(), randomizer.end(), randomNumber) == randomizer.end()) {
+                            randomizer.push_back(randomNumber);
+                        }
+                    }
+                }
+
+                for (int i = 1; i < this->m_numSteps; ++i) {
+                    stepSizes[i] = stepSizes[i - 1] + initialStepSize;
+
+                    for (const auto& index : randomizer) {
+                        if (i == index) {
+                            stepSizes[i]++;
+                            break;
+                        }
+                    }
+                }
+                return stepSizes;
+            }
 
             virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
                 static u32 tick = 0;
@@ -2806,10 +2840,14 @@ namespace tsl {
 
                 if (keysHeld & (HidNpadButton_AnyLeft | HidNpadButton_AnyRight)) {
                     if ((tick == 0 || tick > 20) && (tick % 3) == 0) {
-                        if (keysHeld & HidNpadButton_AnyLeft && this->m_value > 0) {
-                            this->m_value = std::max(this->m_value - (100 / (this->m_numSteps - 1)), 0);
-                        } else if (keysHeld & HidNpadButton_AnyRight && this->m_value < 100) {
-                            this->m_value = std::min(this->m_value + (100 / (this->m_numSteps - 1)), 100);
+                        if (keysHeld & HidNpadButton_AnyLeft && this->currentStep > 0) {
+                            this->currentStep--;
+                            this->m_value = this->stepSizes[this->currentStep];
+                            // this->m_value = std::max(this->m_value - (100 / (this->m_numSteps - 1)), 0);
+                        } else if (keysHeld & HidNpadButton_AnyRight && this->currentStep < this->m_numSteps - 1) {
+                            this->currentStep++;
+                            this->m_value = this->stepSizes[this->currentStep];
+                            // this->m_value = std::min(this->m_value + (100 / (this->m_numSteps - 1)), 100);
                         } else {
                             return false;
                         }
@@ -2850,26 +2888,31 @@ namespace tsl {
             }
 
             /**
-             * @brief Gets the current value of the trackbar
+             * @brief Gets the current value of the track bar (0-100)
              *
              * @return State
              */
             virtual inline u8 getProgress() override {
-                return this->m_value / (100 / (this->m_numSteps - 1));
+                return this->m_value;
+                // return this->m_value / (100 / (this->m_numSteps - 1));
             }
 
             /**
-             * @brief Sets the current state of the toggle. Updates the Value
+             * @brief Sets the current value of the track bar to the specifed step.
+             * Updates the Value (0-100)
              *
-             * @param state State
+             * @param step Step to which set the track bar
              */
-            virtual void setProgress(u8 value) override {
-                value = std::min(value, u8(this->m_numSteps - 1));
-                this->m_value = value * (100 / (this->m_numSteps - 1));
+            virtual void setProgress(u8 step) override {
+                this->currentStep = std::min(step, u8(this->m_numSteps - 1));
+                this->m_value = this->stepSizes[this->currentStep];
+                // this->m_value = value * (100 / (this->m_numSteps - 1));
             }
 
         protected:
             u8 m_numSteps = 1;
+            std::vector<int> stepSizes;
+            u8 currentStep;
         };
 
 
@@ -2885,6 +2928,9 @@ namespace tsl {
              * @param icon Icon shown next to the track bar
              * @param stepDescriptions Step names displayed above the track bar
              */
+            NamedStepTrackBar(const char icon[3], std::vector<std::string> stepDescriptions)
+                : StepTrackBar(icon, stepDescriptions.size()), m_stepDescriptions(stepDescriptions) { }
+
             NamedStepTrackBar(const char icon[3], std::initializer_list<std::string> stepDescriptions)
                 : StepTrackBar(icon, stepDescriptions.size()), m_stepDescriptions(stepDescriptions.begin(), stepDescriptions.end()) { }
 
@@ -2892,23 +2938,73 @@ namespace tsl {
 
             virtual void draw(gfx::Renderer *renderer) override {
 
-                u16 trackBarWidth = this->getWidth() - 95;
-                u16 stepWidth = trackBarWidth / (this->m_numSteps - 1);
+                std::string helpSlider = "Press \uE0E0 to apply.";
+                auto [descWidth1, descHeight1] = renderer->drawString(helpSlider.c_str(), false, 0, 0, 19, tsl::style::color::ColorTransparent);
+                renderer->drawString(helpSlider.c_str(), false, ((this->getX() + 50) + (this->getWidth() - 95) / 2) - (descWidth1 / 2), this->getY()+ 75, 19, a(tsl::Color(0xA, 0xA, 0xA, 0xF)));
 
-                for (u8 i = 0; i < this->m_numSteps; i++) {
-                    renderer->drawRect(this->getX() + 40 + stepWidth * i, this->getY() + 50, 1, 10, a(tsl::style::color::ColorFrame));
-                }
+                // u8 currentDescIndex = std::clamp(this->m_value / (100 / (this->m_numSteps - 1)), 0, this->m_numSteps - 1);
 
-                u8 currentDescIndex = std::clamp(this->m_value / (100 / (this->m_numSteps - 1)), 0, this->m_numSteps - 1);
-
+                u8 currentDescIndex = this->currentStep;
                 auto [descWidth, descHeight] = renderer->drawString(this->m_stepDescriptions[currentDescIndex].c_str(), false, 0, 0, 19, tsl::style::color::ColorTransparent);
-                renderer->drawString(this->m_stepDescriptions[currentDescIndex].c_str(), false, ((this->getX() + 50) + (this->getWidth() - 95) / 2) - (descWidth / 2), this->getY() + 20, 19, a(tsl::style::color::ColorDescription));
+
+                renderer->drawString(this->m_stepDescriptions[currentDescIndex].c_str(), false, ((this->getX() + 50) + (this->getWidth() - 95) / 2) - (descWidth / 2), this->getY() + 25, 19, a(textColor));
 
                 StepTrackBar::draw(renderer);
             }
 
+            void setColor(tsl::PredefinedColors col = tsl::PredefinedColors::White) {
+                switch (col) 
+                {
+                    case tsl::PredefinedColors::Green:
+                        this->textColor = tsl::Color(0x0, 0xF, 0xD, 0xF);
+                        break;
+                    case tsl::PredefinedColors::Red:
+                        this->textColor = tsl::Color(0xF, 0x0, 0x2, 0xF);
+                        break;
+                    case tsl::PredefinedColors::White:
+                    default:this->textColor = tsl::Color(0xF, 0xF, 0xF, 0xF);
+                        break;
+                }
+            }
+
+            
+            /**
+             * @brief Sets the track bar progress to the nearest step.
+             *
+             * @param value Value of the track bar (0-100)
+             */
+
+            void setProgressVal(u8 value) {
+                int i = 0;
+                for (i = 0; i < this->m_numSteps; ++i) {
+                    // Check if the value falls within the range of the current step
+                    if (value == this->stepSizes[i]) {
+                        this->m_value = this->stepSizes[i];
+                        this->currentStep = i;
+                        return;
+                    }
+                    else if (value < this->stepSizes[i]) {
+                        this->currentStep = i-1;
+                        this->m_value = this->stepSizes[i-1];
+                        return;
+                    }
+                }
+                this->m_value = this->stepSizes[i];
+                this->currentStep = i;
+                // this->m_value = value * (100 / (this->m_numSteps - 1));
+            }
+
+            /**
+             * @brief Returns the current step of the track bar
+             */
+            inline u8 getProgressStep() {
+                return this->currentStep;
+                // return this->m_value / (100 / (this->m_numSteps - 1));
+            }
+
         protected:
             std::vector<std::string> m_stepDescriptions;
+            Color textColor = tsl::Color(0xF, 0xF, 0xF, 0xF);
         };
 
     }
