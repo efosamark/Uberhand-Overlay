@@ -791,6 +791,9 @@ public:
     SubMenu(const std::string& path) : subPath(path) {}
     ~SubMenu() {}
 
+    FILE* kipFile = nullptr;
+    size_t custOffset;
+
     auto addSliderItem(auto& sliderOption)
     {
         const std::string& sliderName = sliderOption[1];
@@ -864,7 +867,11 @@ public:
                 std::string currentHex;
                 try {
                     const std::string CUST = "43555354";
-                    currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", CUST, std::stoul(offset), hexLength);
+                    if (!kipFile) {
+                        kipFile = openFile("/atmosphere/kips/loader.kip");
+                        custOffset = findCustOffset(kipFile);
+                    }
+                    currentHex = readHexDataAtOffset(kipFile, CUST, std::stoul(offset), hexLength, custOffset);
                 }
                 catch (const std::invalid_argument& ex) {
                     log("ERROR - %s:%d - invalid offset value: \"%s\" in \"%s\"", __func__, __LINE__, offset.c_str(), jsonPath.c_str());
@@ -1256,6 +1263,10 @@ public:
 
         }
 
+        if (kipFile) {
+            closeFile(kipFile);
+            kipFile = nullptr;
+        }
         constexpr int lineHeight = 20;  // Adjust the line height as needed
         constexpr int xOffset = 120;    // Adjust the horizontal offset as needed
         constexpr int fontSize = 16;    // Adjust the font size as needed

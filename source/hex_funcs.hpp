@@ -125,67 +125,59 @@ std::string readHexDataAtOffset(const std::string& filePath, const std::string& 
     return result;
 }
 
-std::string readStringHexDataAtOffset(const std::string& hexString, const std::string& hexData, const size_t offsetFromData, size_t length) {
-    // log("Entered readHexDataAtOffset");
-
-    if (length > hexString.size()) {
-      throw std::invalid_argument("Length exceeds string size");
+FILE* openFile(const std::string& filePath) {
+    
+    // Open the file for reading in binary mode
+    FILE* file = fopen(filePath.c_str(), "rb");
+    if (!file) {
+        log("Failed to open the file.");
+        return nullptr;
     }
-
-    std::stringstream hexStream;
-
-    // Iterate up to the specified length
-    for (size_t i = 0; i < length; ++i) {
-      hexStream << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(toupper(hexString[i]));
-    }
-
-    return hexStream.str();
+    return file;
 }
 
-std::string readHexDataAtOffsetF(FILE* const file, const size_t offset, const size_t length) {
-    // log("Entered readHexDataAtOffsetF");
+void closeFile(FILE* const file) {
+    fclose(file);
+}
 
-    if (fseek(file, offset, SEEK_SET) != 0) {
-        log("Error seeking to offset.");
+size_t findCustOffset(FILE* const file) {
+    const std::vector<std::size_t> dataOffsets = findHexDataOffsetsF(file, "43555354");
+    if (dataOffsets.empty()) {
+        log("readHexDataAtOffset: data \"%s\" not found.", "CUST");
+        return -1;
+    }
+    return dataOffsets[0];
+}
+
+std::string readHexDataAtOffset(FILE* const file, const std::string& hexData, const size_t offsetFromData, size_t length, size_t custOffset = -1) {
+    // log("Entered readHexDataAtOffset");
+    
+    if (!file) {
+        log("Failed to open the file.");
         return "";
     }
 
-    char hexBuffer[length];
-    std::stringstream hexStream;
-    if (fread(hexBuffer, 1, length, file) == length) {
-        for (size_t i = 0; i < length; ++i) {
-            hexStream << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(hexBuffer[i]);
+    if (custOffset == -1) {
+        const std::vector<std::size_t> dataOffsets = findHexDataOffsetsF(file, hexData);
+        if (dataOffsets.empty()) {
+            log("readHexDataAtOffset: data \"%s\" not found.", hexData.c_str());
+            return "";
         }
-    } else {
-        if (feof(file)) {
-            log("End of file reached.");
-        } else if (ferror(file)) {
-            log("Error reading data from file: %s", strerror(errno));
-        }
+        custOffset = dataOffsets[0];
     }
 
-    std::string result = "";
-    char lowerToUpper;
-    while (hexStream.get(lowerToUpper)) {
-        result += std::toupper(lowerToUpper);
-    }
+    const size_t offset = custOffset + offsetFromData;
+    const std::string result = readHexDataAtOffsetF(file, offset, length);
 
-    // log("Hex data at offset:" + result);
+    log("result = %s",result.c_str());
+
+    fseek(file, 0, SEEK_SET);
 
     return result;
 }
 
-std::string readHexDataAtOffsetF (FILE* const file, const std::string& hexData, const size_t offsetFromData, size_t length) {
+std::string readHexDataAtOffsetF(FILE* const file, const size_t offset, const size_t length) {
     // log("Entered readHexDataAtOffsetF");
-
-    const std::vector<std::size_t> dataOffsets = findHexDataOffsetsF(file, hexData);
-    if (dataOffsets.empty()) {
-        log("readHexDataAtOffset: data \"%s\" not found.", hexData.c_str());
-        fclose(file);
-        return "";
-    }
-
-    const size_t offset = dataOffsets[0] + offsetFromData;
 
     if (fseek(file, offset, SEEK_SET) != 0) {
         log("Error seeking to offset.");
