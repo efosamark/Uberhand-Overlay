@@ -792,7 +792,7 @@ public:
     ~SubMenu() {}
 
     FILE* kipFile = nullptr;
-    size_t custOffset;
+    int custOffset;
 
     auto addSliderItem(auto& sliderOption)
     {
@@ -1263,7 +1263,7 @@ public:
         }
 
         if (kipFile) {
-            closeFile(kipFile);
+            fclose(kipFile);
             kipFile = nullptr;
         }
         constexpr int lineHeight = 20;  // Adjust the line height as needed
