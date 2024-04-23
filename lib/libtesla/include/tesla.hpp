@@ -2800,32 +2800,12 @@ namespace tsl {
             std::vector<int> calculateStepSizes() {
                 std::vector<int> randomizer;
 
-                int initialStepSize = 100 / this->m_numSteps;
-
-                int remainingUnits = 100 % this->m_numSteps;
+                double initialStepSize = 100.0 / (m_numSteps - 1);
 
                 std::vector<int> stepSizes(this->m_numSteps);
 
-                if (remainingUnits > 0) {
-                    std::srand(std::time(nullptr));
-
-                    while (int(randomizer.size()) < remainingUnits) {
-                        int randomNumber = std::rand() % (this->m_numSteps + 1);
-                        if (std::find(randomizer.begin(), randomizer.end(), randomNumber) == randomizer.end()) {
-                            randomizer.push_back(randomNumber);
-                        }
-                    }
-                }
-
                 for (int i = 1; i < this->m_numSteps; ++i) {
-                    stepSizes[i] = stepSizes[i - 1] + initialStepSize;
-
-                    for (const auto& index : randomizer) {
-                        if (i == index) {
-                            stepSizes[i]++;
-                            break;
-                        }
-                    }
+                    stepSizes[i] = round(i * initialStepSize);
                 }
                 return stepSizes;
             }
