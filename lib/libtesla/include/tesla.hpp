@@ -2798,8 +2798,6 @@ namespace tsl {
             virtual ~StepTrackBar() {}
             
             std::vector<int> calculateStepSizes() {
-                std::vector<int> randomizer;
-
                 double initialStepSize = 100.0 / (m_numSteps - 1);
 
                 std::vector<int> stepSizes(this->m_numSteps);
