@@ -149,7 +149,7 @@ size_t findCustOffset(FILE* const file) {
     return dataOffsets[0];
 }
 
-std::string readHexDataAtOffset(FILE* const file, const std::string& hexData, const size_t offsetFromData, size_t length, size_t custOffset = -1) {
+std::string readHexDataAtOffset(FILE* const file, const std::string& hexData, const size_t offsetFromData, size_t length, int custOffset = -1) {
     // log("Entered readHexDataAtOffset");
     
     if (!file) {
@@ -168,8 +168,6 @@ std::string readHexDataAtOffset(FILE* const file, const std::string& hexData, co
 
     const size_t offset = custOffset + offsetFromData;
     const std::string result = readHexDataAtOffsetF(file, offset, length);
-
-    log("result = %s",result.c_str());
 
     fseek(file, 0, SEEK_SET);
 

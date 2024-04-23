@@ -123,7 +123,6 @@ public:
                     size_t listSize = list->getSize();
                     for (size_t i = 0; i < listSize; i++) {
                         if (list->getItemAtIndex(i)->getClass() == tsl::Class::TrackBar) {
-                            log("value to set = %d", int(double(dynamic_cast<tsl::elm::NamedStepTrackBar*>(list->getItemAtIndex(i))->getProgressStep())*stepSize));
                             values.push_back(int(double(dynamic_cast<tsl::elm::NamedStepTrackBar*>(list->getItemAtIndex(i))->getProgressStep())*stepSize));
                         }
                     }
