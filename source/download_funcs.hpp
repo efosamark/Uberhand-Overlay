@@ -64,9 +64,37 @@ SafeJson loadJsonFromUrl(const std::string& url) {
 
     return root;
 }
+struct progress {
+    size_t size;
+    tsl::elm::ListItem* listItem;
+    int totalCommands;
+    int curProgress;
+};;
 
+static size_t progress_callback(void *clientp,
+                                curl_off_t dltotal,
+                                curl_off_t dlnow,
+                                curl_off_t ultotal,
+                                curl_off_t ulnow) {
+    if (dltotal <= 0) {
+        //log("Download progress: Unknown total size");
+        return 0;
+    }
+    struct progress *memory = static_cast<struct progress*>(clientp);
+    tsl::elm::ListItem* listItem = memory->listItem;
+    int totalCommands = memory->totalCommands;
+    int curProgress = memory->curProgress;
+    // Calculate download percentage
+    int progress = curProgress + ((static_cast<int>(dlnow)*100) / (static_cast<int>(dltotal)*totalCommands));
+    std::string progressStr = std::to_string(progress) + "%";
+    if (listItem->getValue() != progressStr) {
+        listItem->setValue(progressStr, tsl::PredefinedColors::Green);
+    }
+    
+    return 0;
+}
 
-bool downloadFile(const std::string& url, const std::string& toDestination) {
+bool downloadFile(const std::string& url, const std::string& toDestination, tsl::elm::ListItem* listItem = nullptr, int totalCommands = -1, int curProgress = -1) {
     std::string destination = toDestination;
     // Check if the destination ends with "/"
     if (destination.back() == '/') {
@@ -112,11 +140,18 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
         log("Error opening file: %s", destination.c_str());
         return false;
     }
-
+    struct progress data;
+    data.listItem = listItem;
+    data.totalCommands = totalCommands;
+    data.curProgress = curProgress;
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallbackFile);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
-
+    if (totalCommands != -1) {
+        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+    }
+    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &data);
+    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
     // Set a user agent
     curl_easy_setopt(curl, CURLOPT_USERAGENT, userAgent);
 
@@ -150,7 +185,7 @@ bool downloadFile(const std::string& url, const std::string& toDestination) {
 }
 
 
-bool unzipFile(const std::string& zipFilePath, const std::string& toDestination) {
+bool unzipFile(const std::string& zipFilePath, const std::string& toDestination, tsl::elm::ListItem* listItem = nullptr, int totalCommands = -1, int curProgress = -1) {
     zzip_error_t errorCode{ ZZIP_NO_ERROR };
     ZZIP_DIR* dir = zzip_dir_open(zipFilePath.c_str(), &errorCode);
     if (!dir) {
@@ -160,33 +195,53 @@ bool unzipFile(const std::string& zipFilePath, const std::string& toDestination)
 
     bool success = true;
     ZZIP_DIRENT entry;
+    int totalFiles = 0; // Total number of files in the archive
+    int currentFile = 0; // Current file being processed
+
+    // Count the total number of files in the archive
     while (zzip_dir_read(dir, &entry)) {
-        if (entry.d_name[0] == '\0') continue;  // Skip empty entries
+        if (entry.d_name[0] != '\0') {
+            totalFiles++;
+        }
+    }
+
+    // Rewind the directory pointer to the beginning
+    zzip_rewinddir(dir);
+
+    while (zzip_dir_read(dir, &entry)) {
+        if (entry.d_name[0] == '\0') continue;  // Skip empty records
+
+        currentFile++;
 
         std::string fileName = entry.d_name;
         std::string extractedFilePath = toDestination + fileName;
-        
-        // Extract the directory path from the extracted file path
+
+        if (totalCommands != -1) {
+            // Calculate the percentage completion and add it to the log string
+            std::string progress_str = std::to_string(curProgress + ((currentFile*100) / (totalFiles*totalCommands))) + "%";
+            if (listItem->getValue() != progress_str.c_str()) {
+                listItem->setValue(progress_str.c_str(), tsl::PredefinedColors::Green);
+            }
+        }
+
+        // Create the directory if it doesn't exist
         std::string directoryPath;
         if (extractedFilePath.back() != '/') {
-            directoryPath = extractedFilePath.substr(0, extractedFilePath.find_last_of('/'))+"/";
+            directoryPath = extractedFilePath.substr(0, extractedFilePath.find_last_of('/')) + "/";
         } else {
             directoryPath = extractedFilePath;
         }
-        
         createDirectory(directoryPath);
-        
+
+        // Check if the file is a directory
         if (isDirectory(extractedFilePath)) {
             continue;
         }
-        
-        if (isDirectory(directoryPath)) {
-            //log("directoryPath: success");
-        } else {
-            log("directoryPath: failure");
+
+        if (!isDirectory(directoryPath)) {
+            // Logging failure to create directory
+            log("Failed to create directory path: %s", directoryPath.c_str());
         }
-        
-        //log(std::string("directoryPath: ") + directoryPath);
 
         ZZIP_FILE* file = zzip_file_open(dir, entry.d_name, 0);
         if (file) {

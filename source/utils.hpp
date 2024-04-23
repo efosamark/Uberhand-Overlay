@@ -263,15 +263,18 @@ struct ThreadArgs {
     std::vector<std::vector<std::string>> commands;
     tsl::elm::ListItem* listItem;
     int* errCode;
+    std::string progress;
 };
 
 // Main interpreter
-int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& commands) {
+int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& commands,
+                               std::string progress = "",
+                               tsl::elm::ListItem* listItem = nullptr) {
     std::string commandName, jsonPath, sourcePath, destinationPath, desiredSection, desiredKey, desiredNewKey, desiredValue, offset, hexDataToReplace, hexDataReplacement, fileUrl, occurrence;
     bool catchErrors = false;
-
+    int curProgress = 0;
     for (auto& unmodifiedCommand : commands) {
-        
+            
         // Check the command and perform the appropriate action
         if (unmodifiedCommand.empty()) {
             // Empty command, do nothing
@@ -665,7 +668,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 fileUrl = preprocessUrl(command[1]);
                 destinationPath = preprocessPath(command[2]);
                 //log("fileUrl: "+fileUrl);
-                bool result = downloadFile(fileUrl, destinationPath);
+                bool result = downloadFile(fileUrl, destinationPath, listItem, commands.size(), curProgress);
                 if (!result && catchErrors) {
                     log("Error in %s command", commandName.c_str());
                     return -1;
@@ -676,7 +679,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             if (command.size() >= 3) {
                 sourcePath = preprocessPath(command[1]);
                 destinationPath = preprocessPath(command[2]);
-                bool result = unzipFile(sourcePath, destinationPath);
+                bool result = unzipFile(sourcePath, destinationPath, listItem, commands.size(), curProgress);
                 if (!result && catchErrors) {
                     log("Error in %s command", commandName.c_str());
                     return -1;
@@ -696,6 +699,12 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             // Generate backup
             generateBackup();
         }
+        if (!progress.empty()) {
+            curProgress += 100/commands.size();
+            listItem->setValue(std::to_string(curProgress) + "%", tsl::PredefinedColors::Green);
+            //log("q%s", ss.str().c_str());
+            
+        }
     }
     return 0;
 }
@@ -706,8 +715,9 @@ void MTinterpretAndExecute(void* args){
     tsl::elm::ListItem* listItem = threadArgs->listItem;
     bool* exitMT = threadArgs->exitMT;
     int* errCode = threadArgs->errCode;
+    std::string progress = threadArgs->progress;
     std::vector<std::vector<std::string>> commands = threadArgs->commands;
-    *errCode = interpretAndExecuteCommand(commands);
+    *errCode = interpretAndExecuteCommand(commands, progress, listItem);
     // Mark function as done
     if (*errCode == 0) {
         listItem->setValue("DONE", tsl::PredefinedColors::Green);
