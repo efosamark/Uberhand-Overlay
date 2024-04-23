@@ -136,11 +136,7 @@ FILE* openFile(const std::string& filePath) {
     return file;
 }
 
-void closeFile(FILE* const file) {
-    fclose(file);
-}
-
-size_t findCustOffset(FILE* const file) {
+long findCustOffset(FILE* const file) {
     const std::vector<std::size_t> dataOffsets = findHexDataOffsetsF(file, "43555354");
     if (dataOffsets.empty()) {
         log("readHexDataAtOffset: data \"%s\" not found.", "CUST");

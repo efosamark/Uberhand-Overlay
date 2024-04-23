@@ -2955,7 +2955,7 @@ namespace tsl {
              */
 
             void setProgressVal(u8 value) {
-                int i = 0;
+                size_t i = 0;
                 for (i = 0; i < stepSizes.size(); ++i) {
                     // Check if the value falls within the range of the current step
                     if (value == this->stepSizes[i]) {
