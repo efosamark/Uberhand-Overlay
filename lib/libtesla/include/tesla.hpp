@@ -2802,6 +2802,8 @@ namespace tsl {
 
                 std::vector<int> stepSizes(this->m_numSteps);
 
+                stepSizes[0] = 0;
+
                 for (int i = 1; i < this->m_numSteps; ++i) {
                     stepSizes[i] = round(i * initialStepSize);
                 }
@@ -2954,7 +2956,7 @@ namespace tsl {
 
             void setProgressVal(u8 value) {
                 int i = 0;
-                for (i = 0; i < this->m_numSteps; ++i) {
+                for (i = 0; i < stepSizes.size(); ++i) {
                     // Check if the value falls within the range of the current step
                     if (value == this->stepSizes[i]) {
                         this->m_value = this->stepSizes[i];
