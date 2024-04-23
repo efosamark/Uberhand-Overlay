@@ -812,7 +812,6 @@ public:
 
         myArray.shrink_to_fit();
         auto slider = new tsl::elm::NamedStepTrackBar(" ",myArray);
-        // auto slider = new tsl::elm::NamedStepTrackBar(" ",{"1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1"});
 
         std::string currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", CUST, std::stoul(offset), 4);
 

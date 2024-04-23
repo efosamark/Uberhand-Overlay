@@ -3818,7 +3818,7 @@ namespace tsl {
         Overlay::get()->goBack();
     }
 
-    static void setNextOverlay(const std::string& ovlPath, const std::string& origArgs) {
+    static void setNextOverlay(const std::string& ovlPath, const std::string origArgs) {
 
         //std::string args = std::filesystem::path(ovlPath).filename();
         std::string args = getNameFromPath(ovlPath); // CUSTOM MODIFICATION
