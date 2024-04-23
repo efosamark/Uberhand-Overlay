@@ -221,13 +221,13 @@ bool moveFilesOrDirectoriesByPattern(const std::string& sourcePathPattern, const
     for (const std::string& sourceFileOrDirectory : fileList) {
         //log("sourceFileOrDirectory: "+sourceFileOrDirectory);
         // if sourceFile is a file (Needs condition handling)
-        if (!isDirectory(sourceFileOrDirectory.c_str())) {
+        if (!isDirectory(sourceFileOrDirectory)) {
             //log("destinationPath: "+destinationPath);
             result = result && moveFileOrDirectory(sourceFileOrDirectory, destinationPath);
             if (!result) {
                 return result;
             }
-        } else if (isDirectory(sourceFileOrDirectory.c_str())) {
+        } else if (isDirectory(sourceFileOrDirectory)) {
             // if sourceFile is a directory (needs conditoin handling)
             std::string folderName = getNameFromPath(sourceFileOrDirectory);
             std::string fixedDestinationPath = destinationPath + folderName + "/";

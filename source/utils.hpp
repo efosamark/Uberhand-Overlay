@@ -612,7 +612,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             }
         } else if (commandName == "hex-by-cust-offset-dec") {
             // Edit command - Hex data replacement with offset from CUST (decimal)
-            if (command.size() >= 3) {
+            if (command.size() >= 4) {
                 sourcePath = preprocessPath(command[1]);
                 offset = removeQuotes(command[2]);
                 hexDataReplacement = decimalToReversedHex(removeQuotes(command[3]));
@@ -624,7 +624,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             }
         } else if (commandName == "hex-by-cust-offset") {
             // Edit command - Hex data replacement with offset from CUST ("raw" hex)
-            if (command.size() >= 3) {
+            if (command.size() >= 4) {
                 sourcePath = preprocessPath(command[1]);
                 offset = removeQuotes(command[2]);
                 hexDataReplacement = removeQuotes(command[3]);

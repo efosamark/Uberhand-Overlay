@@ -3,7 +3,6 @@
 class HelpOverlay : public tsl::Gui {
 private:
     std::string helpPath;
-    bool isInSection, inQuotes;
 
 public:
     HelpOverlay(const std::string& helpPath) : helpPath(helpPath) {}

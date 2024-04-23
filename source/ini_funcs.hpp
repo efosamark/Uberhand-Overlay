@@ -558,7 +558,7 @@ bool removeIniFileKey(const std::string& fileToEdit, const std::string& desiredS
   return true;
 }
 
-std::string readIniValue(std::string filePath, std::string section, std::string key) {
+std::string readIniValue(const std::string& filePath, const std::string& section, const std::string& key) {
     std::ifstream file(filePath);
     std::string line, currentSection;
     bool sectionFound = false;
