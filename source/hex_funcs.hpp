@@ -262,7 +262,7 @@ bool hexEditByOffset(const std::string& filePath, const size_t offset, const std
 }
 
 // Is used when mutiple write iterrations are required to reduce the number of file open/close requests
-bool hexEditByOffsetF(const std::string& filePath, std::map <std::string,std::string> data) {
+bool hexEditByOffsetF(const std::string& filePath, const std::map <std::string,std::string>& data) {
 
     // Open the file for reading and writing in binary mode
     FILE* file = fopen(filePath.c_str(), "rb+");

@@ -2928,7 +2928,7 @@ namespace tsl {
              * @param icon Icon shown next to the track bar
              * @param stepDescriptions Step names displayed above the track bar
              */
-            NamedStepTrackBar(const char icon[3], std::vector<std::string> stepDescriptions)
+            NamedStepTrackBar(const char icon[3], const std::vector<std::string>& stepDescriptions)
                 : StepTrackBar(icon, stepDescriptions.size()), m_stepDescriptions(stepDescriptions) { }
 
             NamedStepTrackBar(const char icon[3], std::initializer_list<std::string> stepDescriptions)
@@ -3818,7 +3818,7 @@ namespace tsl {
         Overlay::get()->goBack();
     }
 
-    static void setNextOverlay(const std::string& ovlPath, const std::string origArgs) {
+    static void setNextOverlay(const std::string& ovlPath, const std::string& origArgs) {
 
         //std::string args = std::filesystem::path(ovlPath).filename();
         std::string args = getNameFromPath(ovlPath); // CUSTOM MODIFICATION

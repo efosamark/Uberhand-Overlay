@@ -74,7 +74,7 @@ public:
                         if (strcmp(key, "name") != 0 && strcmp(key, "t_offsets") != 0) {
                             std::string valStr = json_string_value(value);
                             size_t spacePos = valStr.find(' ');
-                            if (spacePos != 0) { valStr = valStr.substr(0, spacePos); }
+                            if (spacePos != 0) { valStr = valStr.resize(spacePos); }
                             // if not a flag or state - convert to KHz/Microvolts
                             if (valStr.length() >= 3) { valStr = std::to_string(std::stoi(valStr) * 1000); }
                             newKipdata.emplace(offsets[j], decimalToReversedHex(valStr));
