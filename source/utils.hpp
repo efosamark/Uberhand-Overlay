@@ -267,7 +267,6 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
 
     for (auto& unmodifiedCommand : commands) {
         
-        log("command to  perform = %s", unmodifiedCommand[0].c_str());
         // Check the command and perform the appropriate action
         if (unmodifiedCommand.empty()) {
             // Empty command, do nothing
@@ -433,7 +432,6 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
 
         } else if (commandName == "set-ini-val" || commandName == "set-ini-value") {
             // Edit command
-            log ("command.size() = %d", int(command.size()));
             if (command.size() == 3) {
                 sourcePath = preprocessPath(command[1]);
                 // log(command[2]);
