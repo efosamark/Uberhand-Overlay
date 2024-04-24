@@ -251,7 +251,7 @@ bool copySingleFile(const std::string& fromFile, const std::string& toFile) {
     FILE* srcFile = fopen(fromFile.c_str(), "rb");
     FILE* destFile = fopen(toFile.c_str(), "wb");
     if (srcFile && destFile) {
-        const size_t bufferSize = 131072; // Increase buffer size to 128 KB
+        const size_t bufferSize = 8192;
         char buffer[bufferSize];
         size_t bytesRead;
 
