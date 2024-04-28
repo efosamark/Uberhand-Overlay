@@ -8,6 +8,8 @@
 #include "path_funcs.hpp"
 #include "debug_funcs.hpp"
 #include "json_funcs.hpp"
+#include <chrono>
+#include <thread>
 
 const char* userAgent = "Mozilla/5.0 (Nintendo Switch; WebApplet) AppleWebKit/609.4 (KHTML, like Gecko) NF/6.0.2.21.3 NintendoBrowser/5.1.0.22474";
 
@@ -72,10 +74,8 @@ struct progress {
 };;
 
 static size_t progress_callback(void *clientp,
-                                curl_off_t dltotal,
-                                curl_off_t dlnow,
-                                curl_off_t ultotal,
-                                curl_off_t ulnow) {
+                                int dltotal,
+                                int dlnow ) {
     if (dltotal <= 0) {
         //log("Download progress: Unknown total size");
         return 0;
@@ -85,10 +85,17 @@ static size_t progress_callback(void *clientp,
     int totalCommands = memory->totalCommands;
     int curProgress = memory->curProgress;
     // Calculate download percentage
-    int progress = curProgress + ((static_cast<int>(dlnow)*100) / (static_cast<int>(dltotal)*totalCommands));
+    int progress = curProgress + ((dlnow*100) / (dltotal*totalCommands));
     std::string progressStr = std::to_string(progress) + "%";
-    if (listItem->getValue() != progressStr) {
-        listItem->setValue(progressStr, tsl::PredefinedColors::Green);
+
+    static auto lastUpdate = std::chrono::steady_clock::now();
+    auto now = std::chrono::steady_clock::now();
+    auto diff = now - lastUpdate;
+    if (diff >= std::chrono::milliseconds(200)) { // update every 200ms
+        lastUpdate = now;
+        if (listItem->getValue() != progressStr) {
+            listItem->setValue(progressStr, tsl::PredefinedColors::Green);
+        }
     }
     
     return 0;
@@ -215,12 +222,12 @@ bool unzipFile(const std::string& zipFilePath, const std::string& toDestination,
 
         std::string fileName = entry.d_name;
         std::string extractedFilePath = toDestination + fileName;
-
+        
         if (totalCommands != -1) {
             // Calculate the percentage completion and add it to the log string
             std::string progress_str = std::to_string(curProgress + ((currentFile*100) / (totalFiles*totalCommands))) + "%";
-            if (listItem->getValue() != progress_str.c_str()) {
-                listItem->setValue(progress_str.c_str(), tsl::PredefinedColors::Green);
+            if (listItem->getValue() != progress_str) {
+                listItem->setValue(progress_str, tsl::PredefinedColors::Green);
             }
         }
 
