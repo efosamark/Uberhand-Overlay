@@ -273,6 +273,8 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
     std::string commandName, jsonPath, sourcePath, destinationPath, desiredSection, desiredKey, desiredNewKey, desiredValue, offset, hexDataToReplace, hexDataReplacement, fileUrl, occurrence;
     bool catchErrors = false;
     int curProgress = 0;
+    bool flag = false;
+    int commands_size = commands.size();
     for (auto& unmodifiedCommand : commands) {
             
         // Check the command and perform the appropriate action
@@ -315,15 +317,21 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
         //         editJSONfile(jsonPath.c_str(), offset);
         //     }
         if (commandName == "catch_errors") {
+            commands_size--;
             catchErrors = true;
+            flag = true;
         } else if (commandName == "ignore_errors") {
             catchErrors = false;
+            commands_size--;
+            flag = true;
         } else if (commandName == "back") {
             return 1;
         } else if (commandName == "json_data") {
+            commands_size--;
             if (command.size() >= 2) {
                 jsonPath = preprocessPath(command[1]);
             }
+            flag = true;
         } else if (commandName == "make" || commandName == "mkdir") {
             // Make direcrory command
             if (command[1] != "") {
@@ -668,7 +676,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 fileUrl = preprocessUrl(command[1]);
                 destinationPath = preprocessPath(command[2]);
                 //log("fileUrl: "+fileUrl);
-                bool result = downloadFile(fileUrl, destinationPath, listItem, commands.size(), curProgress);
+                bool result = downloadFile(fileUrl, destinationPath, listItem, commands_size, curProgress);
                 if (!result && catchErrors) {
                     log("Error in %s command", commandName.c_str());
                     return -1;
@@ -679,7 +687,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             if (command.size() >= 3) {
                 sourcePath = preprocessPath(command[1]);
                 destinationPath = preprocessPath(command[2]);
-                bool result = unzipFile(sourcePath, destinationPath, listItem, commands.size(), curProgress);
+                bool result = unzipFile(sourcePath, destinationPath, listItem, commands_size, curProgress);
                 if (!result && catchErrors) {
                     log("Error in %s command", commandName.c_str());
                     return -1;
@@ -700,7 +708,12 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             generateBackup();
         }
         if (!progress.empty()) {
-            curProgress += 100/commands.size();
+            //log("commands_size: %s", std::to_string(commands_size).c_str());
+            if (!flag) {
+                curProgress += 100/commands_size;
+            } else {
+                flag = false;
+            }
             listItem->setValue(std::to_string(curProgress) + "%", tsl::PredefinedColors::Green);
             //log("q%s", ss.str().c_str());
             
