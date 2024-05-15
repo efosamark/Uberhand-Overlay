@@ -1,18 +1,19 @@
 #define NDEBUG
 #define STBTT_STATIC
 #define TESLA_INIT_IMPL
-#include <tesla.hpp>
+
 #include <FanSliderOverlay.hpp>
-#include <KipInfoOverlay.hpp>
 #include <JsonInfoOverlay.hpp>
-#include <utils.hpp>
+#include <KipInfoOverlay.hpp>
 #include <switch/kernel/thread.h>
+#include <tesla.hpp>
+#include <utils.hpp>
 
 // Overlay booleans
 static bool defaultMenuLoaded = true;
 static std::string package = "";
 bool enableConfigNav = false;
-bool showCurInMenu   = false;
+bool showCurInMenu = false;
 std::string kipVersion = "";
 bool DownloadProcessing = false;
 bool sameKeyCombo = false;
@@ -36,10 +37,15 @@ private:
     bool isInSection, inQuotes;
 
 public:
-    ConfigOverlay(const std::string& file, const std::string& key = "") : filePath(file), specificKey(key) {}
-    ~ConfigOverlay() {}
+    ConfigOverlay(const std::string& file, const std::string& key = "")
+        : filePath(file)
+        , specificKey(key)
+    {
+    }
+    ~ConfigOverlay() { }
 
-    virtual tsl::elm::Element* createUI() override {
+    virtual tsl::elm::Element* createUI() override
+    {
         // log ("ConfigOverlay");
         auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(filePath), "Uberhand Config");
         auto list = new tsl::elm::List();
@@ -125,13 +131,14 @@ public:
 
     bool adjuct_top, adjuct_bot = false;
 
-    virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+    virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override
+    {
         if (this->adjuct_top) { // Adjust cursor to the top item after jump bot-top
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
             this->adjuct_top = false;
             return true;
         }
-        if (this->adjuct_bot) {  // Adjust cursor to the top item after jump top-bot
+        if (this->adjuct_bot) { // Adjust cursor to the top item after jump top-bot
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
             this->adjuct_bot = false;
             return true;
@@ -142,7 +149,7 @@ public:
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
             if (prevItem == this->getFocusedElement()) {
                 scrollListItems(this, ShiftFocusMode::UpMax);
-                this->adjuct_top = true; // Go one item 
+                this->adjuct_top = true; // Go one item
             } else { // Adjust to account for tesla key processing
                 this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
             }
@@ -167,7 +174,8 @@ public:
         if (keysDown & KEY_R) { // Scroll to down for 5 items
             scrollListItems(this, ShiftFocusMode::DownNum);
             return true;
-        }if (keysDown & KEY_ZL) { // Scroll to up for 5 items
+        }
+        if (keysDown & KEY_ZL) { // Scroll to up for 5 items
             scrollListItems(this, ShiftFocusMode::UpMax);
             return true;
         }
@@ -195,11 +203,17 @@ private:
     tsl::elm::ListItem* savedItem = nullptr;
 
 public:
-    SelectionOverlay(const std::string& file, const std::string& key = "", const std::vector<std::vector<std::string>>& cmds = {}, std::string footer = "") 
-        : filePath(file), specificKey(key), footer(footer), commands(cmds) {}
-    ~SelectionOverlay() {}
+    SelectionOverlay(const std::string& file, const std::string& key = "", const std::vector<std::vector<std::string>>& cmds = {}, std::string footer = "")
+        : filePath(file)
+        , specificKey(key)
+        , footer(footer)
+        , commands(cmds)
+    {
+    }
+    ~SelectionOverlay() { }
 
-    virtual tsl::elm::Element* createUI() override {
+    virtual tsl::elm::Element* createUI() override
+    {
         // log ("SelectionOverlay");
 
         bool hasHelp = false;
@@ -217,7 +231,7 @@ public:
                 helpPath += "/Help/" + getNameFromPath(filePath) + ".txt";
             }
             if (isFileOrDirectory(helpPath)) {
-               hasHelp = true; 
+                hasHelp = true;
             } else {
                 helpPath = "";
             }
@@ -242,9 +256,9 @@ public:
         std::string offset = "";
         std::pair<std::string, int> textDataPair;
 
-        constexpr int lineHeight = 20;  // Adjust the line height as needed
-        constexpr int fontSize = 19;    // Adjust the font size as needed
-        
+        constexpr int lineHeight = 20; // Adjust the line height as needed
+        constexpr int fontSize = 19; // Adjust the font size as needed
+
         for (const auto& cmd : commands) {
             if (cmd.size() > 1) {
                 if (cmd[0] == "split") {
@@ -295,26 +309,27 @@ public:
                     }
                     useJson = true;
                     if (cmd.size() > 5) { // Enough parts are provided to mark the current ini value
-                        sourceIni  = preprocessPath(cmd[3]);
+                        sourceIni = preprocessPath(cmd[3]);
                         sectionIni = cmd[4];
-                        keyIni     = cmd[5];
+                        keyIni = cmd[5];
                         markCurIni = true;
                     }
                 } else if (cmd[0] == "text_source") {
                     textPath = preprocessPath(cmd[1]);
                     useText = true;
                 }
-            } 
+            }
         }
 
         // Get the list of files matching the pattern
-       
+
         if (!useToggle) {
             if (useText) {
                 if (!isFileOrDirectory(textPath)) {
-                    list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                    renderer->drawString("Text file not found.\nContact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
-                    }), fontSize + lineHeight);
+                    list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
+                                      renderer->drawString("Text file not found.\nContact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                                  }),
+                                  fontSize + lineHeight);
                     rootFrame->setContent(list);
                     return rootFrame;
                 } else {
@@ -322,25 +337,27 @@ public:
                     std::string textdata = textDataPair.first;
                     int textsize = textDataPair.second;
                     if (!textdata.empty()) {
-                        list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                        renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
-                        }), fontSize * textsize + lineHeight);
+                        list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize, textdata](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
+                                          renderer->drawString(textdata.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                                      }),
+                                      fontSize * textsize + lineHeight);
                         rootFrame->setContent(list);
                         return rootFrame;
                     }
                 }
             } else if (useJson) {
                 if (!isFileOrDirectory(jsonPath)) {
-                    list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                    renderer->drawString("JSON file not found.\nContact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
-                    }), fontSize + lineHeight);
+                    list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
+                                      renderer->drawString("JSON file not found.\nContact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                                  }),
+                                  fontSize + lineHeight);
                     rootFrame->setContent(list);
                     return rootFrame;
                 } else {
                     std::string currentHex = ""; // Is used to mark current value from the kip
                     bool detectSize = true;
                     searchCurrent = markCurKip || markCurIni ? true : false;
-                    // create list of data in the json 
+                    // create list of data in the json
                     auto jsonData = readJsonFromFile(jsonPath);
                     if (jsonData && json_is_array(jsonData)) {
                         size_t arraySize = json_array_size(jsonData);
@@ -375,25 +392,23 @@ public:
                                                 if (decValue) {
                                                     currentHex = std::to_string(reversedHexToInt(currentHex));
                                                 }
-                                            }
-                                            catch (const std::invalid_argument& ex) {
+                                            } catch (const std::invalid_argument& ex) {
                                                 log("ERROR - %s:%d  - invalid offset value: \"%s\" in \"%s\"", __func__, __LINE__, offset.c_str(), jsonPath.c_str());
                                             }
                                         }
                                         if (valueStr == currentHex) {
                                             name = json_string_value(keyValue);
                                             if (name.find(" - ") != std::string::npos) {
-                                                name = name +  " | " + checkmarkChar;
-                                            } else {   
-                                                name = name +  " - " + checkmarkChar;
+                                                name = name + " | " + checkmarkChar;
+                                            } else {
+                                                name = name + " - " + checkmarkChar;
                                             }
                                             searchCurrent = false;
-                                        }
-                                        else {
+                                        } else {
                                             name = json_string_value(keyValue);
                                         }
                                     } else if (markCurIni && hexOrDecOrVal && searchCurrent) {
-                                        const char* iniValueStr; 
+                                        const char* iniValueStr;
                                         if (hexValue) {
                                             iniValueStr = json_string_value(hexValue);
                                         } else if (decValue) {
@@ -405,17 +420,16 @@ public:
                                         if (iniValueStr == iniValue) {
                                             name = json_string_value(keyValue);
                                             if (name.find(" - ") != std::string::npos) {
-                                                name = name +  " | " + checkmarkChar;
-                                            } else {   
-                                                name = name +  " - " + checkmarkChar;
+                                                name = name + " | " + checkmarkChar;
+                                            } else {
+                                                name = name + " - " + checkmarkChar;
                                             }
                                             searchCurrent = false;
-                                        }
-                                        else {
+                                        } else {
                                             name = json_string_value(keyValue);
                                         }
                                     } else {
-                                            name = json_string_value(keyValue);
+                                        name = json_string_value(keyValue);
                                     }
                                     if (colorValue) {
                                         name = name + " ::" + json_string_value(colorValue);
@@ -435,7 +449,7 @@ public:
         } else {
             filesListOn = getFilesListByWildcards(pathPatternOn);
             filesListOff = getFilesListByWildcards(pathPatternOff);
-            
+
             // Apply On Filter
             for (const auto& filterOnPath : filterOnList) {
                 removeEntryFromList(filterOnPath, filesListOn);
@@ -444,12 +458,10 @@ public:
             for (const auto& filterOnPath : filterOffList) {
                 removeEntryFromList(filterOnPath, filesListOff);
             }
-            
-            
+
             // remove filterOnPath from filesListOn
             // remove filterOffPath from filesListOff
-            
-            
+
             filesList.reserve(filesListOn.size() + filesListOff.size());
             filesList.insert(filesList.end(), filesListOn.begin(), filesListOn.end());
             filesList.insert(filesList.end(), filesListOff.begin(), filesListOff.end());
@@ -457,7 +469,7 @@ public:
                 std::sort(filesList.begin(), filesList.end(), [](const std::string& a, const std::string& b) {
                     std::string parentDirA = getParentDirNameFromPath(a);
                     std::string parentDirB = getParentDirNameFromPath(b);
-                
+
                     // Compare parent directory names
                     if (parentDirA != parentDirB) {
                         return parentDirA < parentDirB;
@@ -465,7 +477,7 @@ public:
                         // Parent directory names are the same, compare filenames
                         std::string filenameA = getNameFromPath(a);
                         std::string filenameB = getNameFromPath(b);
-                
+
                         // Compare filenames
                         return filenameA < filenameB;
                     }
@@ -475,15 +487,13 @@ public:
                     return getNameFromPath(a) < getNameFromPath(b);
                 });
             }
-
-            
         }
-        
+
         // Apply filter
         for (const auto& filterPath : filterList) {
             removeEntryFromList(filterPath, filesList);
         }
-        
+
         // Add each file as a menu item
         int count = 0;
         std::string jsonSep = "";
@@ -496,7 +506,7 @@ public:
                 itemName = dropExtension(itemName);
             }
             parentDirName = getParentDirNameFromPath(file);
-            if (useSplitHeader && (lastParentDirName.empty() || (lastParentDirName != parentDirName))){
+            if (useSplitHeader && (lastParentDirName.empty() || (lastParentDirName != parentDirName))) {
                 list->addItem(new tsl::elm::CategoryHeader(removeQuotes(parentDirName)));
                 lastParentDirName = parentDirName;
             }
@@ -521,13 +531,11 @@ public:
                         if (isFirst) {
                             jsonSep = optionName.substr(1);
                             hasSep = true;
-                        }
-                        else {
+                        } else {
                             auto item = new tsl::elm::CategoryHeader(optionName.substr(1), true);
                             list->addItem(item);
                         }
-                    }
-                    else {
+                    } else {
                         isFirst = false;
                         auto listItem = new tsl::elm::ListItem(optionName);
                         if (ramInfo) {
@@ -575,10 +583,10 @@ public:
                                 }
                                 return false;
                             });
-                            if (color.compare(0, 1, "#") == 0){
+                            if (color.compare(0, 1, "#") == 0) {
                                 listItem->setColor(tsl::PredefinedColors::Custom, color);
                             } else {
-                                listItem->setColor(defineColor(color));  
+                                listItem->setColor(defineColor(color));
                             }
                             // Find the curent list item to jump to
                             size_t checkmarkPos = listItem->getValue().find(checkmarkChar);
@@ -604,7 +612,7 @@ public:
                     std::string concatenatedString;
 
                     // Iterate through the vector and append each string with a space
-                    for (auto & str : kipInfoCommand) {
+                    for (auto& str : kipInfoCommand) {
                         if (str == "{source}") {
                             str = replacePlaceholder(str, "{source}", file);
                         }
@@ -682,14 +690,14 @@ public:
                     }
                 });
                 list->addItem(toggleListItem);
-            } 
+            }
             count++;
         }
         if (hasSep) {
             if (!jsonSep.empty()) {
                 list->addItem(new tsl::elm::CategoryHeader(jsonSep), 0, 0);
             }
-        } else if (!useSplitHeader){
+        } else if (!useSplitHeader) {
             list->addItem(new tsl::elm::CategoryHeader(specificKey), 0, 0);
         }
         rootFrame->setContent(list);
@@ -698,11 +706,12 @@ public:
 
     bool adjuct_top, adjuct_bot = false;
 
-    virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+    virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override
+    {
         if (!keysDown) {
             if (this->savedItem != nullptr && this->savedItem != this->getFocusedElement()) {
-                while(this->savedItem != this->getFocusedElement()) {
-                        this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
+                while (this->savedItem != this->getFocusedElement()) {
+                    this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
                 }
             } else {
                 this->savedItem = nullptr;
@@ -723,7 +732,7 @@ public:
             this->adjuct_top = false;
             return true;
         }
-        if (this->adjuct_bot) {  // Adjust cursor to the top item after jump top-bot
+        if (this->adjuct_bot) { // Adjust cursor to the top item after jump top-bot
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
             this->adjuct_bot = false;
             return true;
@@ -734,7 +743,7 @@ public:
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
             if (prevItem == this->getFocusedElement()) {
                 scrollListItems(this, ShiftFocusMode::UpMax);
-                this->adjuct_top = true; // Go one item 
+                this->adjuct_top = true; // Go one item
             } else { // Adjust to account for tesla key processing
                 this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
             }
@@ -759,7 +768,8 @@ public:
         if (keysDown & KEY_R) { // Scroll to down for 5 items
             scrollListItems(this, ShiftFocusMode::DownNum);
             return true;
-        }if (keysDown & KEY_ZL) { // Scroll to up for 5 items
+        }
+        if (keysDown & KEY_ZL) { // Scroll to up for 5 items
             scrollListItems(this, ShiftFocusMode::UpMax);
             return true;
         }
@@ -780,8 +790,7 @@ public:
             if (applied) {
                 resetValue = true;
                 focusedItem->setValue("APPLIED", tsl::PredefinedColors::Green);
-            }
-            else
+            } else
                 focusedItem->setValue("DELETED", tsl::PredefinedColors::Red);
             applied = false;
             deleted = false;
@@ -791,14 +800,16 @@ public:
     }
 };
 
-
 class SubMenu : public tsl::Gui {
 protected:
     std::string subPath, pathReplace, pathReplaceOn, pathReplaceOff;
 
 public:
-    SubMenu(const std::string& path) : subPath(path) {}
-    ~SubMenu() {}
+    SubMenu(const std::string& path)
+        : subPath(path)
+    {
+    }
+    ~SubMenu() { }
 
     FILE* kipFile = nullptr;
     int custOffset;
@@ -806,7 +817,7 @@ public:
     auto addSliderItem(auto& sliderOption)
     {
         const std::string& sliderName = sliderOption[1];
-        const int low  = std::stoi(sliderOption[2]);
+        const int low = std::stoi(sliderOption[2]);
         const int high = std::stoi(sliderOption[3]);
         const int step = std::stoi(sliderOption[4]);
         const std::string& offset = sliderOption[5];
@@ -820,11 +831,11 @@ public:
         }
 
         myArray.shrink_to_fit();
-        auto slider = new tsl::elm::NamedStepTrackBar(" ",myArray);
+        auto slider = new tsl::elm::NamedStepTrackBar(" ", myArray);
 
         std::string currentHex = readHexDataAtOffset("/atmosphere/kips/loader.kip", CUST, std::stoul(offset), 4);
 
-        int initProgress = (reversedHexToInt(currentHex) - low)/step;
+        int initProgress = (reversedHexToInt(currentHex) - low) / step;
 
         slider->setProgress(initProgress);
 
@@ -835,7 +846,7 @@ public:
                 hexEditCustOffset("/atmosphere/kips/loader.kip", std::stoul(offset), hexData);
                 slider->setColor(tsl::PredefinedColors::Green);
                 return true;
-            } else if (keys){
+            } else if (keys) {
                 slider->setColor();
             }
             return false;
@@ -843,7 +854,8 @@ public:
         return slider;
     }
 
-    std::string findCurrentKip(const std::string& jsonPath, const std::string& offset) {
+    std::string findCurrentKip(const std::string& jsonPath, const std::string& offset)
+    {
         std::string searchKey;
         const char* valueStr;
 
@@ -863,13 +875,11 @@ public:
                     searchKey = "hex";
                     hexLength = strlen(valueStr) / 2;
                     hexLength = std::max(hexLength, 1);
-                }
-                else if ((decValue && json_is_string(decValue))) {
+                } else if ((decValue && json_is_string(decValue))) {
                     valueStr = json_string_value(decValue);
                     searchKey = "dec";
                     hexLength = 4;
-                }
-                else {
+                } else {
                     return "\u25B6";
                 }
                 std::string currentHex;
@@ -880,8 +890,7 @@ public:
                         custOffset = findCustOffset(kipFile);
                     }
                     currentHex = readHexDataAtOffset(kipFile, CUST, std::stoul(offset), hexLength, custOffset);
-                }
-                catch (const std::invalid_argument& ex) {
+                } catch (const std::invalid_argument& ex) {
                     log("ERROR - %s:%d - invalid offset value: \"%s\" in \"%s\"", __func__, __LINE__, offset.c_str(), jsonPath.c_str());
                 }
                 if (!currentHex.empty()) {
@@ -911,7 +920,8 @@ public:
         return "\u25B6";
     }
 
-    std::string findCurrentIni(const std::string& jsonPath, const std::string& iniPath, const std::string& section, const std::string& key) {
+    std::string findCurrentIni(const std::string& jsonPath, const std::string& iniPath, const std::string& section, const std::string& key)
+    {
         std::string searchKey;
 
         auto jsonData = readJsonFromFile(jsonPath);
@@ -927,14 +937,11 @@ public:
                 json_t* otherValue = json_object_get(item, "value");
                 if ((hexValue && json_is_string(hexValue))) {
                     searchKey = "hex";
-                }
-                else if ((decValue && json_is_string(decValue))) {
+                } else if ((decValue && json_is_string(decValue))) {
                     searchKey = "dec";
-                }
-                else if ((otherValue && json_is_string(otherValue))) {
+                } else if ((otherValue && json_is_string(otherValue))) {
                     searchKey = "value";
-                }
-                else {
+                } else {
                     return "\u25B6";
                 }
                 std::string iniValue = readIniValue(iniPath, section, key);
@@ -962,7 +969,8 @@ public:
         return "\u25B6";
     }
 
-    virtual tsl::elm::Element* createUI() override {
+    virtual tsl::elm::Element* createUI() override
+    {
         // log ("SubMenu");
 
         int numSlashes = count(subPath.begin(), subPath.end(), '/');
@@ -975,7 +983,7 @@ public:
             helpPath = subPath.substr(0, fifthSlashPos);
             helpPath += "/Help/" + getNameFromPath(subPath) + ".txt";
             if (isFileOrDirectory(helpPath)) {
-                hasHelp = true; 
+                hasHelp = true;
             } else {
                 helpPath = "";
             }
@@ -984,19 +992,20 @@ public:
         std::string viewPackage = package;
         std::string viewsubPath = getNameFromPath(subPath);
 
-        auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(viewsubPath), viewPackage, "" , hasHelp);
+        auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(viewsubPath), viewPackage, "", hasHelp);
         auto list = new tsl::elm::List();
 
         if (!kipVersion.empty()) {
-            constexpr int lineHeight = 20;  // Adjust the line height as needed
-            constexpr int fontSize = 19;    // Adjust the font size as needed
+            constexpr int lineHeight = 20; // Adjust the line height as needed
+            constexpr int fontSize = 19; // Adjust the font size as needed
             const std::string CUST = "43555354";
             std::string curKipVer = readHexDataAtOffset("/atmosphere/kips/loader.kip", CUST, 4, 3);
             int i_curKipVer = reversedHexToInt(curKipVer);
             if (std::stoi(kipVersion) != i_curKipVer) {
-                list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                renderer->drawString("Kip version mismatch.\nUpdate the requirements to use this\npackage.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
-                }), fontSize * 3 + lineHeight);
+                list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
+                                  renderer->drawString("Kip version mismatch.\nUpdate the requirements to use this\npackage.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                              }),
+                              fontSize * 3 + lineHeight);
                 rootFrame->setContent(list);
                 return rootFrame;
             }
@@ -1009,7 +1018,7 @@ public:
                 if (isFileOrDirectory(subPath + subDirectory + '/' + configFileName)) {
                     auto item = new tsl::elm::ListItem(subDirectory);
                     item->setValue("\u25B6", tsl::PredefinedColors::White);
-                    item->setClickListener([&, subDirectory, helpPath](u64 keys)->bool {
+                    item->setClickListener([&, subDirectory, helpPath](u64 keys) -> bool {
                         if (keys & KEY_A) {
                             tsl::changeTo<SubMenu>(subPath + subDirectory + '/');
                             return true;
@@ -1018,7 +1027,7 @@ public:
                             return true;
                         }
                         return false;
-                        });
+                    });
                     list->addItem(item);
                 }
             }
@@ -1033,14 +1042,14 @@ public:
 
         // Package Info
         PackageHeader packageHeader = getPackageHeaderFromIni(subConfigIniPath);
-        
+
         // Populate the sub menu with options
         for (const auto& option : options) {
             std::string optionName = option.first;
-            std::string footer; 
+            std::string footer;
             bool usePattern = false;
-            bool useSlider  = false;
-            bool useSliderItem  = false;
+            bool useSlider = false;
+            bool useSliderItem = false;
             std::string toggleMode;
             std::string toggleVerPath;
             std::string toggleVerLine;
@@ -1049,7 +1058,7 @@ public:
                 std::vector<std::string> tmpldir = option.second[0];
                 auto item = new tsl::elm::ListItem(optionName.substr(1));
                 item->setValue("\u25B6", tsl::PredefinedColors::White);
-                item->setClickListener([&, tmpldir, item](u64 keys)->bool {
+                item->setClickListener([&, tmpldir, item](u64 keys) -> bool {
                     if (keys & KEY_A) {
                         if (!isFileOrDirectory(tmpldir[1])) {
                             item->setValue("FAIL", tsl::PredefinedColors::Red);
@@ -1059,7 +1068,7 @@ public:
                         return true;
                     }
                     return false;
-                    });
+                });
                 list->addItem(item);
                 continue;
             }
@@ -1067,7 +1076,7 @@ public:
                 auto subDirectory = optionName.substr(1);
                 auto item = new tsl::elm::ListItem(subDirectory);
                 item->setValue("\u25B6", tsl::PredefinedColors::White);
-                item->setClickListener([&, subDirectory, item, helpPath](u64 keys)->bool {
+                item->setClickListener([&, subDirectory, item, helpPath](u64 keys) -> bool {
                     if (keys & KEY_A) {
                         if (!isDirectory(subPath + subDirectory + '/')) {
                             item->setValue("FAIL", tsl::PredefinedColors::Red);
@@ -1080,11 +1089,10 @@ public:
                         return true;
                     }
                     return false;
-                    });
+                });
                 list->addItem(item);
                 continue;
-            }
-            else if (optionName[0] == '*') {
+            } else if (optionName[0] == '*') {
                 if (option.second[0][0] == "slider_kip") {
                     useSliderItem = true;
                     footer = "";
@@ -1106,7 +1114,7 @@ public:
             }
 
             size_t pos = optionName.find(" ;; "); // Find the custom display header
-            if (pos!= std::string::npos) {
+            if (pos != std::string::npos) {
                 headerName = optionName.substr(pos + 4); // Strip the item name
                 optionName.resize(pos); // Strip the displayName
             } else {
@@ -1118,7 +1126,7 @@ public:
             bool useAdvToggle = false;
             bool isSeparator = false;
             for (const auto& cmd : option.second) {
-                if(cmd[0] == "separator"){
+                if (cmd[0] == "separator") {
                     isSeparator = true;
                     break;
                 }
@@ -1139,7 +1147,7 @@ public:
                         }
                         useAdvToggle = true;
                     }
-                } 
+                }
             }
 
             if (isSeparator) {
@@ -1192,21 +1200,21 @@ public:
                         listItem->setValue(findCurrentKip(jsonPath, offset));
                     }
                     if ((cmd[0] == "json_mark_cur_ini") && showCurInMenu) {
-                        std::string sourceIni  = preprocessPath(cmd[3]);
+                        std::string sourceIni = preprocessPath(cmd[3]);
                         auto& sectionIni = cmd[4];
-                        auto& keyIni     = cmd[5];
-                        std::string jsonPath   = preprocessPath(cmd[1]);
+                        auto& keyIni = cmd[5];
+                        std::string jsonPath = preprocessPath(cmd[1]);
                         listItem->setValue(findCurrentIni(jsonPath, sourceIni, sectionIni, keyIni));
                     }
                 }
-                
+
                 listItem->setClickListener([command = option.second, keyName = headerName, subPath = this->subPath, usePattern, listItem, helpPath, useSlider](uint64_t keys) {
-                    if (exitMT){
+                    if (exitMT) {
                         // Means that commands was executed
                         threadClose(&threadMT);
                         exitMT = false;
                         Mtrun = false;
-                        
+
                         if (errCode == 1) {
                             tsl::goBack();
                             return true;
@@ -1249,9 +1257,9 @@ public:
                         } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
                             listItem->setValue("");
                         }
-                            return false;
-                }
-                return false;
+                        return false;
+                    }
+                    return false;
                 });
 
                 list->addItem(listItem);
@@ -1259,7 +1267,7 @@ public:
                 auto toggleListItem = new tsl::elm::ToggleListItem(optionName, false, "On", "Off");
                 // Set the initial state of the toggle item
                 bool toggleStateOn = isFileOrDirectory(preprocessPath(pathReplaceOn));
-                
+
                 toggleListItem->setState(toggleStateOn);
 
                 toggleListItem->setStateChangedListener([toggleStateOn, command = option.second, this](bool state) {
@@ -1286,46 +1294,45 @@ public:
 
                 list->addItem(toggleListItem);
             }
-
         }
 
         if (kipFile) {
             fclose(kipFile);
             kipFile = nullptr;
         }
-        constexpr int lineHeight = 20;  // Adjust the line height as needed
-        constexpr int xOffset = 120;    // Adjust the horizontal offset as needed
-        constexpr int fontSize = 16;    // Adjust the font size as needed
-        int numEntries = 0;   // Adjust the number of entries as needed
-        
+        constexpr int lineHeight = 20; // Adjust the line height as needed
+        constexpr int xOffset = 120; // Adjust the horizontal offset as needed
+        constexpr int fontSize = 16; // Adjust the font size as needed
+        int numEntries = 0; // Adjust the number of entries as needed
+
         std::string packageSectionString = "";
         std::string packageInfoString = "";
         if (packageHeader.version != "") {
             packageSectionString += "Version\n";
-            packageInfoString += (packageHeader.version+"\n").c_str();
+            packageInfoString += (packageHeader.version + "\n").c_str();
             numEntries++;
         }
         if (packageHeader.creator != "") {
             packageSectionString += "Creator(s)\n";
-            packageInfoString += (packageHeader.creator+"\n").c_str();
+            packageInfoString += (packageHeader.creator + "\n").c_str();
             numEntries++;
         }
         if (packageHeader.about != "") {
             std::string aboutHeaderText = "About\n";
             std::string::size_type aboutHeaderLength = aboutHeaderText.length();
             std::string aboutText = packageHeader.about;
-    
+
             packageSectionString += aboutHeaderText;
-            
+
             // Split the about text into multiple lines with proper word wrapping
-            constexpr int maxLineLength = 28;  // Adjust the maximum line length as needed
+            constexpr int maxLineLength = 28; // Adjust the maximum line length as needed
             std::string::size_type startPos = 0;
             std::string::size_type spacePos = 0;
-    
+
             while (startPos < aboutText.length()) {
                 std::string::size_type endPos = std::min(startPos + maxLineLength, aboutText.length());
                 std::string line = aboutText.substr(startPos, endPos - startPos);
-        
+
                 // Check if the current line ends with a space; if not, find the last space in the line
                 if (endPos < aboutText.length() && aboutText[endPos] != ' ') {
                     spacePos = line.find_last_of(' ');
@@ -1334,20 +1341,18 @@ public:
                         line = aboutText.substr(startPos, endPos - startPos);
                     }
                 }
-        
+
                 packageInfoString += line + '\n';
                 startPos = endPos + 1;
                 numEntries++;
-        
+
                 // Add corresponding newline to the packageSectionString
                 if (startPos < aboutText.length()) {
                     packageSectionString += std::string(aboutHeaderLength, ' ') + '\n';
                 }
             }
-    
         }
 
-        
         // Remove trailing newline character
         if ((packageSectionString != "") && (packageSectionString.back() == '\n')) {
             packageSectionString.resize(packageSectionString.size() - 1);
@@ -1355,18 +1360,18 @@ public:
         if ((packageInfoString != "") && (packageInfoString.back() == '\n')) {
             packageInfoString.resize(packageInfoString.size() - 1);
         }
-        
-        
+
         if ((packageSectionString != "") && (packageInfoString != "")) {
             list->addItem(new tsl::elm::CategoryHeader("Package Info"));
-            list->addItem(new tsl::elm::CustomDrawer([lineHeight, xOffset, fontSize, packageSectionString, packageInfoString](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                renderer->drawString(packageSectionString.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
-                renderer->drawString(packageInfoString.c_str(), false, x + xOffset, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
-            }), fontSize * numEntries + lineHeight);
+            list->addItem(new tsl::elm::CustomDrawer([lineHeight, xOffset, fontSize, packageSectionString, packageInfoString](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
+                              renderer->drawString(packageSectionString.c_str(), false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                              renderer->drawString(packageInfoString.c_str(), false, x + xOffset, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                          }),
+                          fontSize * numEntries + lineHeight);
         }
 
         if (numSlashes == 5 && integrityCheck) {
-            int headerCh[] = {83, 112, 101, 99, 105, 97, 108, 32, 84, 104, 97, 110, 107, 115};
+            int headerCh[] = { 83, 112, 101, 99, 105, 97, 108, 32, 84, 104, 97, 110, 107, 115 };
             int length = sizeof(headerCh) / sizeof(headerCh[0]);
             char* charArray = new char[length + 1];
             for (int i = 0; i < length; ++i) {
@@ -1374,26 +1379,28 @@ public:
             }
             charArray[length] = '\0';
             list->addItem(new tsl::elm::CategoryHeader(charArray));
-            int checksum[] = {83, 112, 101, 99, 105, 97, 108, 32, 116, 104, 97, 110, 107, 115, 32, 116, 111, 32, 69, 102, 111, 115, 97, 109, 97, 114, 107, 44, 32, 73, 114, 110, 101, 32, 97, 110, 100, 32, 73, 51, 115, 101, 121, 46, 10, 87, 105, 116, 104, 111, 117, 116, 32, 116, 104, 101, 109, 32, 116, 104, 105, 115, 32, 119, 111, 117, 108, 100, 110, 39, 116, 32, 98, 101, 32, 112, 111, 115, 115, 98, 108, 101, 33};
+            int checksum[] = { 83, 112, 101, 99, 105, 97, 108, 32, 116, 104, 97, 110, 107, 115, 32, 116, 111, 32, 69, 102, 111, 115, 97, 109, 97, 114, 107, 44, 32, 73, 114, 110, 101, 32, 97, 110, 100, 32, 73, 51, 115, 101, 121, 46, 10, 87, 105, 116, 104, 111, 117, 116, 32, 116, 104, 101, 109, 32, 116, 104, 105, 115, 32, 119, 111, 117, 108, 100, 110, 39, 116, 32, 98, 101, 32, 112, 111, 115, 115, 98, 108, 101, 33 };
             length = sizeof(checksum) / sizeof(checksum[0]);
             charArray = new char[length + 1];
             for (int i = 0; i < length; ++i) {
                 charArray[i] = static_cast<char>(checksum[i]);
             }
             charArray[length] = '\0';
-            list->addItem(new tsl::elm::CustomDrawer([lineHeight, xOffset, fontSize, charArray](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-                renderer->drawString(charArray, false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
-            }), fontSize * 2 + lineHeight);
+            list->addItem(new tsl::elm::CustomDrawer([lineHeight, xOffset, fontSize, charArray](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
+                              renderer->drawString(charArray, false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
+                          }),
+                          fontSize * 2 + lineHeight);
         }
 
         rootFrame->setContent(list);
-        
+
         return rootFrame;
     }
 
     bool adjuct_top, adjuct_bot = false;
 
-    virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+    virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override
+    {
         if (resetValue && keysDown) {
             if (this->getFocusedElement()->getClass() == tsl::Class::ListItem) {
                 tsl::elm::ListItem* focusedItem = dynamic_cast<tsl::elm::ListItem*>(this->getFocusedElement());
@@ -1409,7 +1416,7 @@ public:
             this->adjuct_top = false;
             return true;
         }
-        if (this->adjuct_bot) {  // Adjust cursor to the top item after jump top-bot
+        if (this->adjuct_bot) { // Adjust cursor to the top item after jump top-bot
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
             this->adjuct_bot = false;
             return true;
@@ -1420,7 +1427,7 @@ public:
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
             if (prevItem == this->getFocusedElement()) {
                 scrollListItems(this, ShiftFocusMode::UpMax);
-                this->adjuct_top = true; // Go one item 
+                this->adjuct_top = true; // Go one item
             } else { // Adjust to account for tesla key processing
                 this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
             }
@@ -1445,7 +1452,8 @@ public:
         if (keysDown & KEY_R) { // Scroll to down for 5 items
             scrollListItems(this, ShiftFocusMode::DownNum);
             return true;
-        }if (keysDown & KEY_ZL) { // Scroll to up for 5 items
+        }
+        if (keysDown & KEY_ZL) { // Scroll to up for 5 items
             scrollListItems(this, ShiftFocusMode::UpMax);
             return true;
         }
@@ -1461,7 +1469,7 @@ public:
         } else if (applied && !keysDown) {
             applied = false;
             resetValue = true;
-            tsl::elm::ListItem* focusedItem = dynamic_cast<tsl::elm::ListItem*>(this-> getFocusedElement());
+            tsl::elm::ListItem* focusedItem = dynamic_cast<tsl::elm::ListItem*>(this->getFocusedElement());
             if (prevValue.empty())
                 prevValue = focusedItem->getValue();
             focusedItem->setValue("APPLIED", tsl::PredefinedColors::Green);
@@ -1475,9 +1483,13 @@ class MainMenu;
 
 class Package : public SubMenu {
 public:
-    Package(const std::string& path) : SubMenu(path) {}
+    Package(const std::string& path)
+        : SubMenu(path)
+    {
+    }
 
-    tsl::elm::Element* createUI() override {
+    tsl::elm::Element* createUI() override
+    {
         package = getNameFromPath(subPath);
         std::string subConfigIniPath = subPath + "/" + configFileName;
         PackageHeader packageHeader = getPackageHeaderFromIni(subConfigIniPath);
@@ -1493,13 +1505,14 @@ public:
 
     bool adjuct_top, adjuct_bot = false;
 
-    bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+    bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override
+    {
         if (this->adjuct_top) { // Adjust cursor to the top item after jump bot-top
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
             this->adjuct_top = false;
             return true;
         }
-        if (this->adjuct_bot) {  // Adjust cursor to the top item after jump top-bot
+        if (this->adjuct_bot) { // Adjust cursor to the top item after jump top-bot
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
             this->adjuct_bot = false;
             return true;
@@ -1510,7 +1523,7 @@ public:
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
             if (prevItem == this->getFocusedElement()) {
                 scrollListItems(this, ShiftFocusMode::UpMax);
-                this->adjuct_top = true; // Go one item 
+                this->adjuct_top = true; // Go one item
             } else { // Adjust to account for tesla key processing
                 this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
             }
@@ -1535,7 +1548,8 @@ public:
         if (keysDown & KEY_R) { // Scroll to down for 5 items
             scrollListItems(this, ShiftFocusMode::DownNum);
             return true;
-        }if (keysDown & KEY_ZL) { // Scroll to up for 5 items
+        }
+        if (keysDown & KEY_ZL) { // Scroll to up for 5 items
             scrollListItems(this, ShiftFocusMode::UpMax);
             return true;
         }
@@ -1557,9 +1571,14 @@ protected:
     Screen prevMenu;
 
 public:
-    Updater(const std::vector<std::map<std::string, std::string>>& items, Screen mode = Overlays) : uitems(items), prevMenu(mode) {}
+    Updater(const std::vector<std::map<std::string, std::string>>& items, Screen mode = Overlays)
+        : uitems(items)
+        , prevMenu(mode)
+    {
+    }
 
-    tsl::elm::Element* createUI() override {
+    tsl::elm::Element* createUI() override
+    {
         auto rootFrame = new tsl::elm::OverlayFrame("Updates available", "Updater");
         auto list = new tsl::elm::List();
 
@@ -1648,13 +1667,14 @@ public:
 
     bool adjuct_top, adjuct_bot = false;
 
-    bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+    bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override
+    {
         if (this->adjuct_top) { // Adjust cursor to the top item after jump bot-top
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
             this->adjuct_top = false;
             return true;
         }
-        if (this->adjuct_bot) {  // Adjust cursor to the top item after jump top-bot
+        if (this->adjuct_bot) { // Adjust cursor to the top item after jump top-bot
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
             this->adjuct_bot = false;
             return true;
@@ -1665,7 +1685,7 @@ public:
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
             if (prevItem == this->getFocusedElement()) {
                 scrollListItems(this, ShiftFocusMode::UpMax);
-                this->adjuct_top = true; // Go one item 
+                this->adjuct_top = true; // Go one item
             } else { // Adjust to account for tesla key processing
                 this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
             }
@@ -1690,7 +1710,8 @@ public:
         if (keysDown & KEY_R) { // Scroll to down for 5 items
             scrollListItems(this, ShiftFocusMode::DownNum);
             return true;
-        }if (keysDown & KEY_ZL) { // Scroll to up for 5 items
+        }
+        if (keysDown & KEY_ZL) { // Scroll to up for 5 items
             scrollListItems(this, ShiftFocusMode::UpMax);
             return true;
         }
@@ -1707,7 +1728,6 @@ public:
     }
 };
 
-
 class MainMenu : public tsl::Gui {
 private:
     tsl::hlp::ini::IniData settingsData;
@@ -1720,40 +1740,45 @@ private:
     bool overlayUpdater = true;
     bool sorting = false;
     Screen ForMode;
-public:
-    MainMenu(const Screen& curScreen=Default) : ForMode(curScreen){}
-    ~MainMenu() {}
 
-    virtual tsl::elm::Element* createUI() override {
+public:
+    MainMenu(const Screen& curScreen = Default)
+        : ForMode(curScreen)
+    {
+    }
+    ~MainMenu() { }
+
+    virtual tsl::elm::Element* createUI() override
+    {
         // log ("MainMenu");
 
         defaultMenuMode = "overlays";
         menuMode = "overlays";
-        
+
         createDirectory(packageDirectory);
         createDirectory(settingsPath);
 
         switch (ForMode) {
-           case Soverlays:
-               sorting = true;
-               menuMode = "overlays";
-               break;
-           case Spackages:
-               sorting = true;
-               menuMode = "packages";
-               break;
-           case Overlays:
-               sorting = false;
-               menuMode = "overlays";
-               break;
-           case Packages:
-               sorting = false;
-               menuMode = "packages";
-               break;
-           case Default:
-               break;
+        case Soverlays:
+            sorting = true;
+            menuMode = "overlays";
+            break;
+        case Spackages:
+            sorting = true;
+            menuMode = "packages";
+            break;
+        case Overlays:
+            sorting = false;
+            menuMode = "overlays";
+            break;
+        case Packages:
+            sorting = false;
+            menuMode = "packages";
+            break;
+        case Default:
+            break;
         }
-        
+
         bool settingsLoaded = false;
         if (isFileOrDirectory(settingsConfigIniPath)) {
             settingsData = getParsedDataFromIniFile(settingsConfigIniPath);
@@ -1778,12 +1803,12 @@ public:
                 } else {
                     setIniFileValue(settingsConfigIniPath, "uberhand", "show_pack_versions", "false");
                 }
-                if (uberhandSection["uberhand_updates_only"] == "true"){
+                if (uberhandSection["uberhand_updates_only"] == "true") {
                     uberhand_updates_only = true;
                 } else {
                     setIniFileValue(settingsConfigIniPath, "uberhand", "uberhand_updates_only", "false");
                 }
-                if (!uberhandSection["ovl_repo"].empty()){
+                if (!uberhandSection["ovl_repo"].empty()) {
                     repoUrl = uberhandSection["ovl_repo"];
                 } else {
                     repoUrl = "https://raw.githubusercontent.com/i3sey/uUpdater-ovl-repo/main/main.ini";
@@ -1802,8 +1827,7 @@ public:
                 if (!(uberhandSection["show_separator"] == "true")) {
                     setIniFileValue(settingsConfigIniPath, "uberhand", "show_separator", "false");
                 }
-                if (uberhandSection["key_combo"].empty())
-                {
+                if (uberhandSection["key_combo"].empty()) {
                     copyTeslaKeyComboTouberhand();
                 } else {
                     if (!isDirectory("sdmc:/config/tesla/")) {
@@ -1821,17 +1845,16 @@ public:
                 }
             }
         }
-        
+
         if (!isFileOrDirectory("sdmc:/config/tesla/config.ini")) // Create and modify tesla kinfog
 
-        if (!settingsLoaded) { // write data if settings are not loaded
-            setIniFileValue(settingsConfigIniPath, "uberhand", "default_menu", defaultMenuMode);
-            setIniFileValue(settingsConfigIniPath, "uberhand", "last_menu", menuMode);
-            setIniFileValue(settingsConfigIniPath, "uberhand", "in_overlay", "false");
-        }
+            if (!settingsLoaded) { // write data if settings are not loaded
+                setIniFileValue(settingsConfigIniPath, "uberhand", "default_menu", defaultMenuMode);
+                setIniFileValue(settingsConfigIniPath, "uberhand", "last_menu", menuMode);
+                setIniFileValue(settingsConfigIniPath, "uberhand", "in_overlay", "false");
+            }
         //setIniFileValue(settingsConfigIniPath, "uberhand", "in_overlay", "false");
-        
-        
+
         if ((defaultMenuMode == "overlays") || (defaultMenuMode == "packages")) {
             if (defaultMenuLoaded) {
                 menuMode = defaultMenuMode;
@@ -1841,18 +1864,18 @@ public:
             defaultMenuMode = "last_menu";
             setIniFileValue(settingsConfigIniPath, "uberhand", "default_menu", defaultMenuMode);
         }
-        
-        std::string versionLabel = APP_VERSION+std::string("   (")+envGetLoaderInfo()+std::string(")");
+
+        std::string versionLabel = APP_VERSION + std::string("   (") + envGetLoaderInfo() + std::string(")");
         auto rootFrame = new tsl::elm::OverlayFrame("Uberhand", versionLabel, menuMode);
         auto list = new tsl::elm::List();
 
         //loadOverlayFiles(list);
 
         int count = 0;
-        
+
         if (menuMode == "overlays") {
             // Load overlay files
-            std::vector<std::string> overlayFiles = getFilesListByWildcard(overlayDirectory+"*.ovl");
+            std::vector<std::string> overlayFiles = getFilesListByWildcard(overlayDirectory + "*.ovl");
 
             FILE* overlaysIniFile = fopen(overlaysIniFilePath.c_str(), "r");
             if (!overlaysIniFile) {
@@ -1869,18 +1892,18 @@ public:
                 std::multimap<int, std::string> order;
                 std::map<std::string, std::string> alpSort;
 
-                for (const std::string& sortElem : overlayFiles){
+                for (const std::string& sortElem : overlayFiles) {
                     auto [result, overlayName, overlayVersion] = getOverlayInfo(sortElem);
-                    if (result != ResultSuccess){
+                    if (result != ResultSuccess) {
                         continue;
                     }
-                    if (overlayName == "Uberhand"){
+                    if (overlayName == "Uberhand") {
                         continue;
                     }
                     alpSort[overlayName] = sortElem;
                 }
                 overlayFiles.clear();
-                for (const auto & overlay : alpSort) {
+                for (const auto& overlay : alpSort) {
                     overlayFiles.push_back(overlay.second);
                 }
 
@@ -1888,7 +1911,7 @@ public:
                     overlayFileName = getNameFromPath(overlayFile);
                     int priority = 0;
 
-                    if (getNameFromPath(overlayFile) == "ovlmenu.ovl"){
+                    if (getNameFromPath(overlayFile) == "ovlmenu.ovl") {
                         continue;
                     }
 
@@ -1896,36 +1919,32 @@ public:
                         setIniFileValue(overlaysIniFilePath, overlayFileName, "priority", "0");
                     } else {
                         // Check if the "priority" key exists in overlaysIniData for overlayFileName
-                        if (overlaysIniData.find(overlayFileName) != overlaysIniData.end() &&
-                            overlaysIniData[overlayFileName].find("priority") != overlaysIniData[overlayFileName].end()) {
+                        if (overlaysIniData.find(overlayFileName) != overlaysIniData.end() && overlaysIniData[overlayFileName].find("priority") != overlaysIniData[overlayFileName].end()) {
                             priority = -(stoi(overlaysIniData[overlayFileName]["priority"]));
                         } else
-                            setIniFileValue(overlaysIniFilePath, overlayFileName, "priority", "0");  
+                            setIniFileValue(overlaysIniFilePath, overlayFileName, "priority", "0");
                     }
                     order.emplace(priority, overlayFileName);
                 }
 
-                
-                
-                for (const auto & overlay : order) {
+                for (const auto& overlay : order) {
                     overlayFileName = overlay.second;
 
                     auto [result, overlayName, overlayVersion] = getOverlayInfo(overlayDirectory + overlayFileName);
                     if (result != ResultSuccess)
                         continue;
-                    
+
                     auto* listItem = new tsl::elm::ListItem(overlayName);
                     if (showOverlayVersions)
                         listItem->setValue(overlayVersion);
 
-                    
                     if (sorting) {
                         std::map<std::string, std::map<std::string, std::string>> overlaysIniData = getParsedDataFromIniFile(overlaysIniFilePath);
                         priority = std::stoi(overlaysIniData[overlayFileName]["priority"]);
                         listItem->setValue("Priority: " + std::to_string(priority));
                     }
                     // Add a click listener to load the overlay when clicked upon
-                    listItem->setClickListener([this, overlayFile=overlayDirectory + overlayFileName, listItem, overlayFileName](s64 key) {
+                    listItem->setClickListener([this, overlayFile = overlayDirectory + overlayFileName, listItem, overlayFileName](s64 key) {
                         int localPriority;
                         if (key & KEY_A) {
                             // Load the overlay here
@@ -1935,13 +1954,13 @@ public:
                             return true;
                         } else if (key & KEY_PLUS) {
                             std::map<std::string, std::map<std::string, std::string>> overlaysIniData = getParsedDataFromIniFile(overlaysIniFilePath);
-                            localPriority = std::stoi(overlaysIniData[overlayFileName]["priority"])+1;
+                            localPriority = std::stoi(overlaysIniData[overlayFileName]["priority"]) + 1;
                             setIniFileValue(overlaysIniFilePath, overlayFileName, "priority", std::to_string(localPriority));
                             tsl::replaceWith<MainMenu>(Soverlays);
                             return true;
                         } else if (key & KEY_MINUS) {
                             std::map<std::string, std::map<std::string, std::string>> overlaysIniData = getParsedDataFromIniFile(overlaysIniFilePath);
-                            localPriority = std::stoi(overlaysIniData[overlayFileName]["priority"])-1;
+                            localPriority = std::stoi(overlaysIniData[overlayFileName]["priority"]) - 1;
                             setIniFileValue(overlaysIniFilePath, overlayFileName, "priority", std::to_string(localPriority));
                             tsl::replaceWith<MainMenu>(Soverlays);
                             return true;
@@ -1958,100 +1977,98 @@ public:
             }
 
             //ovl updater section
-            if (overlayUpdater)
-            {
-            list->addItem(new tsl::elm::CategoryHeader("Updater", true));
-            auto updaterItem = new tsl::elm::ListItem("Check for Overlay Updates");
-            updaterItem->setClickListener([this, updaterItem](uint64_t keys) {
-                        if (keys & KEY_A) {
-                            if (!DownloadProcessing) {
-                                DownloadProcessing = true;
-                                updaterItem->setText("Processing...");
-                                return true;
-                            }
+            if (overlayUpdater) {
+                list->addItem(new tsl::elm::CategoryHeader("Updater", true));
+                auto updaterItem = new tsl::elm::ListItem("Check for Overlay Updates");
+                updaterItem->setClickListener([this, updaterItem](uint64_t keys) {
+                    if (keys & KEY_A) {
+                        if (!DownloadProcessing) {
+                            DownloadProcessing = true;
+                            updaterItem->setText("Processing...");
+                            return true;
                         }
-                        if (DownloadProcessing) {
-                            bool NeedUpdate = false;
-                            std::vector<std::map<std::string, std::string>> items;
-                            if (!uberhand_updates_only) {
-                                std::vector<std::string> overlays = getFilesListByWildcard("sdmc:/switch/.overlays/*.ovl");
-                                std::map<std::string, std::string> package;
-                                if (downloadFile(repoUrl, "sdmc:/config/uberhand/Updater.ini")) {
-                                    auto options = loadOptionsFromIni("sdmc:/config/uberhand/Updater.ini");
-                                    for (const std::string& overlay : overlays) {
-                                        std::string uoverlay = dropExtension(getNameFromPath(overlay));
-                                        for (const auto& [name, parameters] : options) {
-                                            if (uoverlay == name) {
-                                                auto [result, overlayName, overlayVersion] = getOverlayInfo(overlay);
-                                                if (result != ResultSuccess)
-                                                    continue;
-                                                package["name"] = overlayName;
-                                                package["filename"] = overlay;
-                                                if (parameters.size() > 1 && parameters[1].size() > 0 && parameters[1][0].starts_with("link=")) {
-                                                    package["link"] = parameters[1][0].substr(5); // skip "link="
-                                                } else {
-                                                    log("Overlay Updater:ERROR: link not found for item \"%s\"", overlayName.c_str());
-                                                    break;
-                                                }
-                                                package["localVer"] = overlayVersion;
-                                                if (parameters.size() > 0 && parameters[0].size() > 0 && parameters[0][0].starts_with("downloadEntry=")) {
-                                                    package["downloadEntry"] = parameters[0][0].substr(14); // skip "downloadEntry="
-                                                } else {
-                                                    log("Overlay Updater:ERROR: downloadEntry not found for item \"%s\"", overlayName.c_str());
-                                                    break;
-                                                }
-                                                std::map<std::string, std::string> resultUpdate = ovlUpdateCheck(package);
-                                                if (!resultUpdate.empty()) {
-                                                    NeedUpdate = true;
-                                                    items.insert(items.end(), resultUpdate);
-                                                }
+                    }
+                    if (DownloadProcessing) {
+                        bool NeedUpdate = false;
+                        std::vector<std::map<std::string, std::string>> items;
+                        if (!uberhand_updates_only) {
+                            std::vector<std::string> overlays = getFilesListByWildcard("sdmc:/switch/.overlays/*.ovl");
+                            std::map<std::string, std::string> package;
+                            if (downloadFile(repoUrl, "sdmc:/config/uberhand/Updater.ini")) {
+                                auto options = loadOptionsFromIni("sdmc:/config/uberhand/Updater.ini");
+                                for (const std::string& overlay : overlays) {
+                                    std::string uoverlay = dropExtension(getNameFromPath(overlay));
+                                    for (const auto& [name, parameters] : options) {
+                                        if (uoverlay == name) {
+                                            auto [result, overlayName, overlayVersion] = getOverlayInfo(overlay);
+                                            if (result != ResultSuccess)
+                                                continue;
+                                            package["name"] = overlayName;
+                                            package["filename"] = overlay;
+                                            if (parameters.size() > 1 && parameters[1].size() > 0 && parameters[1][0].starts_with("link=")) {
+                                                package["link"] = parameters[1][0].substr(5); // skip "link="
+                                            } else {
+                                                log("Overlay Updater:ERROR: link not found for item \"%s\"", overlayName.c_str());
+                                                break;
+                                            }
+                                            package["localVer"] = overlayVersion;
+                                            if (parameters.size() > 0 && parameters[0].size() > 0 && parameters[0][0].starts_with("downloadEntry=")) {
+                                                package["downloadEntry"] = parameters[0][0].substr(14); // skip "downloadEntry="
+                                            } else {
+                                                log("Overlay Updater:ERROR: downloadEntry not found for item \"%s\"", overlayName.c_str());
+                                                break;
+                                            }
+                                            std::map<std::string, std::string> resultUpdate = ovlUpdateCheck(package);
+                                            if (!resultUpdate.empty()) {
+                                                NeedUpdate = true;
+                                                items.insert(items.end(), resultUpdate);
                                             }
                                         }
                                     }
-                                } else {
-                                    log("Overlay Updater:ERROR: Failed to download Updater.ini");
                                 }
                             } else {
-                                auto [result, overlayName, overlayVersion] = getOverlayInfo("sdmc:/switch/.overlays/ovlmenu.ovl");
-                                if (result != ResultSuccess)
-                                    return false;
-                                std::map<std::string, std::string> ovlmenu;
-                                ovlmenu["name"] = overlayName;
-                                ovlmenu["localVer"] = overlayVersion;
-                                ovlmenu["link"] = "https://api.github.com/repos/efosamark/Uberhand-Overlay/releases?per_page=1";
-                                ovlmenu["downloadEntry"] = "1";
-                                std::map<std::string, std::string> resultUpdate = ovlUpdateCheck(ovlmenu);
-                                if (!resultUpdate.empty()) {
-                                    NeedUpdate = true;
-                                    items.insert(items.end(), resultUpdate);
-                                }
+                                log("Overlay Updater:ERROR: Failed to download Updater.ini");
                             }
-                            
-                            if (NeedUpdate){
-                                DownloadProcessing = false;
-                                tsl::changeTo<Updater>(items);
+                        } else {
+                            auto [result, overlayName, overlayVersion] = getOverlayInfo("sdmc:/switch/.overlays/ovlmenu.ovl");
+                            if (result != ResultSuccess)
+                                return false;
+                            std::map<std::string, std::string> ovlmenu;
+                            ovlmenu["name"] = overlayName;
+                            ovlmenu["localVer"] = overlayVersion;
+                            ovlmenu["link"] = "https://api.github.com/repos/efosamark/Uberhand-Overlay/releases?per_page=1";
+                            ovlmenu["downloadEntry"] = "1";
+                            std::map<std::string, std::string> resultUpdate = ovlUpdateCheck(ovlmenu);
+                            if (!resultUpdate.empty()) {
+                                NeedUpdate = true;
+                                items.insert(items.end(), resultUpdate);
                             }
-                            updaterItem->setText("No updates");
-                            DownloadProcessing = false;
-                            return true;
                         }
-                        return false;
-                    });
-            list->addItem(updaterItem);
+
+                        if (NeedUpdate) {
+                            DownloadProcessing = false;
+                            tsl::changeTo<Updater>(items);
+                        }
+                        updaterItem->setText("No updates");
+                        DownloadProcessing = false;
+                        return true;
+                    }
+                    return false;
+                });
+                list->addItem(updaterItem);
             }
         }
-        
-        if (menuMode == "packages" ) {
+
+        if (menuMode == "packages") {
             // Create the directory if it doesn't exist
             createDirectory(packageDirectory);
 
             // Load options from INI file
             std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> options = loadOptionsFromIni(packageConfigIniPath, true);
-        
 
             // Load subdirectories
             std::vector<std::string> subdirectories = getSubdirectories(packageDirectory);
-            
+
             FILE* packagesIniFile = fopen(packagesIniFilePath.c_str(), "r");
             if (!packagesIniFile) {
                 fclose(fopen(packagesIniFilePath.c_str(), "w")); // The INI file doesn't exist, so create an empty one.
@@ -2064,15 +2081,14 @@ public:
             for (const auto& taintedSubdirectory : subdirectories) {
                 priority = 0;
                 std::string subWithoutSpaces = taintedSubdirectory;
-                std::remove(subWithoutSpaces.begin(), subWithoutSpaces.end(), ' ');
+                (void)std::remove(subWithoutSpaces.begin(), subWithoutSpaces.end(), ' ');
                 if (packagesIniData.find(subWithoutSpaces) == packagesIniData.end()) {
                     setIniFileValue(packagesIniFilePath, subWithoutSpaces, "priority", "0");
                 } else {
-                    if (packagesIniData.find(subWithoutSpaces) != packagesIniData.end() &&
-                        packagesIniData[subWithoutSpaces].find("priority") != packagesIniData[subWithoutSpaces].end()) {
+                    if (packagesIniData.find(subWithoutSpaces) != packagesIniData.end() && packagesIniData[subWithoutSpaces].find("priority") != packagesIniData[subWithoutSpaces].end()) {
                         priority = -(stoi(packagesIniData[subWithoutSpaces]["priority"]));
                     } else
-                        setIniFileValue(packagesIniFilePath, subWithoutSpaces, "priority", "0");  
+                        setIniFileValue(packagesIniFilePath, subWithoutSpaces, "priority", "0");
                 }
                 // log("priority, taintedSubdirectory: "+std::to_string(priority)+subWithoutSpaces);
                 order.emplace(priority, taintedSubdirectory);
@@ -2084,18 +2100,17 @@ public:
                 //bool usingStar = false;
                 std::string subdirectory = package.second;
                 std::string subdirectoryIcon = "";
-                
 
                 std::string subPath = packageDirectory + subdirectory + "/";
                 std::string configFilePath = subPath + "config.ini";
-            
+
                 if (isFileOrDirectory(configFilePath)) {
                     PackageHeader packageHeader = getPackageHeaderFromIni(subPath + configFileName);
                     if (count == 0) {
                         // Add a section break with small text to indicate the "Packages" section
                         list->addItem(new tsl::elm::CategoryHeader("Packages"));
                     }
-                    
+
                     auto listItem = new tsl::elm::ListItem(subdirectoryIcon + subdirectory);
                     if (showPackageVersions)
                         listItem->setValue(packageHeader.version);
@@ -2104,7 +2119,7 @@ public:
                     if (sorting) {
                         std::map<std::string, std::map<std::string, std::string>> packagesIniData = getParsedDataFromIniFile(packagesIniFilePath);
                         subWithoutSpaces = subdirectory;
-                        std::remove(subWithoutSpaces.begin(), subWithoutSpaces.end(), ' ');
+                        (void)std::remove(subWithoutSpaces.begin(), subWithoutSpaces.end(), ' ');
                         priority = std::stoi(packagesIniData[subWithoutSpaces]["priority"]);
                         listItem->setValue("Priority: " + std::to_string(priority));
                     }
@@ -2125,33 +2140,33 @@ public:
                         } else if (keys & KEY_PLUS) {
                             std::map<std::string, std::map<std::string, std::string>> packagesIniData = getParsedDataFromIniFile(packagesIniFilePath);
                             subWithoutSpaces = subdirectory;
-                            std::remove(subWithoutSpaces.begin(), subWithoutSpaces.end(), ' ');
-                            localPriority = std::stoi(packagesIniData[subWithoutSpaces]["priority"])+1;
+                            (void)std::remove(subWithoutSpaces.begin(), subWithoutSpaces.end(), ' ');
+                            localPriority = std::stoi(packagesIniData[subWithoutSpaces]["priority"]) + 1;
                             setIniFileValue(packagesIniFilePath, subWithoutSpaces, "priority", std::to_string(localPriority));
                             tsl::replaceWith<MainMenu>(Spackages);
                             return true;
                         } else if (keys & KEY_MINUS) {
                             std::map<std::string, std::map<std::string, std::string>> packagesIniData = getParsedDataFromIniFile(packagesIniFilePath);
                             subWithoutSpaces = subdirectory;
-                            std::remove(subWithoutSpaces.begin(), subWithoutSpaces.end(), ' ');
-                            localPriority = std::stoi(packagesIniData[subWithoutSpaces]["priority"])-1;
+                            (void)std::remove(subWithoutSpaces.begin(), subWithoutSpaces.end(), ' ');
+                            localPriority = std::stoi(packagesIniData[subWithoutSpaces]["priority"]) - 1;
                             setIniFileValue(packagesIniFilePath, subWithoutSpaces, "priority", std::to_string(localPriority));
                             tsl::replaceWith<MainMenu>(Spackages);
                             return true;
                         }
                         if (DownloadProcessing) {
                             std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> options = loadOptionsFromIni(subPath + "/init.ini");
-                                for (const auto& option : options) {
-                                    if (interpretAndExecuteCommand(getModifyCommands(option.second, subPath + option.first)) == -1) {
-                                        log("Init failed!");
-                                        DownloadProcessing = false;
-                                        listItem->setValue("FAIL", tsl::PredefinedColors::Red);
-                                    } else {
-                                        deleteFileOrDirectory(subPath + "/init.ini");
-                                        DownloadProcessing = false;
-                                        tsl::changeTo<Package>(subPath);
-                                    }
+                            for (const auto& option : options) {
+                                if (interpretAndExecuteCommand(getModifyCommands(option.second, subPath + option.first)) == -1) {
+                                    log("Init failed!");
+                                    DownloadProcessing = false;
+                                    listItem->setValue("FAIL", tsl::PredefinedColors::Red);
+                                } else {
+                                    deleteFileOrDirectory(subPath + "/init.ini");
+                                    DownloadProcessing = false;
+                                    tsl::changeTo<Package>(subPath);
                                 }
+                            }
                         }
                         return false;
                     });
@@ -2159,43 +2174,41 @@ public:
                     list->addItem(listItem);
                     count++;
                 }
-
             }
 
             //package updater section
-            if (packageUpdater)
-            {
+            if (packageUpdater) {
                 list->addItem(new tsl::elm::CategoryHeader("Updater", true));
                 auto updaterItem = new tsl::elm::ListItem("Check for Package Updates");
                 updaterItem->setClickListener([this, subdirectories, updaterItem](uint64_t keys) {
-                            if (keys & KEY_A) {
-                                if (!DownloadProcessing) {
-                                    DownloadProcessing = true;
-                                    updaterItem->setText("Processing...");
-                                    return true;
-                                }
+                    if (keys & KEY_A) {
+                        if (!DownloadProcessing) {
+                            DownloadProcessing = true;
+                            updaterItem->setText("Processing...");
+                            return true;
+                        }
+                    }
+                    if (DownloadProcessing) {
+                        bool NeedUpdate = false;
+                        std::vector<std::map<std::string, std::string>> items;
+                        for (const auto& taintedSubdirectory : subdirectories) {
+                            std::map<std::string, std::string> packageInfo = packageUpdateCheck(taintedSubdirectory + "/config.ini");
+                            if (packageInfo["localVer"] != packageInfo["repoVer"]) {
+                                NeedUpdate = true;
+                                packageInfo["filename"] = packageDirectory + taintedSubdirectory;
+                                items.insert(items.end(), packageInfo);
                             }
-                            if (DownloadProcessing) {
-                                bool NeedUpdate = false;
-                                std::vector<std::map<std::string, std::string>> items;
-                                for (const auto& taintedSubdirectory : subdirectories) {
-                                    std::map<std::string, std::string> packageInfo = packageUpdateCheck(taintedSubdirectory + "/config.ini");
-                                    if (packageInfo["localVer"] != packageInfo["repoVer"]) {
-                                        NeedUpdate = true;
-                                        packageInfo["filename"] = packageDirectory + taintedSubdirectory;
-                                        items.insert(items.end(), packageInfo);
-                                    }
-                                }
-                                if (NeedUpdate){
-                                    DownloadProcessing = false;
-                                    tsl::changeTo<Updater>(items);
-                                }
-                                DownloadProcessing = false;
-                                updaterItem->setText("No updates");
-                                return true;
-                            }
-                            return false;
-                        });
+                        }
+                        if (NeedUpdate) {
+                            DownloadProcessing = false;
+                            tsl::changeTo<Updater>(items);
+                        }
+                        DownloadProcessing = false;
+                        updaterItem->setText("No updates");
+                        return true;
+                    }
+                    return false;
+                });
                 list->addItem(updaterItem);
             }
             count = 0;
@@ -2203,7 +2216,7 @@ public:
             // Populate the menu with options
             for (const auto& option : options) {
                 optionName = option.first;
-            
+
                 // Check if it's a subdirectory
                 fullPath = packageDirectory + optionName;
                 if (count == 0) {
@@ -2216,7 +2229,7 @@ public:
                     list->addItem(item);
                     continue;
                 }
-                
+
                 //std::string header;
                 //if ((optionName == "Shutdown")) {
                 //    header = "\uE0F3  ";
@@ -2226,7 +2239,7 @@ public:
                 //}
                 //auto listItem = new tsl::elm::ListItem(header+optionName);
                 auto listItem = new tsl::elm::ListItem(optionName);
-                
+
                 std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(option.second, fullPath);
                 listItem->setClickListener([this, command = modifiedCommands, subPath = optionName, listItem](uint64_t keys) {
                     if (keys & KEY_A) {
@@ -2249,7 +2262,7 @@ public:
 
                         return true;
                     } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
-                            listItem->setValue("");
+                        listItem->setValue("");
                     }
                     return false;
                 });
@@ -2263,16 +2276,17 @@ public:
 
         return rootFrame;
     }
-    
+
     bool adjuct_top, adjuct_bot = false;
 
-    virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+    virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override
+    {
         if (this->adjuct_top) { // Adjust cursor to the top item after jump bot-top
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
             this->adjuct_top = false;
             return true;
         }
-        if (this->adjuct_bot) {  // Adjust cursor to the top item after jump top-bot
+        if (this->adjuct_bot) { // Adjust cursor to the top item after jump top-bot
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
             this->adjuct_bot = false;
             return true;
@@ -2283,7 +2297,7 @@ public:
             this->requestFocus(this->getTopElement(), tsl::FocusDirection::Down);
             if (prevItem == this->getFocusedElement()) {
                 scrollListItems(this, ShiftFocusMode::UpMax);
-                this->adjuct_top = true; // Go one item 
+                this->adjuct_top = true; // Go one item
             } else { // Adjust to account for tesla key processing
                 this->requestFocus(this->getTopElement(), tsl::FocusDirection::Up);
             }
@@ -2308,7 +2322,8 @@ public:
         if (keysDown & KEY_R) { // Scroll to down for 5 items
             scrollListItems(this, ShiftFocusMode::DownNum);
             return true;
-        }if (keysDown & KEY_ZL) { // Scroll to up for 5 items
+        }
+        if (keysDown & KEY_ZL) { // Scroll to up for 5 items
             scrollListItems(this, ShiftFocusMode::UpMax);
             return true;
         }
@@ -2340,8 +2355,8 @@ public:
 
 class Overlay : public tsl::Overlay {
 public:
-    
-    virtual void initServices() override {
+    virtual void initServices() override
+    {
         fsdevMountSdmc();
         splInitialize();
         spsmInitialize();
@@ -2351,7 +2366,8 @@ public:
         ASSERT_FATAL(smInitialize());
     }
 
-    virtual void exitServices() override {
+    virtual void exitServices() override
+    {
         socketExit();
         nifmExit();
         timeExit();
@@ -2361,22 +2377,23 @@ public:
         fsdevUnmountAll();
     }
 
-    virtual void onShow() override {
+    virtual void onShow() override
+    {
         //if (rootFrame != nullptr) {
         //    tsl::Overlay::get()->getCurrentGui()->removeFocus();
         //    rootFrame->invalidate();
         //    tsl::Overlay::get()->getCurrentGui()->requestFocus(rootFrame, tsl::FocusDirection::None);
         //}
-    }   // Called before overlay wants to change from invisible to visible state
-    virtual void onHide() override {}   // Called before overlay wants to change from visible to invisible state
+    } // Called before overlay wants to change from invisible to visible state
+    virtual void onHide() override { } // Called before overlay wants to change from visible to invisible state
 
-    virtual std::unique_ptr<tsl::Gui> loadInitialGui() override {
-        return initially<MainMenu>();  // Initial Gui to load. It's possible to pass arguments to its constructor like this
+    virtual std::unique_ptr<tsl::Gui> loadInitialGui() override
+    {
+        return initially<MainMenu>(); // Initial Gui to load. It's possible to pass arguments to its constructor like this
     }
 };
 
-
-
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     return tsl::loop<Overlay, tsl::impl::LaunchFlags::None>(argc, argv);
 }

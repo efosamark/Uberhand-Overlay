@@ -1,14 +1,17 @@
 #pragma once
-#include <sys/stat.h>
+
 #include <dirent.h>
+#include <sys/stat.h>
+
 #include <ctime>
-#include <iostream>
-#include <fstream>
-#include <regex>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <regex>
 
 // Function to create a directory if it doesn't exist
-void createSingleDirectory(const std::string& directoryPath) {
+void createSingleDirectory(const std::string& directoryPath)
+{
     struct stat st;
     if (stat(directoryPath.c_str(), &st) != 0) {
         mkdir(directoryPath.c_str(), 0777);
@@ -16,7 +19,8 @@ void createSingleDirectory(const std::string& directoryPath) {
 }
 
 // Function to create a directory (including nested directories) if it doesn't exist
-void createDirectory(const std::string& directoryPath) {
+void createDirectory(const std::string& directoryPath)
+{
     std::string path = directoryPath;
 
     // Remove leading "sdmc:/" if present
@@ -49,12 +53,9 @@ void createDirectory(const std::string& directoryPath) {
     }
 }
 
-
-
-
-
 // Function to create a text file with the specified content
-void createTextFile(const std::string& filePath, const std::string& content) {
+void createTextFile(const std::string& filePath, const std::string& content)
+{
     FILE* file = std::fopen(filePath.c_str(), "w");
     if (file != nullptr) {
         std::fwrite(content.c_str(), 1, content.length(), file);
@@ -62,16 +63,17 @@ void createTextFile(const std::string& filePath, const std::string& content) {
     }
 }
 
-
-void removeEntryFromList(const std::string& entry, std::vector<std::string>& fileList) {
+void removeEntryFromList(const std::string& entry, std::vector<std::string>& fileList)
+{
     fileList.erase(std::remove_if(fileList.begin(), fileList.end(), [&](const std::string& filePath) {
-        return filePath.compare(0, entry.length(), entry) == 0;
-    }), fileList.end());
+                       return filePath.compare(0, entry.length(), entry) == 0;
+                   }),
+                   fileList.end());
 }
 
-
 // Delete functions
-bool deleteFileOrDirectory(const std::string& pathToDelete) {
+bool deleteFileOrDirectory(const std::string& pathToDelete)
+{
     struct stat pathStat;
 
     if (isDirectory(pathToDelete)) {
@@ -96,7 +98,8 @@ bool deleteFileOrDirectory(const std::string& pathToDelete) {
     return false;
 }
 
-bool deleteFileOrDirectoryByPattern(const std::string& pathPattern) {
+bool deleteFileOrDirectoryByPattern(const std::string& pathPattern)
+{
     //log("pathPattern: "+pathPattern);
     std::vector<std::string> fileList = getFilesListByWildcards(pathPattern);
     bool result = true;
@@ -104,13 +107,14 @@ bool deleteFileOrDirectoryByPattern(const std::string& pathPattern) {
         //log("path: "+path);
         result = result && deleteFileOrDirectory(path);
         if (!result) {
-                return result;
+            return result;
         }
     }
     return result;
 }
 
-bool mirrorDeleteFiles(const std::string& sourcePath, const std::string& targetPath="sdmc:/") {
+bool mirrorDeleteFiles(const std::string& sourcePath, const std::string& targetPath = "sdmc:/")
+{
     std::vector<std::string> fileList = getFilesListFromDirectory(sourcePath);
     bool result = true;
     for (const auto& path : fileList) {
@@ -126,15 +130,15 @@ bool mirrorDeleteFiles(const std::string& sourcePath, const std::string& targetP
     return result;
 }
 
-
 // Move functions
-bool moveFileOrDirectory(const std::string& sourcePath, const std::string& destinationPath) {
+bool moveFileOrDirectory(const std::string& sourcePath, const std::string& destinationPath)
+{
     struct stat sourceInfo;
     struct stat destinationInfo;
-    
+
     //log("sourcePath: "+sourcePath);
     //log("destinationPath: "+destinationPath);
-    
+
     if (stat(sourcePath.c_str(), &sourceInfo) == 0) {
         // Source file or directory exists
 
@@ -143,7 +147,7 @@ bool moveFileOrDirectory(const std::string& sourcePath, const std::string& desti
         if (!destinationExists) {
             // Create the destination directory
             createDirectory(getParentDirFromPath(destinationPath));
-        } 
+        }
 
         if (S_ISDIR(sourceInfo.st_mode)) {
             // Source path is a directory
@@ -187,11 +191,10 @@ bool moveFileOrDirectory(const std::string& sourcePath, const std::string& desti
             if (destinationPath[destinationPath.length() - 1] == '/') {
                 destinationFilePath += filename;
             }
-            
-            
+
             //log("sourcePath: "+sourcePath);
             //log("destinationFilePath: "+destinationFilePath);
-            
+
             deleteFileOrDirectory(destinationFilePath); // delete destiantion file for overwriting
             if (rename(sourcePath.c_str(), destinationFilePath.c_str()) == -1) {
                 //printf("Failed to move file: %s\n", sourcePath.c_str());
@@ -207,7 +210,8 @@ bool moveFileOrDirectory(const std::string& sourcePath, const std::string& desti
     return false;
 }
 
-bool moveFilesOrDirectoriesByPattern(const std::string& sourcePathPattern, const std::string& destinationPath) {
+bool moveFilesOrDirectoriesByPattern(const std::string& sourcePathPattern, const std::string& destinationPath)
+{
     std::vector<std::string> fileList = getFilesListByWildcards(sourcePathPattern);
     bool result = true;
     std::string fileListAsString;
@@ -215,7 +219,7 @@ bool moveFilesOrDirectoriesByPattern(const std::string& sourcePathPattern, const
         fileListAsString += filePath + "\n";
     }
     //log("File List:\n" + fileListAsString);
-    
+
     //log("pre loop");
     // Iterate through the file list
     for (const std::string& sourceFileOrDirectory : fileList) {
@@ -231,23 +235,22 @@ bool moveFilesOrDirectoriesByPattern(const std::string& sourcePathPattern, const
             // if sourceFile is a directory (needs conditoin handling)
             std::string folderName = getNameFromPath(sourceFileOrDirectory);
             std::string fixedDestinationPath = destinationPath + folderName + "/";
-        
+
             //log("fixedDestinationPath: "+fixedDestinationPath);
-        
+
             result = result && moveFileOrDirectory(sourceFileOrDirectory, fixedDestinationPath);
             if (!result) {
                 return result;
             }
         }
-
     }
     return result;
     //log("post loop");
 }
 
-
 // Copy functions
-bool copySingleFile(const std::string& fromFile, const std::string& toFile) {
+bool copySingleFile(const std::string& fromFile, const std::string& toFile)
+{
     FILE* srcFile = fopen(fromFile.c_str(), "rb");
     FILE* destFile = fopen(toFile.c_str(), "wb");
     if (srcFile && destFile) {
@@ -269,16 +272,17 @@ bool copySingleFile(const std::string& fromFile, const std::string& toFile) {
     return true;
 }
 
-bool copyFileOrDirectory(const std::string& fromFileOrDirectory, const std::string& toFileOrDirectory) {
+bool copyFileOrDirectory(const std::string& fromFileOrDirectory, const std::string& toFileOrDirectory)
+{
     bool result = true;
     struct stat fromFileOrDirectoryInfo;
     if (stat(fromFileOrDirectory.c_str(), &fromFileOrDirectoryInfo) == 0) {
         if (S_ISREG(fromFileOrDirectoryInfo.st_mode)) {
             // Source is a regular file
             std::string fromFile = fromFileOrDirectory;
-            
+
             struct stat toFileOrDirectoryInfo;
-            
+
             if (stat(toFileOrDirectory.c_str(), &toFileOrDirectoryInfo) == 0 && S_ISDIR(toFileOrDirectoryInfo.st_mode)) {
                 // Destination is a directory
                 std::string toDirectory = toFileOrDirectory;
@@ -301,7 +305,7 @@ bool copyFileOrDirectory(const std::string& fromFileOrDirectory, const std::stri
 
                 // Create the destination directory if it doesn't exist
                 createDirectory(toDirectory);
-                
+
                 // Destination is a file or doesn't exist
                 // Check if the destination file exists and remove it
                 if (stat(toFile.c_str(), &toFileOrDirectoryInfo) == 0 && S_ISREG(toFileOrDirectoryInfo.st_mode)) {
@@ -314,14 +318,14 @@ bool copyFileOrDirectory(const std::string& fromFileOrDirectory, const std::stri
             // Source is a directory
             std::string fromDirectory = fromFileOrDirectory;
             //log("fromDirectory: "+fromDirectory);
-            
+
             struct stat toFileOrDirectoryInfo;
             if (stat(toFileOrDirectory.c_str(), &toFileOrDirectoryInfo) == 0 && S_ISDIR(toFileOrDirectoryInfo.st_mode)) {
                 // Destination is a directory
                 std::string toDirectory = toFileOrDirectory;
                 std::string dirName = getNameFromPath(fromDirectory);
                 if (dirName != "") {
-                    std::string toDirPath = toDirectory + dirName +"/";
+                    std::string toDirPath = toDirectory + dirName + "/";
                     //log("toDirectory: "+toDirectory);
                     //log("dirName: "+dirName);
                     //log("toDirPath: "+toDirPath);
@@ -347,17 +351,16 @@ bool copyFileOrDirectory(const std::string& fromFileOrDirectory, const std::stri
                             }
                             // handle case for subfolders within the from file path
                             if (entry->d_type == DT_DIR && fileOrFolderName != "." && fileOrFolderName != "..") {
-                                std::string subFolderPath = fromDirectory + fileOrFolderName + "/";                          
+                                std::string subFolderPath = fromDirectory + fileOrFolderName + "/";
                                 result = result && copyFileOrDirectory(subFolderPath, toDirPath);
                                 if (!result) {
                                     closedir(dir);
                                     return result;
                                 }
                             }
-                            
                         }
                         closedir(dir);
-                    }  
+                    }
                 }
             }
         }
@@ -365,14 +368,15 @@ bool copyFileOrDirectory(const std::string& fromFileOrDirectory, const std::stri
     return result;
 }
 
-bool copyFileOrDirectoryByPattern(const std::string& sourcePathPattern, const std::string& toDirectory) {
+bool copyFileOrDirectoryByPattern(const std::string& sourcePathPattern, const std::string& toDirectory)
+{
     std::vector<std::string> fileList = getFilesListByWildcards(sourcePathPattern);
     bool result = true;
 
     for (const std::string& sourcePath : fileList) {
         //log("sourcePath: "+sourcePath);
         //log("toDirectory: "+toDirectory);
-        if (sourcePath != toDirectory){
+        if (sourcePath != toDirectory) {
             result = result && copyFileOrDirectory(sourcePath, toDirectory);
             if (!result) {
                 return result;
@@ -380,19 +384,19 @@ bool copyFileOrDirectoryByPattern(const std::string& sourcePathPattern, const st
         } else {
             return false;
         }
-        
     }
     return result;
 }
 
-bool mirrorCopyFiles(const std::string& sourcePath, const std::string& targetPath="sdmc:/") {
+bool mirrorCopyFiles(const std::string& sourcePath, const std::string& targetPath = "sdmc:/")
+{
     std::vector<std::string> fileList = getFilesListFromDirectory(sourcePath);
     bool result = true;
 
     for (const auto& path : fileList) {
         // Generate the corresponding path in the target directory by replacing the source path
         std::string updatedPath = targetPath + path.substr(sourcePath.size());
-        if (path != updatedPath){
+        if (path != updatedPath) {
             //log("mirror-copy: "+path+" "+updatedPath);
             result = result && copyFileOrDirectory(path, updatedPath);
             if (!result) {
@@ -405,7 +409,8 @@ bool mirrorCopyFiles(const std::string& sourcePath, const std::string& targetPat
     return result;
 }
 
-bool generateBackup() {
+bool generateBackup()
+{
     int highestNumber = 0;
     std::regex pattern(R"(Backup \[(\d+)\])");
     namespace fs = std::filesystem;

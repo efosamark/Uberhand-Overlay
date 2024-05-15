@@ -2,12 +2,14 @@
 
 #include "debug_funcs.hpp"
 #include "json_funcs.hpp"
+
 #include <dirent.h>
 #include <fnmatch.h>
 #include <jansson.h>
-#include <regex>
 #include <string_funcs.hpp>
 #include <sys/stat.h>
+
+#include <regex>
 
 // Get functions
 
@@ -16,7 +18,8 @@ constexpr int OverlayLoaderModuleId = 348;
 constexpr Result ResultSuccess = MAKERESULT(0, 0);
 constexpr Result ResultParseError = MAKERESULT(OverlayLoaderModuleId, 1);
 
-std::tuple<Result, std::string, std::string> getOverlayInfo(const std::string& filePath) {
+std::tuple<Result, std::string, std::string> getOverlayInfo(const std::string& filePath)
+{
     FILE* file = fopen(filePath.c_str(), "r");
 
     NroHeader nroHeader;
@@ -43,7 +46,7 @@ std::tuple<Result, std::string, std::string> getOverlayInfo(const std::string& f
         fclose(file);
         return { ResultParseError, "", "" };
     }
-    
+
     fclose(file);
 
     // Return overlay information
@@ -54,9 +57,9 @@ std::tuple<Result, std::string, std::string> getOverlayInfo(const std::string& f
     };
 }
 
-
 // Function to read the content of a file
-std::string getFileContents(const std::string& filePath) {
+std::string getFileContents(const std::string& filePath)
+{
     std::string content;
     FILE* file = fopen(filePath.c_str(), "rb");
     if (file) {
@@ -73,19 +76,21 @@ std::string getFileContents(const std::string& filePath) {
     return content;
 }
 
-
-std::string getFileNameFromURL(const std::string& url) {
+std::string getFileNameFromURL(const std::string& url)
+{
     size_t lastSlash = url.find_last_of('/');
     if (lastSlash != std::string::npos)
         return url.substr(lastSlash + 1);
     return "";
 }
 
-std::string getDestinationPath(const std::string& destinationDir, const std::string& fileName) {
+std::string getDestinationPath(const std::string& destinationDir, const std::string& fileName)
+{
     return destinationDir + "/" + fileName;
 }
 
-std::string getValueFromLine(const std::string& line) {
+std::string getValueFromLine(const std::string& line)
+{
     std::size_t equalsPos = line.find('=');
     if (equalsPos != std::string::npos) {
         std::string value = line.substr(equalsPos + 1);
@@ -94,8 +99,8 @@ std::string getValueFromLine(const std::string& line) {
     return "";
 }
 
-
-std::string getNameFromPath(const std::string& path) {
+std::string getNameFromPath(const std::string& path)
+{
     size_t lastSlash = path.find_last_of('/');
     if (lastSlash != std::string::npos) {
         std::string name = path.substr(lastSlash + 1);
@@ -112,7 +117,8 @@ std::string getNameFromPath(const std::string& path) {
     return path;
 }
 
-std::string getParentDirFromPath(const std::string& path) {
+std::string getParentDirFromPath(const std::string& path)
+{
     size_t lastSlash = path.find_last_of('/');
     if (lastSlash != std::string::npos) {
         std::string parentDir = path.substr(0, lastSlash + 1);
@@ -121,7 +127,8 @@ std::string getParentDirFromPath(const std::string& path) {
     return path;
 }
 
-std::string getParentDirNameFromPath(const std::string& path) {
+std::string getParentDirNameFromPath(const std::string& path)
+{
     // Find the position of the last occurrence of the directory separator '/'
     std::size_t lastSlashPos = removeEndingSlash(path).rfind('/');
 
@@ -150,7 +157,8 @@ std::string getParentDirNameFromPath(const std::string& path) {
     return "";
 }
 
-std::string getNameWithoutPrefix(std::string Name) {
+std::string getNameWithoutPrefix(std::string Name)
+{
     std::regex pattern("^(\\d{1,2})_");
     std::smatch matches;
     if (std::regex_search(Name, matches, pattern)) {
@@ -159,7 +167,8 @@ std::string getNameWithoutPrefix(std::string Name) {
     return Name;
 }
 
-std::vector<std::string> getSubdirectories(const std::string& directoryPath) {
+std::vector<std::string> getSubdirectories(const std::string& directoryPath)
+{
     std::vector<std::string> subdirectories;
 
     DIR* dir = opendir(directoryPath.c_str());
@@ -185,7 +194,8 @@ std::vector<std::string> getSubdirectories(const std::string& directoryPath) {
     return subdirectories;
 }
 
-std::vector<std::string> getFilesListFromDirectory(const std::string& directoryPath) {
+std::vector<std::string> getFilesListFromDirectory(const std::string& directoryPath)
+{
     std::vector<std::string> fileList;
 
     DIR* dir = opendir(directoryPath.c_str());
@@ -215,9 +225,9 @@ std::vector<std::string> getFilesListFromDirectory(const std::string& directoryP
     return fileList;
 }
 
-
 // get files list for file patterns and folders list for folder patterns
-std::vector<std::string> getFilesListByWildcard(const std::string& pathPattern) {
+std::vector<std::string> getFilesListByWildcard(const std::string& pathPattern)
+{
     std::string dirPath = "";
     std::string wildcard = "";
 
@@ -243,7 +253,7 @@ std::vector<std::string> getFilesListByWildcard(const std::string& pathPattern) 
 
     bool isFolderWildcard = wildcard.back() == '/';
     if (isFolderWildcard) {
-        wildcard.resize(wildcard.size() - 1);  // Remove the trailing slash
+        wildcard.resize(wildcard.size() - 1); // Remove the trailing slash
     }
 
     //log("isFolderWildcard: " + std::to_string(isFolderWildcard));
@@ -264,7 +274,7 @@ std::vector<std::string> getFilesListByWildcard(const std::string& pathPattern) 
 
             if (isFolderWildcard && isEntryDirectory && fnmatch(wildcard.c_str(), entryName.c_str(), FNM_NOESCAPE) == 0) {
                 if (entryName != "." && entryName != "..") {
-                    fileList.push_back(entryPath+"/");
+                    fileList.push_back(entryPath + "/");
                 }
             } else if (!isFolderWildcard && !isEntryDirectory) {
                 std::size_t wildcardPos = wildcard.find('*');
@@ -293,8 +303,8 @@ std::vector<std::string> getFilesListByWildcard(const std::string& pathPattern) 
     return fileList;
 }
 
-
-std::vector<std::string> getFilesListByWildcards(const std::string& pathPattern) {
+std::vector<std::string> getFilesListByWildcards(const std::string& pathPattern)
+{
     std::vector<std::string> fileList;
 
     // Check if the pattern contains multiple wildcards
@@ -330,9 +340,8 @@ std::vector<std::string> getFilesListByWildcards(const std::string& pathPattern)
     return fileList;
 }
 
-
-
-std::string replacePlaceholder(const std::string& input, const std::string& placeholder, const std::string& replacement) {
+std::string replacePlaceholder(const std::string& input, const std::string& placeholder, const std::string& replacement)
+{
     std::string result = input;
     std::size_t pos = result.find(placeholder);
     if (pos != std::string::npos) {
@@ -341,7 +350,8 @@ std::string replacePlaceholder(const std::string& input, const std::string& plac
     return result;
 }
 
-std::string replaceJsonSourcePlaceholder(const std::string& placeholder, const std::string& jsonPath, std::string searchString = "{json_data(") {
+std::string replaceJsonSourcePlaceholder(const std::string& placeholder, const std::string& jsonPath, std::string searchString = "{json_data(")
+{
     // Load JSON data from the provided file
     json_error_t error;
     SafeJson root = json_load_file(jsonPath.c_str(), 0, &error);
@@ -349,11 +359,11 @@ std::string replaceJsonSourcePlaceholder(const std::string& placeholder, const s
     if (!root) {
         // Handle JSON parsing error
         // printf("JSON parsing error: %s\n", error.text);
-        return placeholder;  // Return the original placeholder if JSON parsing fails
+        return placeholder; // Return the original placeholder if JSON parsing fails
     }
 
     std::string replacement = placeholder;
-    
+
     std::size_t startPos = replacement.find(searchString);
     std::size_t endPos = replacement.find(")}");
     if (startPos != std::string::npos && endPos != std::string::npos && endPos > startPos) {
@@ -388,13 +398,13 @@ std::string replaceJsonSourcePlaceholder(const std::string& placeholder, const s
                     } else {
                         // Handle invalid JSON array index
                         // printf("Invalid JSON array index: %s\n", key.c_str());
-                        return placeholder;  // Return the original placeholder if JSON array index is invalid
+                        return placeholder; // Return the original placeholder if JSON array index is invalid
                     }
                 }
             } else {
                 // Handle invalid JSON structure or key
                 // printf("Invalid JSON structure or key: %s\n", key.c_str());
-                return placeholder;  // Return the original placeholder if JSON structure or key is invalid
+                return placeholder; // Return the original placeholder if JSON structure or key is invalid
             }
         }
 
@@ -408,12 +418,11 @@ std::string replaceJsonSourcePlaceholder(const std::string& placeholder, const s
     return replacement;
 }
 
-
-
-std::vector<std::vector<std::string>> getModifyCommands(const std::vector<std::vector<std::string>>& commands, const std::string& file, bool toggle = false, bool on = true, bool usingJsonSource = false) {
+std::vector<std::vector<std::string>> getModifyCommands(const std::vector<std::vector<std::string>>& commands, const std::string& file, bool toggle = false, bool on = true, bool usingJsonSource = false)
+{
     std::vector<std::vector<std::string>> modifiedCommands;
     std::string jsonPath, replacement;
-    
+
     bool addCommands = false;
     for (const auto& cmd : commands) {
         if (cmd.size() > 1) {
@@ -432,7 +441,7 @@ std::vector<std::vector<std::string>> getModifyCommands(const std::vector<std::v
             }
             if ((usingJsonSource) && (cmd[0] == "json_source" || cmd[0] == "json_mark_cur_kip" || cmd[0] == "json_mark_cur_ini")) {
                 jsonPath = preprocessPath(cmd[1]);
-            } 
+            }
         }
         if (!toggle or addCommands) {
             std::vector<std::string> modifiedCmd = cmd;
@@ -447,32 +456,31 @@ std::vector<std::vector<std::string>> getModifyCommands(const std::vector<std::v
                     arg = replacePlaceholder(arg, "{name}", getNameFromPath(file));
                 } else if (arg.find("{parent_name}") != std::string::npos) {
                     arg = replacePlaceholder(arg, "{parent_name}", getParentDirNameFromPath(file));
-                //} else if (arg.find("{json_source(") != std::string::npos) {
-                //    size_t startPos = arg.find("{json_source(");
-                //    size_t endPos = arg.find(")}");
-                //    if (endPos != std::string::npos && endPos > startPos) {
-                //        std::string placeholder = "*";
-                //        std::string replacement = arg.substr(startPos, endPos - startPos + 2);
-                //        size_t placeholderPos = replacement.find(placeholder);
-                //        if (placeholderPos != std::string::npos) {
-                //            replacement.replace(placeholderPos, placeholder.length(), file);
-                //            //arg.replace(startPos, endPos - startPos + 2, replacement);
-                //        }
-                //        
-                //        replacement = replaceJsonSourcePlaceholder(replacement, jsonPath, true);
-                //        //log2("replacement: "+replacement);
-                //        //log2("pre-arg: "+arg);
-                //        arg.replace(startPos, endPos - startPos + 2, replacement);
-                //    }
+                    //} else if (arg.find("{json_source(") != std::string::npos) {
+                    //    size_t startPos = arg.find("{json_source(");
+                    //    size_t endPos = arg.find(")}");
+                    //    if (endPos != std::string::npos && endPos > startPos) {
+                    //        std::string placeholder = "*";
+                    //        std::string replacement = arg.substr(startPos, endPos - startPos + 2);
+                    //        size_t placeholderPos = replacement.find(placeholder);
+                    //        if (placeholderPos != std::string::npos) {
+                    //            replacement.replace(placeholderPos, placeholder.length(), file);
+                    //            //arg.replace(startPos, endPos - startPos + 2, replacement);
+                    //        }
+                    //
+                    //        replacement = replaceJsonSourcePlaceholder(replacement, jsonPath, true);
+                    //        //log2("replacement: "+replacement);
+                    //        //log2("pre-arg: "+arg);
+                    //        arg.replace(startPos, endPos - startPos + 2, replacement);
+                    //    }
                 } else if (usingJsonSource && (arg.find("{json_source(") != std::string::npos)) {
                     std::string countStr = file;
-                    
+
                     // log(std::string("count: ")+countStr);
                     // log(std::string("pre arg: ") + arg);
                     arg = replacePlaceholder(arg, "*", file);
                     // log(std::string("post arg: ") + arg);
 
-                    
                     size_t startPos = arg.find("{json_source(");
                     size_t endPos = arg.find(")}");
                     if (endPos != std::string::npos && endPos > startPos) {
@@ -484,13 +492,12 @@ std::vector<std::vector<std::string>> getModifyCommands(const std::vector<std::v
                     }
                 } else if (usingJsonSource && (arg.find("{json_mark_cur_kip(") != std::string::npos)) {
                     std::string countStr = file;
-                    
+
                     // log(std::string("count: ")+countStr);
                     // log(std::string("pre arg: ") + arg);
                     arg = replacePlaceholder(arg, "*", file);
                     // log(std::string("post arg: ") + arg);
 
-                    
                     size_t startPos = arg.find("{json_mark_cur_kip(");
                     size_t endPos = arg.find(")}");
                     if (endPos != std::string::npos && endPos > startPos) {
@@ -499,13 +506,12 @@ std::vector<std::vector<std::string>> getModifyCommands(const std::vector<std::v
                     }
                 } else if (usingJsonSource && (arg.find("{json_mark_cur_ini(") != std::string::npos)) {
                     std::string countStr = file;
-                    
+
                     // log(std::string("count: ")+countStr);
                     // log(std::string("pre arg: ") + arg);
                     arg = replacePlaceholder(arg, "*", file);
                     // log(std::string("post arg: ") + arg);
 
-                    
                     size_t startPos = arg.find("{json_mark_cur_ini(");
                     size_t endPos = arg.find(")}");
                     if (endPos != std::string::npos && endPos > startPos) {

@@ -1,35 +1,41 @@
 #pragma once
-#include <cstdio>
+
+#include "debug_funcs.hpp"
+#include "get_funcs.hpp"
+#include "json_funcs.hpp"
+#include "path_funcs.hpp"
+#include "string_funcs.hpp"
+
 #include <curl/curl.h>
 #include <zlib.h>
 #include <zzip/zzip.h>
-#include "string_funcs.hpp"
-#include "get_funcs.hpp"
-#include "path_funcs.hpp"
-#include "debug_funcs.hpp"
-#include "json_funcs.hpp"
+
+#include <cstdio>
 
 const char* userAgent = "Mozilla/5.0 (Nintendo Switch; WebApplet) AppleWebKit/609.4 (KHTML, like Gecko) NF/6.0.2.21.3 NintendoBrowser/5.1.0.22474";
 
-size_t writeCallbackFile(void* contents, size_t size, size_t nmemb, FILE* file) {
+size_t writeCallbackFile(void* contents, size_t size, size_t nmemb, FILE* file)
+{
     // Callback function to write received data to a file
     size_t written = fwrite(contents, size, nmemb, file);
     return written;
 }
 
-size_t writeCallbackJson(void* contents, size_t size, size_t nmemb, std::string* s) {
+size_t writeCallbackJson(void* contents, size_t size, size_t nmemb, std::string* s)
+{
     size_t newLength = size * nmemb;
     try {
         s->append((char*)contents, newLength);
-    } catch(std::bad_alloc &e) {
+    } catch (std::bad_alloc& e) {
         // Handle memory allocation exceptions
         return 0;
     }
     return newLength;
 }
 
-SafeJson loadJsonFromUrl(const std::string& url) {
-    CURL *curl;
+SafeJson loadJsonFromUrl(const std::string& url)
+{
+    CURL* curl;
     CURLcode res;
     std::string readBuffer;
     readBuffer.reserve(5 * 1024);
@@ -37,7 +43,7 @@ SafeJson loadJsonFromUrl(const std::string& url) {
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
 
-    if(curl) {
+    if (curl) {
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallbackJson);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
@@ -45,7 +51,7 @@ SafeJson loadJsonFromUrl(const std::string& url) {
         res = curl_easy_perform(curl);
         curl_easy_cleanup(curl);
 
-        if(res != CURLE_OK) {
+        if (res != CURLE_OK) {
             fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
             return nullptr;
         }
@@ -69,37 +75,40 @@ struct progress {
     tsl::elm::ListItem* listItem;
     int totalCommands;
     int curProgress;
-};;
+};
+;
 
-static size_t progress_callback(void *clientp,
+static size_t progress_callback(void* clientp,
                                 curl_off_t dltotal,
                                 curl_off_t dlnow,
                                 curl_off_t ultotal,
-                                curl_off_t ulnow) {
+                                curl_off_t ulnow)
+{
     if (dltotal <= 0) {
         //log("Download progress: Unknown total size");
         return 0;
     }
-    struct progress *memory = static_cast<struct progress*>(clientp);
+    struct progress* memory = static_cast<struct progress*>(clientp);
     tsl::elm::ListItem* listItem = memory->listItem;
     int totalCommands = memory->totalCommands;
     int curProgress = memory->curProgress;
     // Calculate download percentage
-    int progress = curProgress + ((static_cast<int>(dlnow)*100) / (static_cast<int>(dltotal)*totalCommands));
+    int progress = curProgress + ((static_cast<int>(dlnow) * 100) / (static_cast<int>(dltotal) * totalCommands));
     std::string progressStr = std::to_string(progress) + "%";
     if (listItem->getValue() != progressStr) {
         listItem->setValue(progressStr, tsl::PredefinedColors::Green);
     }
-    
+
     return 0;
 }
 
-bool downloadFile(const std::string& url, const std::string& toDestination, tsl::elm::ListItem* listItem = nullptr, int totalCommands = -1, int curProgress = -1) {
+bool downloadFile(const std::string& url, const std::string& toDestination, tsl::elm::ListItem* listItem = nullptr, int totalCommands = -1, int curProgress = -1)
+{
     std::string destination = toDestination;
     // Check if the destination ends with "/"
     if (destination.back() == '/') {
         createDirectory(destination);
-        
+
         // Extract the filename from the URL
         size_t lastSlash = url.find_last_of('/');
         if (lastSlash != std::string::npos) {
@@ -110,9 +119,8 @@ bool downloadFile(const std::string& url, const std::string& toDestination, tsl:
             return false;
         }
     } else {
-        createDirectory(destination.substr(0, destination.find_last_of('/'))+"/");
+        createDirectory(destination.substr(0, destination.find_last_of('/')) + "/");
     }
-    
 
     const int MAX_RETRIES = 3;
     int retryCount = 0;
@@ -134,7 +142,7 @@ bool downloadFile(const std::string& url, const std::string& toDestination, tsl:
         log("Error initializing curl after multiple retries.");
         return false;
     }
-    
+
     FILE* file = fopen(destination.c_str(), "wb");
     if (!file) {
         log("Error opening file: %s", destination.c_str());
@@ -184,9 +192,9 @@ bool downloadFile(const std::string& url, const std::string& toDestination, tsl:
     return true;
 }
 
-
-bool unzipFile(const std::string& zipFilePath, const std::string& toDestination, tsl::elm::ListItem* listItem = nullptr, int totalCommands = -1, int curProgress = -1) {
-    zzip_error_t errorCode{ ZZIP_NO_ERROR };
+bool unzipFile(const std::string& zipFilePath, const std::string& toDestination, tsl::elm::ListItem* listItem = nullptr, int totalCommands = -1, int curProgress = -1)
+{
+    zzip_error_t errorCode { ZZIP_NO_ERROR };
     ZZIP_DIR* dir = zzip_dir_open(zipFilePath.c_str(), &errorCode);
     if (!dir) {
         log("Error opening file: %s; error: %s", zipFilePath.c_str(), zzip_strerror(errorCode));
@@ -209,7 +217,8 @@ bool unzipFile(const std::string& zipFilePath, const std::string& toDestination,
     zzip_rewinddir(dir);
 
     while (zzip_dir_read(dir, &entry)) {
-        if (entry.d_name[0] == '\0') continue;  // Skip empty records
+        if (entry.d_name[0] == '\0')
+            continue; // Skip empty records
 
         currentFile++;
 
@@ -218,7 +227,7 @@ bool unzipFile(const std::string& zipFilePath, const std::string& toDestination,
 
         if (totalCommands != -1) {
             // Calculate the percentage completion and add it to the log string
-            std::string progress_str = std::to_string(curProgress + ((currentFile*100) / (totalFiles*totalCommands))) + "%";
+            std::string progress_str = std::to_string(curProgress + ((currentFile * 100) / (totalFiles * totalCommands))) + "%";
             if (listItem->getValue() != progress_str.c_str()) {
                 listItem->setValue(progress_str.c_str(), tsl::PredefinedColors::Green);
             }

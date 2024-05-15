@@ -1,16 +1,18 @@
 #pragma once
+
+#include <time.h>
+
 #include <algorithm>
+#include <chrono>
 #include <cstdarg>
 #include <cstdio>
-#include <time.h>
-#include <chrono>
 
 const char* logPath = "sdmc:/config/uberhand/log.txt";
 
-char logTimeBuffer[std::size("yyyy-mm-dd hh:mm:ss")]{ 0 };
+char logTimeBuffer[std::size("yyyy-mm-dd hh:mm:ss")] { 0 };
 
-__attribute__((__format__(__printf__, 1, 2)))
-void log(const char* format, ...) noexcept {
+__attribute__((__format__(__printf__, 1, 2))) void log(const char* format, ...) noexcept
+{
     FILE* logFile = fopen(logPath, "a");
     if (logFile == nullptr) {
         fprintf(stderr, "Failed to open log file: %s", logPath);

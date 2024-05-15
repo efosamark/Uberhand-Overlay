@@ -1,16 +1,19 @@
 #pragma once
-#include <sys/stat.h>
-#include <cstdio>   // For FILE*, fopen(), fclose(), fprintf(), etc.
-#include <cstring>  // For std::string, strlen(), etc.
-#include <string>   // For std::string
-#include <vector>   // For std::vector
-#include <map>      // For std::map
-#include <sstream>  // For std::istringstream
-#include <algorithm> // For std::remove_if
-#include <cctype>   // For ::isspace
-#include <fstream>
-#include "debug_funcs.hpp"
+
 #include "IniSection.hpp"
+#include "debug_funcs.hpp"
+
+#include <sys/stat.h>
+
+#include <algorithm> // For std::remove_if
+#include <cctype> // For ::isspace
+#include <cstdio> // For FILE*, fopen(), fclose(), fprintf(), etc.
+#include <cstring> // For std::string, strlen(), etc.
+#include <fstream>
+#include <map> // For std::map
+#include <sstream> // For std::istringstream
+#include <string> // For std::string
+#include <vector> // For std::vector
 
 // Ini Functions
 
@@ -19,11 +22,12 @@ struct PackageHeader {
     std::string creator;
     std::string github;
     std::string about;
-    bool enableConfigNav{ false };
-    bool showCurInMenu  { false };
+    bool enableConfigNav { false };
+    bool showCurInMenu { false };
     std::string checkKipVersion;
 };
-PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
+PackageHeader getPackageHeaderFromIni(const std::string& filePath)
+{
     PackageHeader packageHeader;
     FILE* file = fopen(filePath.c_str(), "r");
     if (file == nullptr) {
@@ -43,9 +47,8 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
     const std::string aboutPrefix = ";about=";
     const std::string repoPrefix = ";github=";
     const std::string configNavMarker = ";enableConfigNav";
-    const std::string showCurMarker   = ";showCurInMenu";
+    const std::string showCurMarker = ";showCurInMenu";
     const std::string kipVerMarker = ";kipVer=";
-
 
     while (fgets(line, sizeof(line), file)) {
         if (line[0] != ';') { // Header ended. Skip further parsing
@@ -116,7 +119,6 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
 
         if (showCurMarker == strLine.substr(0, showCurMarker.length())) {
             packageHeader.showCurInMenu = true;
-
         }
 
         size_t repoPos = strLine.find(repoPrefix);
@@ -138,17 +140,16 @@ PackageHeader getPackageHeaderFromIni(const std::string& filePath) {
         }
     }
 
-
-
     fclose(file);
-    
+
     return packageHeader;
 }
 
 using KeyValueData = std::map<std::string, std::string>;
 using IniData = std::map<std::string, KeyValueData>;
 
-static IniData parseIni(std::istream& str) {
+static IniData parseIni(std::istream& str)
+{
     IniData iniData;
 
     std::string section = "";
@@ -161,7 +162,7 @@ static IniData parseIni(std::istream& str) {
 
         } else if (line[0] == '[' && line[line.size() - 1] == ']') { // Section
             section = line.substr(1, line.size() - 2);
-            iniData.emplace(section, KeyValueData{});
+            iniData.emplace(section, KeyValueData {});
 
         } else if (size_t equalsPos = line.find('='); equalsPos != std::string::npos) { // Key = Value
             std::string key = trim(line.substr(0, equalsPos));
@@ -177,7 +178,8 @@ static IniData parseIni(std::istream& str) {
 }
 
 // Custom utility function for parsing an ini file
-IniData getParsedDataFromIniFile(const std::string& configIniPath) {
+IniData getParsedDataFromIniFile(const std::string& configIniPath)
+{
     std::ifstream iniFile(configIniPath);
     return parseIni(iniFile);
 }
@@ -209,11 +211,12 @@ bool isMarikoHWType()
     }
 }
 
-std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadOptionsFromIni(const std::string& configIniPath, bool makeConfig = false) {
+std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadOptionsFromIni(const std::string& configIniPath, bool makeConfig = false)
+{
     std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> options;
 
     FILE* configFile = fopen(configIniPath.c_str(), "r");
-    if (!configFile ) {
+    if (!configFile) {
         // Write the default INI file
         FILE* configFileOut = fopen(configIniPath.c_str(), "w");
         std::string commands;
@@ -226,8 +229,7 @@ std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadO
             commands = "";
         }
         fprintf(configFileOut, "%s", commands.c_str());
-        
-        
+
         fclose(configFileOut);
         configFile = fopen(configIniPath.c_str(), "r");
     }
@@ -241,7 +243,7 @@ std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadO
 
     while (fgets(line, sizeof(line), configFile)) {
         std::string trimmedLine = line;
-        trimmedLine.erase(trimmedLine.find_last_not_of("\r\n") + 1);  // Remove trailing newline character
+        trimmedLine.erase(trimmedLine.find_last_not_of("\r\n") + 1); // Remove trailing newline character
 
         if (trimmedLine.empty() || trimmedLine[0] == '#') {
             // Skip empty lines and comment lines
@@ -249,7 +251,7 @@ std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadO
         } else if (trimmedLine.starts_with("--")) { // Separator
             if (!currentOption.empty()) {
                 // Store previous option and its commands
-                if(!skipCommand) {
+                if (!skipCommand) {
                     options.emplace_back(std::move(currentOption), std::move(commands));
                 }
                 commands.clear();
@@ -265,10 +267,10 @@ std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadO
                 if ((name.substr(pos + 3) == "Mariko" && !isMariko) || (name.substr(pos + 3) == "Erista" && isMariko)) {
                     continue;
                 }
-                name = name.substr(0,pos);
+                name = name.substr(0, pos);
             }
             name = name.substr(start);
-            std::vector<std::string> command{ "separator" };
+            std::vector<std::string> command { "separator" };
             commands.push_back(std::move(command));
             options.emplace_back(std::move(name), std::move(commands));
         } else if (trimmedLine == "; Mariko") {
@@ -277,18 +279,18 @@ std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadO
         } else if (trimmedLine == "; Erista") {
             skipCommand = (isMariko);
             continue;
-        if (trimmedLine == "; Help") {}
+            if (trimmedLine == "; Help") { }
         } else if (trimmedLine[0] == '[' && trimmedLine.back() == ']') {
             // New option section
             if (!currentOption.empty()) {
-                if(!skipCommand){
+                if (!skipCommand) {
                     // Store previous option and its commands
                     options.emplace_back(std::move(currentOption), std::move(commands));
                 }
                 commands.clear();
                 skipCommand = false;
             }
-            currentOption = trimmedLine.substr(1, trimmedLine.size() - 2);  // Extract option name
+            currentOption = trimmedLine.substr(1, trimmedLine.size() - 2); // Extract option name
         } else if (!currentOption.empty()) {
             // Command line
             std::istringstream iss(trimmedLine);
@@ -317,7 +319,7 @@ std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadO
 
     // Store the last option and its commands
     if (!currentOption.empty()) {
-        if(!skipCommand){
+        if (!skipCommand) {
             options.emplace_back(std::move(currentOption), std::move(commands));
         }
     }
@@ -326,7 +328,8 @@ std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> loadO
     return options;
 }
 
-void cleanIniFormatting(const std::string& filePath) {
+void cleanIniFormatting(const std::string& filePath)
+{
     FILE* inputFile = fopen(filePath.c_str(), "r");
     if (!inputFile) {
         // Failed to open the input file
@@ -369,7 +372,6 @@ void cleanIniFormatting(const std::string& filePath) {
     rename(tempPath.c_str(), filePath.c_str());
 }
 
-
 /*
 1. Get a data vector: data<section<keys<values>>> 
 Open file
@@ -393,7 +395,7 @@ Close file
 //         // std::cerr << "Unable to open file: " << fileToEdit << " for writing\n";
 //         return;
 //     }
-    
+
 //     for (const auto& [section, keys] : desiredData) {
 //         file << "[" << section << "]\n";
 //         for (const auto& [key, value] : keys) {
@@ -403,7 +405,8 @@ Close file
 //     }
 // }
 
-bool setIniFile(const std::string& fileToEdit, const std::string& desiredSection, const std::string& desiredKey, const std::string& desiredValue, const std::string& desiredNewKey) {
+bool setIniFile(const std::string& fileToEdit, const std::string& desiredSection, const std::string& desiredKey, const std::string& desiredValue, const std::string& desiredNewKey)
+{
     FILE* configFile = fopen(fileToEdit.c_str(), "r");
     if (!configFile) {
         // The INI file doesn't exist, create a new file and add the section and key-value pair
@@ -438,14 +441,13 @@ bool setIniFile(const std::string& fileToEdit, const std::string& desiredSection
             // Check if the line represents a section
             if (trimmedLine[0] == '[' && trimmedLine[trimmedLine.length() - 1] == ']') {
                 currentSection = removeQuotes(trim(std::string(trimmedLine.c_str() + 1, trimmedLine.length() - 2)));
-                
+
                 if (sectionFound && !keyFound && (desiredNewKey.empty())) {
                     // Write the modified line with the desired key and value
                     formattedDesiredValue = removeQuotes(desiredValue);
                     fprintf(tempFile, "%s=%s\n", desiredKey.c_str(), formattedDesiredValue.c_str());
                     keyFound = true;
                 }
-                
             }
 
             if (sectionFound && !keyFound && desiredNewKey.empty()) {
@@ -477,16 +479,16 @@ bool setIniFile(const std::string& fileToEdit, const std::string& desiredSection
                         continue; // Skip writing the original line
                     }
                 }
-            } 
-            
+            }
+
             fprintf(tempFile, "%s", line);
         }
-        
+
         if (sectionFound && !keyFound && (desiredNewKey.empty())) {
             // Write the modified line with the desired key and value
             fprintf(tempFile, "%s=%s\n", desiredKey.c_str(), formattedDesiredValue.c_str());
         }
-        
+
         if (!sectionFound && !keyFound && desiredNewKey.empty()) {
             // The desired section doesn't exist, so create it and add the key-value pair
             fprintf(tempFile, "[%s]\n", desiredSection.c_str());
@@ -506,59 +508,63 @@ bool setIniFile(const std::string& fileToEdit, const std::string& desiredSection
     return false;
 }
 
-bool setIniFileValue(const std::string& fileToEdit, const std::string& desiredSection, const std::string& desiredKey, const std::string& desiredValue) {
+bool setIniFileValue(const std::string& fileToEdit, const std::string& desiredSection, const std::string& desiredKey, const std::string& desiredValue)
+{
     bool result = setIniFile(fileToEdit, desiredSection, desiredKey, desiredValue, "");
     cleanIniFormatting(fileToEdit);
     return result;
 }
 
-bool setIniFileKey(const std::string& fileToEdit, const std::string& desiredSection, const std::string& desiredKey, const std::string& desiredNewKey) {
+bool setIniFileKey(const std::string& fileToEdit, const std::string& desiredSection, const std::string& desiredKey, const std::string& desiredNewKey)
+{
     bool result = setIniFile(fileToEdit, desiredSection, desiredKey, "", desiredNewKey);
     cleanIniFormatting(fileToEdit);
     return result;
 }
 
-bool removeIniFileKey(const std::string& fileToEdit, const std::string& desiredSection, const std::string& desiredKey) {
-  std::ifstream file(fileToEdit);
-  std::string line, currentSection;
-  bool sectionFound = false;
-  std::vector<std::string> newLines;
+bool removeIniFileKey(const std::string& fileToEdit, const std::string& desiredSection, const std::string& desiredKey)
+{
+    std::ifstream file(fileToEdit);
+    std::string line, currentSection;
+    bool sectionFound = false;
+    std::vector<std::string> newLines;
 
-  while (std::getline(file, line)) {
-    // Remove leading and trailing whitespace
-    if (line.find_first_not_of(" \r\n") != std::string::npos) {
-        trimInPlace(line);
-    }
-
-    if (!line.empty()) {
-      if (line[0] == '[' && line.back() == ']') {
-        currentSection = line.substr(1, line.length() - 2);
-        sectionFound = (currentSection == desiredSection);
-      } else if (sectionFound) {
-        size_t equalsPos = line.find('=');
-        if (equalsPos != std::string::npos) {
-          std::string keyInFile = line.substr(0, equalsPos);
-          trimInPlace(keyInFile);
-          if (keyInFile == desiredKey) {
-            continue;
-          }
+    while (std::getline(file, line)) {
+        // Remove leading and trailing whitespace
+        if (line.find_first_not_of(" \r\n") != std::string::npos) {
+            trimInPlace(line);
         }
-      }
-      newLines.push_back(line);
+
+        if (!line.empty()) {
+            if (line[0] == '[' && line.back() == ']') {
+                currentSection = line.substr(1, line.length() - 2);
+                sectionFound = (currentSection == desiredSection);
+            } else if (sectionFound) {
+                size_t equalsPos = line.find('=');
+                if (equalsPos != std::string::npos) {
+                    std::string keyInFile = line.substr(0, equalsPos);
+                    trimInPlace(keyInFile);
+                    if (keyInFile == desiredKey) {
+                        continue;
+                    }
+                }
+            }
+            newLines.push_back(line);
+        }
     }
-  }
 
-  file.close();
-  std::ofstream outfile(fileToEdit);
-  for (const auto& line : newLines) {
-    outfile << line << std::endl;
-  }
-  outfile.close();
+    file.close();
+    std::ofstream outfile(fileToEdit);
+    for (const auto& line : newLines) {
+        outfile << line << std::endl;
+    }
+    outfile.close();
 
-  return true;
+    return true;
 }
 
-std::string readIniValue(const std::string& filePath, const std::string& section, const std::string& key) {
+std::string readIniValue(const std::string& filePath, const std::string& section, const std::string& key)
+{
     std::ifstream file(filePath);
     std::string line, currentSection;
     bool sectionFound = false;
@@ -587,7 +593,8 @@ std::string readIniValue(const std::string& filePath, const std::string& section
     return ""; // Key not found
 }
 
-std::vector<std::vector<int>> parseIntIniData (std::string input, bool skipFirstItem = true) {
+std::vector<std::vector<int>> parseIntIniData(std::string input, bool skipFirstItem = true)
+{
     // Remove outer brackets
     input = input.substr(6, input.length() - 3);
 
@@ -603,7 +610,7 @@ std::vector<std::vector<int>> parseIntIniData (std::string input, bool skipFirst
         if (openBracket == '[') {
             std::vector<int> array(4);
             ss >> array[0] >> comma1 >> array[1] >> comma2 >> array[2] >> comma1 >> array[3] >> closeBracket;
-            
+
             // Check if it's not the first item and then add to the result
             if (!skipFirstItem) {
                 result.push_back(array);
@@ -615,15 +622,14 @@ std::vector<std::vector<int>> parseIntIniData (std::string input, bool skipFirst
         }
     }
 
-
     return result;
 }
 
-
-bool isLineExistInIni(const std::string& filename, std::string& lineToFind) {
+bool isLineExistInIni(const std::string& filename, std::string& lineToFind)
+{
     std::ifstream infile(filename);
     std::string line;
-    
+
     if (!infile) {
         log("isLineExistInIni: Failed to open file: %s", filename.c_str());
         return false;
@@ -633,8 +639,8 @@ bool isLineExistInIni(const std::string& filename, std::string& lineToFind) {
 
     while (std::getline(infile, line)) {
         if (std::regex_match(line, pattern)) {
-          infile.close();
-          return true;
+            infile.close();
+            return true;
         }
     }
 

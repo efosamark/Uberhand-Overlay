@@ -1,13 +1,16 @@
 #pragma once
-#include <string>
-#include <vector>
+
+#include <sys/stat.h> // Added for stat
+
 #include <algorithm>
 #include <cstdio> // Added for FILE and fopen
 #include <cstring> // Added for std::memcmp
-#include <sys/stat.h> // Added for stat
+#include <string>
+#include <vector>
 
 // Hex-editing commands
-std::string asciiToHex(const std::string& asciiStr) {
+std::string asciiToHex(const std::string& asciiStr)
+{
     std::string hexStr;
     hexStr.reserve(asciiStr.length() * 2); // Reserve space for the hexadecimal string
 
@@ -27,14 +30,16 @@ std::string asciiToHex(const std::string& asciiStr) {
     return hexStr;
 }
 
-std::string decimalToHex(const std::string& decimalStr) {
+std::string decimalToHex(const std::string& decimalStr)
+{
     // assumes the decimal is a 32-bit integer
-    std::string hexadecimal = (std::stringstream{} << std::hex << std::setw(8) << std::setfill('0') << std::stoi(decimalStr)).str();
+    std::string hexadecimal = (std::stringstream {} << std::hex << std::setw(8) << std::setfill('0') << std::stoi(decimalStr)).str();
 
     return hexadecimal;
 }
 
-std::string decimalToReversedHex(const std::string& decimalStr, int order = 2) {
+std::string decimalToReversedHex(const std::string& decimalStr, int order = 2)
+{
     std::string hexadecimal = decimalToHex(decimalStr);
 
     // Reverse the hexadecimal string in groups of order
@@ -49,7 +54,8 @@ std::string decimalToReversedHex(const std::string& decimalStr, int order = 2) {
 
 std::vector<size_t> findHexDataOffsetsF(FILE* const file, const std::string& hexData);
 
-std::vector<size_t> findHexDataOffsets(const std::string& filePath, const std::string& hexData) {
+std::vector<size_t> findHexDataOffsets(const std::string& filePath, const std::string& hexData)
+{
     // Open the file for reading in binary mode
     FILE* file = fopen(filePath.c_str(), "rb");
     if (!file) {
@@ -71,7 +77,8 @@ std::vector<size_t> findHexDataOffsets(const std::string& filePath, const std::s
     return offsets;
 }
 
-std::vector<size_t> findHexDataOffsetsF(FILE* const file, const std::string& hexData) {
+std::vector<size_t> findHexDataOffsetsF(FILE* const file, const std::string& hexData)
+{
     // Convert the hex data string to binary data
     std::vector<unsigned char> binaryData;
     for (std::size_t i = 0; i < hexData.length(); i += 2) {
@@ -101,7 +108,8 @@ std::vector<size_t> findHexDataOffsetsF(FILE* const file, const std::string& hex
 
 std::string readHexDataAtOffsetF(FILE* const file, const size_t offset, size_t length);
 
-std::string readHexDataAtOffset(const std::string& filePath, const std::string& hexData, const size_t offsetFromData, size_t length) {
+std::string readHexDataAtOffset(const std::string& filePath, const std::string& hexData, const size_t offsetFromData, size_t length)
+{
     // log("Entered readHexDataAtOffset");
 
     // Open the file for reading in binary mode
@@ -125,8 +133,9 @@ std::string readHexDataAtOffset(const std::string& filePath, const std::string& 
     return result;
 }
 
-FILE* openFile(const std::string& filePath) {
-    
+FILE* openFile(const std::string& filePath)
+{
+
     // Open the file for reading in binary mode
     FILE* file = fopen(filePath.c_str(), "rb");
     if (!file) {
@@ -136,7 +145,8 @@ FILE* openFile(const std::string& filePath) {
     return file;
 }
 
-long findCustOffset(FILE* const file) {
+long findCustOffset(FILE* const file)
+{
     const std::vector<std::size_t> dataOffsets = findHexDataOffsetsF(file, "43555354");
     if (dataOffsets.empty()) {
         log("readHexDataAtOffset: data \"%s\" not found.", "CUST");
@@ -145,9 +155,10 @@ long findCustOffset(FILE* const file) {
     return dataOffsets[0];
 }
 
-std::string readHexDataAtOffset(FILE* const file, const std::string& hexData, const size_t offsetFromData, size_t length, int custOffset = -1) {
+std::string readHexDataAtOffset(FILE* const file, const std::string& hexData, const size_t offsetFromData, size_t length, int custOffset = -1)
+{
     // log("Entered readHexDataAtOffset");
-    
+
     if (!file) {
         log("Failed to open the file.");
         return "";
@@ -170,7 +181,8 @@ std::string readHexDataAtOffset(FILE* const file, const std::string& hexData, co
     return result;
 }
 
-std::string readHexDataAtOffsetF(FILE* const file, const size_t offset, const size_t length) {
+std::string readHexDataAtOffsetF(FILE* const file, const size_t offset, const size_t length)
+{
     // log("Entered readHexDataAtOffsetF");
 
     if (fseek(file, offset, SEEK_SET) != 0) {
@@ -203,7 +215,8 @@ std::string readHexDataAtOffsetF(FILE* const file, const size_t offset, const si
     return result;
 }
 
-bool hexEditByOffset(const std::string& filePath, const size_t offset, const std::string& hexData) {
+bool hexEditByOffset(const std::string& filePath, const size_t offset, const std::string& hexData)
+{
     // Open the file for reading and writing in binary mode
     FILE* file = fopen(filePath.c_str(), "rb+");
     if (!file) {
@@ -256,7 +269,8 @@ bool hexEditByOffset(const std::string& filePath, const size_t offset, const std
 }
 
 // Is used when mutiple write iterrations are required to reduce the number of file open/close requests
-bool hexEditByOffsetF(const std::string& filePath, const std::map <std::string,std::string>& data) {
+bool hexEditByOffsetF(const std::string& filePath, const std::map<std::string, std::string>& data)
+{
 
     // Open the file for reading and writing in binary mode
     FILE* file = fopen(filePath.c_str(), "rb+");
@@ -265,8 +279,8 @@ bool hexEditByOffsetF(const std::string& filePath, const std::map <std::string,s
         return false;
     }
 
-    for(const auto& ov : data) {
-        
+    for (const auto& ov : data) {
+
         // Convert the offset string to std::streampos
         std::streampos offset = std::stoll(ov.first);
         std::string hexData = ov.second;
@@ -317,7 +331,8 @@ bool hexEditByOffsetF(const std::string& filePath, const std::map <std::string,s
     //log("Hex editing completed.");
 }
 
-bool hexEditFindReplace(const std::string& filePath, const std::string& hexDataToReplace, const std::string& hexDataReplacement, const std::string& occurrence = "0") {
+bool hexEditFindReplace(const std::string& filePath, const std::string& hexDataToReplace, const std::string& hexDataReplacement, const std::string& occurrence = "0")
+{
     const std::vector<size_t> offsets = findHexDataOffsets(filePath, hexDataToReplace);
     if (!offsets.empty()) {
         if (occurrence == "0") {
@@ -327,8 +342,7 @@ bool hexEditFindReplace(const std::string& filePath, const std::string& hexDataT
                 //log("hexDataReplacement: "+hexDataReplacement);
                 hexEditByOffset(filePath, offset, hexDataReplacement);
             }
-        }
-        else {
+        } else {
             // Convert the occurrence string to an integer
             std::size_t index = std::stoul(occurrence);
             if (index > 0 && index <= offsets.size()) {
@@ -337,8 +351,7 @@ bool hexEditFindReplace(const std::string& filePath, const std::string& hexDataT
                 //log("offsetStr: "+offsetStr);
                 //log("hexDataReplacement: "+hexDataReplacement);
                 hexEditByOffset(filePath, offset, hexDataReplacement);
-            }
-            else {
+            } else {
                 return false;
                 // Invalid occurrence/index specified
                 log("Invalid occurrence/index specified.");
@@ -346,28 +359,28 @@ bool hexEditFindReplace(const std::string& filePath, const std::string& hexDataT
         }
         return true;
         //std::cout << "Hex data replaced successfully." << std::endl;
-    }
-    else {
+    } else {
         return false;
         log("Hex data to replace not found.");
     }
 }
 
-bool hexEditCustOffset(const std::string& filePath, const size_t offsetFromCust, const std::string& hexDataReplacement) {
+bool hexEditCustOffset(const std::string& filePath, const size_t offsetFromCust, const std::string& hexDataReplacement)
+{
     const std::string CUST = "43555354";
     const std::vector<size_t> custOffsets = findHexDataOffsets(filePath, CUST);
     if (!custOffsets.empty()) {
         const size_t offset = offsetFromCust + custOffsets[0]; // count from "C" letter
         hexEditByOffset(filePath, offset, hexDataReplacement);
-    }
-    else {
+    } else {
         return false;
         log("CUST not found.");
     }
     return true;
 }
 
-int reversedHexToInt(const std::string& hex_str) {
+int reversedHexToInt(const std::string& hex_str)
+{
     std::string reversedHex;
     reversedHex.reserve(hex_str.size());
 
