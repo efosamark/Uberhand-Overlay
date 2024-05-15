@@ -1,10 +1,14 @@
+#pragma once
+
+#include <fstream>
 #include <map>
 #include <unordered_map>
 
 using IniKeyValue = std::unordered_map<std::string, std::string>;
 using IniSectionInput = std::unordered_map<std::string, IniKeyValue>;
 
-IniSectionInput readIniFile(const std::string& filename) {
+IniSectionInput readIniFile(const std::string& filename)
+{
     IniSectionInput iniData;
     std::ifstream inFile(filename);
     std::string line;
@@ -33,7 +37,8 @@ IniSectionInput readIniFile(const std::string& filename) {
 }
 
 // Write the IniSectionInput structure back to a file
-void writeIniFile(const std::string& filename, const IniSectionInput& iniData) {
+void writeIniFile(const std::string& filename, const IniSectionInput& iniData)
+{
     std::ofstream outFile(filename);
     for (const auto& [section, kvPairs] : iniData) {
         outFile << "[" << section << "]\n";
@@ -46,26 +51,27 @@ void writeIniFile(const std::string& filename, const IniSectionInput& iniData) {
 }
 
 // Update values in the INI data
-void updateIniData(IniSectionInput& iniData, const IniSectionInput& updates, bool remove=false) {
+void updateIniData(IniSectionInput& iniData, const IniSectionInput& updates, bool remove = false)
+{
     if (remove) {
         for (const auto& [section, kvPairs] : updates) {
             for (const auto& [key, value] : kvPairs) {
-            //log(iniData[section][key]);
-            iniData[section].erase(key);
+                //log(iniData[section][key]);
+                iniData[section].erase(key);
             }
         }
     } else {
         for (const auto& [section, kvPairs] : updates) {
             for (const auto& [key, value] : kvPairs) {
-            //log(iniData[section][key]);
-            iniData[section][key] = value;
+                //log(iniData[section][key]);
+                iniData[section][key] = value;
             }
         }
     }
 }
 
-
-std::vector<std::string> splitSections(const std::string& str) {
+std::vector<std::string> splitSections(const std::string& str)
+{
     std::vector<std::string> result;
     std::string temp;
     size_t pos = 0, lastPos = 0;
@@ -83,8 +89,8 @@ std::vector<std::string> splitSections(const std::string& str) {
     return result;
 }
 
-
-IniSectionInput parseDesiredData(const std::string& input) {
+IniSectionInput parseDesiredData(const std::string& input)
+{
     IniSectionInput desiredData;
     std::vector<std::string> sections = splitSections(input);
 
