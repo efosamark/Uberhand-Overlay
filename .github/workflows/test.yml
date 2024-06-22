@@ -13,4 +13,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build
-        run: make
+        run: 'find /opt/devkitpro -iname "*zip*" && echo "==========" && make'

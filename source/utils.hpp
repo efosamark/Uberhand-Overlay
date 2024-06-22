@@ -1,16 +1,17 @@
 #pragma once
-#include <switch.h>
-#include <sys/stat.h>
+
 #include <dirent.h>
+#include <download_funcs.hpp>
 #include <fnmatch.h>
 #include <get_funcs.hpp>
-#include <path_funcs.hpp>
-#include <ini_funcs.hpp>
 #include <hex_funcs.hpp>
-#include <download_funcs.hpp>
-#include <json_funcs.hpp>
-#include <text_funcs.hpp>
+#include <ini_funcs.hpp>
 #include <jansson.h>
+#include <json_funcs.hpp>
+#include <path_funcs.hpp>
+#include <switch.h>
+#include <sys/stat.h>
+#include <text_funcs.hpp>
 
 #define SpsmShutdownMode_Normal 0
 #define SpsmShutdownMode_Reboot 1
@@ -47,7 +48,7 @@ const std::string settingsPath = "sdmc:/config/uberhand/";
 const std::string settingsConfigIniPath = settingsPath + configFileName;
 const std::string packageDirectory = "sdmc:/switch/.packages/";
 const std::string overlayDirectory = "sdmc:/switch/.overlays/";
-const std::string teslaSettingsConfigIniPath = "sdmc:/config/tesla/"+configFileName;
+const std::string teslaSettingsConfigIniPath = "sdmc:/config/tesla/" + configFileName;
 const std::string overlaysIniFilePath = settingsPath + "overlays.ini";
 const std::string packagesIniFilePath = settingsPath + "packages.ini";
 const std::string checkmarkChar = "\uE14B";
@@ -63,30 +64,30 @@ enum ShiftFocusMode {
     DownMax
 };
 
-void scrollListItems(tsl::Gui* gui, ShiftFocusMode mode) {
+void scrollListItems(tsl::Gui* gui, ShiftFocusMode mode)
+{
     int i = 0;
     int scrollItemNum = 0;
     tsl::FocusDirection dir;
-    switch (mode)
-    {
-        case ShiftFocusMode::UpNum:
-            scrollItemNum = 4;
-            dir = tsl::FocusDirection::Up;
-            break;
-        case ShiftFocusMode::DownNum:
-            scrollItemNum = 4;
-            dir = tsl::FocusDirection::Down;
-            break;
-        case ShiftFocusMode::UpMax:
-            scrollItemNum = 10000;
-            dir = tsl::FocusDirection::Up;
-            break;
-        case ShiftFocusMode::DownMax:
-            scrollItemNum = 10000;
-            dir = tsl::FocusDirection::Down;
-            break;
-        default:
-            return;
+    switch (mode) {
+    case ShiftFocusMode::UpNum:
+        scrollItemNum = 4;
+        dir = tsl::FocusDirection::Up;
+        break;
+    case ShiftFocusMode::DownNum:
+        scrollItemNum = 4;
+        dir = tsl::FocusDirection::Down;
+        break;
+    case ShiftFocusMode::UpMax:
+        scrollItemNum = 10000;
+        dir = tsl::FocusDirection::Up;
+        break;
+    case ShiftFocusMode::DownMax:
+        scrollItemNum = 10000;
+        dir = tsl::FocusDirection::Down;
+        break;
+    default:
+        return;
     }
     do {
         gui->requestFocus(gui->getTopElement(), dir);
@@ -94,10 +95,11 @@ void scrollListItems(tsl::Gui* gui, ShiftFocusMode mode) {
     } while (i < scrollItemNum);
 }
 
-void copyTeslaKeyComboTouberhand() {
+void copyTeslaKeyComboTouberhand()
+{
     std::string keyCombo;
     IniData parsedData;
-    
+
     if (isFileOrDirectory(teslaSettingsConfigIniPath)) {
         parsedData = getParsedDataFromIniFile(teslaSettingsConfigIniPath);
         if (parsedData.count("tesla") > 0) {
@@ -107,8 +109,8 @@ void copyTeslaKeyComboTouberhand() {
             }
         }
     }
-    
-    if (!keyCombo.empty()){
+
+    if (!keyCombo.empty()) {
         if (isFileOrDirectory(settingsConfigIniPath)) {
             parsedData = getParsedDataFromIniFile(settingsConfigIniPath);
             if (parsedData.count("uberhand") > 0) {
@@ -122,8 +124,6 @@ void copyTeslaKeyComboTouberhand() {
     }
     tsl::impl::parseOverlaySettings();
 }
-
-
 
 // Safety conditions
 // List of protected folders
@@ -140,17 +140,18 @@ const std::vector<std::string> ultraProtectedFolders = {
     "sdmc:/Nintendo/",
     "sdmc:/emuMMC/"
 };
-bool isDangerousCombination(const std::string& patternPath) {
+bool isDangerousCombination(const std::string& patternPath)
+{
     // List of obviously dangerous patterns
     const std::vector<std::string> dangerousCombinationPatterns = {
-        "*",         // Deletes all files/directories in the current directory
-        "*/"         // Deletes all files/directories in the current directory
+        "*", // Deletes all files/directories in the current directory
+        "*/" // Deletes all files/directories in the current directory
     };
 
     // List of obviously dangerous patterns
     const std::vector<std::string> dangerousPatterns = {
-        "..",     // Attempts to traverse to parent directories
-        "~"       // Represents user's home directory, can be dangerous if misused
+        "..", // Attempts to traverse to parent directories
+        "~" // Represents user's home directory, can be dangerous if misused
     };
 
     // Check if the patternPath is an ultra protected folder
@@ -269,12 +270,13 @@ struct ThreadArgs {
 // Main interpreter
 int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& commands,
                                std::string progress = "",
-                               tsl::elm::ListItem* listItem = nullptr) {
+                               tsl::elm::ListItem* listItem = nullptr)
+{
     std::string commandName, jsonPath, sourcePath, destinationPath, desiredSection, desiredKey, desiredNewKey, desiredValue, offset, hexDataToReplace, hexDataReplacement, fileUrl, occurrence;
     bool catchErrors = false;
     int curProgress = 0;
     for (auto& unmodifiedCommand : commands) {
-            
+
         // Check the command and perform the appropriate action
         if (unmodifiedCommand.empty()) {
             // Empty command, do nothing
@@ -285,10 +287,9 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
         commandName = unmodifiedCommand[0];
         //log(commandName);
         //log(command[1]);
-        
-        
+
         std::vector<std::string> command;
-        
+
         // Modify the command to replace {json_data} placeholder if jsonPath is available
         if (!jsonPath.empty()) {
             std::vector<std::string> modifiedCommand;
@@ -307,7 +308,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
         } else {
             command = unmodifiedCommand;
         }
-        
+
         // if (commandName == "json-set-current") {
         //     if (command.size() >= 2) {
         //         jsonPath = preprocessPath(command[1]);
@@ -343,8 +344,8 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                     destinationPath = preprocessPath(command[2]);
                     bool result;
                     if (sourcePath.find('*') != std::string::npos) {
-                    // Copy files or directories by pattern
-                    result = copyFileOrDirectoryByPattern(sourcePath, destinationPath);
+                        // Copy files or directories by pattern
+                        result = copyFileOrDirectoryByPattern(sourcePath, destinationPath);
                     } else {
                         result = copyFileOrDirectory(sourcePath, destinationPath);
                     }
@@ -377,7 +378,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             if (command.size() >= 2) {
                 bool result;
                 if (command[1] != "") {
-                sourcePath = preprocessPath(command[1]);
+                    sourcePath = preprocessPath(command[1]);
                     if (!isDangerousCombination(sourcePath)) {
                         if (sourcePath.find('*') != std::string::npos) {
                             // Delete files or directories by pattern
@@ -416,7 +417,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 destinationPath = preprocessPath(command[2]);
                 //log("sourcePath: "+sourcePath);
                 //log("destinationPath: "+destinationPath);
-                
+
                 if (!isDangerousCombination(sourcePath)) {
                     if (sourcePath.find('*') != std::string::npos) {
                         // Move files by pattern
@@ -483,7 +484,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                     }
                 }
 
-                bool result  = setIniFileKey(sourcePath, desiredSection, desiredKey, desiredNewKey);
+                bool result = setIniFileKey(sourcePath, desiredSection, desiredKey, desiredNewKey);
                 if (!result && catchErrors) {
                     log("Error in %s command", commandName.c_str());
                     return -1;
@@ -505,7 +506,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 desiredSection = removeQuotes(command[2]);
                 desiredKey = removeQuotes(command[3]);
 
-                bool result  = removeIniFileKey(sourcePath, desiredSection, desiredKey);
+                bool result = removeIniFileKey(sourcePath, desiredSection, desiredKey);
                 if (!result && catchErrors) {
                     log("Error in %s command", commandName.c_str());
                     return -1;
@@ -515,7 +516,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             // Edit command
             if (command.size() == 3) {
                 sourcePath = preprocessPath(command[1]);
-                bool result  = remove_txt(sourcePath, removeQuotes(command[2]));
+                bool result = remove_txt(sourcePath, removeQuotes(command[2]));
                 // log(command[2]);
                 if (!result && catchErrors) {
                     log("Error in %s command", commandName.c_str());
@@ -526,7 +527,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             // Edit command
             if (command.size() == 3) {
                 sourcePath = preprocessPath(command[1]);
-                bool result  = write_to_file(sourcePath, removeQuotes(command[2]));
+                bool result = write_to_file(sourcePath, removeQuotes(command[2]));
                 // log(command[2]);
                 if (!result && catchErrors) {
                     log("Error in %s command", commandName.c_str());
@@ -557,9 +558,9 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
 
                 if (command.size() >= 5) {
                     occurrence = removeQuotes(command[4]);
-                    result  = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement, occurrence);
+                    result = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement, occurrence);
                 } else {
-                    result  = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement);
+                    result = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement);
                 }
                 if (!result && catchErrors) {
                     log("Error in %s command", commandName.c_str());
@@ -575,7 +576,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 hexDataReplacement = asciiToHex(removeQuotes(command[3]));
                 //log("hexDataToReplace: "+hexDataToReplace);
                 //log("hexDataReplacement: "+hexDataReplacement);
-                
+
                 // Fix miss-matched string sizes
                 if (hexDataReplacement.length() < hexDataToReplace.length()) {
                     // Pad with spaces at the end
@@ -584,12 +585,12 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                     // Add spaces to hexDataToReplace at the far right end
                     hexDataToReplace += std::string(hexDataReplacement.length() - hexDataToReplace.length(), '\0');
                 }
-                
+
                 if (command.size() >= 5) {
                     occurrence = removeQuotes(command[4]);
-                    result  = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement, occurrence);
+                    result = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement, occurrence);
                 } else {
-                    result  = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement);
+                    result = hexEditFindReplace(sourcePath, hexDataToReplace, hexDataReplacement);
                 }
                 if (!result && catchErrors) {
                     log("Error in %s command", commandName.c_str());
@@ -700,16 +701,16 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             generateBackup();
         }
         if (!progress.empty()) {
-            curProgress += 100/commands.size();
+            curProgress += 100 / commands.size();
             listItem->setValue(std::to_string(curProgress) + "%", tsl::PredefinedColors::Green);
             //log("q%s", ss.str().c_str());
-            
         }
     }
     return 0;
 }
 
-void MTinterpretAndExecute(void* args){
+void MTinterpretAndExecute(void* args)
+{
     // Accept pointers to the exit flag and a vector with commands
     ThreadArgs* threadArgs = static_cast<ThreadArgs*>(args);
     tsl::elm::ListItem* listItem = threadArgs->listItem;
@@ -727,7 +728,8 @@ void MTinterpretAndExecute(void* args){
     *exitMT = true;
 }
 
-tsl::PredefinedColors defineColor(const std::string& strColor) {
+tsl::PredefinedColors defineColor(const std::string& strColor)
+{
     // log ("string color: " + strColor);
     if (strColor == "Green") {
         return tsl::PredefinedColors::Green;
@@ -741,10 +743,11 @@ tsl::PredefinedColors defineColor(const std::string& strColor) {
         return tsl::PredefinedColors::Gray;
     } else {
         return tsl::PredefinedColors::DefaultText;
-    } 
+    }
 }
 
-std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std::string& kipPath = "/atmosphere/kips/loader.kip", bool spacing = false) {
+std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std::string& kipPath = "/atmosphere/kips/loader.kip", bool spacing = false)
+{
 
     std::string currentHex = "";
     std::string extent = "";
@@ -752,7 +755,7 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
     std::string state = "";
     std::string name = "";
     std::string offsetStr = "";
-    std::string increment  = "";
+    std::string increment = "";
     bool allign = false;
     int checkDefault = 0;
     size_t length = 0;
@@ -828,12 +831,12 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                     }
                 } else {
                     if (keyValue && json_is_string(keyValue)) {
-                        json_t* j_offset    = json_object_get(item, "offset");
-                        json_t* j_length    = json_object_get(item, "length");
-                        json_t* j_extent    = json_object_get(item, "extent");
-                        json_t* j_state     = json_object_get(item, "state");
+                        json_t* j_offset = json_object_get(item, "offset");
+                        json_t* j_length = json_object_get(item, "length");
+                        json_t* j_extent = json_object_get(item, "extent");
+                        json_t* j_state = json_object_get(item, "state");
                         json_t* j_increment = json_object_get(item, "increment");
-                        json_t* j_prefix    = json_object_get(item, "prefix");
+                        json_t* j_prefix = json_object_get(item, "prefix");
 
                         if (j_state) {
                             state = json_string_value(j_state);
@@ -865,8 +868,7 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                                         const std::string tempHex = readHexDataAtOffsetF(file, offset, length); // Read the data from kip
                                         unsigned int intValue = reversedHexToInt(tempHex);
                                         current += std::to_string(intValue) + '-';
-                                    }
-                                    catch (const std::invalid_argument& ex) {
+                                    } catch (const std::invalid_argument& ex) {
                                         log("ERROR - %s:%d - invalid offset value: \"%s\" in \"%s\"", __func__, __LINE__, offsetItem.c_str(), jsonPath.c_str());
                                     }
                                 }
@@ -912,14 +914,14 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                                         intValue += std::stoi(json_string_value(j_increment));
                                     }
                                     if (intValue > 10000) {
-                                        intValue = intValue/1000;
+                                        intValue = intValue / 1000;
                                     }
                                     if (j_prefix) {
-                                        output += name + ": "  + json_string_value(j_prefix) + std::to_string(intValue);
+                                        output += name + ": " + json_string_value(j_prefix) + std::to_string(intValue);
                                     } else {
                                         output += name + ": " + std::to_string(intValue);
                                     }
-                                    if (state == "check_extent" && intValue < 100) 
+                                    if (state == "check_extent" && intValue < 100)
                                         extent = "";
                                 }
                             }
@@ -927,7 +929,7 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                             if (!extent.empty()) {
                                 output += extent;
                             }
-                            if (state != "no_skip"){
+                            if (state != "no_skip") {
                                 output += '\n';
                                 lineCount++;
                             } else {
@@ -952,17 +954,17 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
     return std::make_pair(output, lineCount);
 }
 
-std::pair<std::string, int> dispRAMTmpl(const std::string& dataPath, const std::string& selectedItem) {
+std::pair<std::string, int> dispRAMTmpl(const std::string& dataPath, const std::string& selectedItem)
+{
 
     std::stringstream output;
     std::string name = "";
-    std::string value  = "";
+    std::string value = "";
     int nItems = 0;
     int lineNum = 0;
 
-
     if (!isFileOrDirectory(dataPath)) {
-        return std::make_pair(output.str(), nItems/2);
+        return std::make_pair(output.str(), nItems / 2);
     }
     auto jsonData = readJsonFromFile(dataPath);
     if (jsonData) {
@@ -974,14 +976,15 @@ std::pair<std::string, int> dispRAMTmpl(const std::string& dataPath, const std::
 
             if (json_string_value(keyValue) == selectedItem) {
                 output << "These RAM settings will be applied:\n\n\n-------------------------------------------------------------------\n";
-                const char *key;
-                json_t *value;
-                json_object_foreach(item, key, value) {
-                    int spaces[5] = {4,9,6,6,6}; //TODO: remove hardcode; redo text display processing
+                const char* key;
+                json_t* value;
+                json_object_foreach(item, key, value)
+                {
+                    int spaces[5] = { 4, 9, 6, 6, 6 }; //TODO: remove hardcode; redo text display processing
                     if (strcmp(key, "name") != 0 && strcmp(key, "t_offsets")) {
                         output << key << ": " << json_string_value(value) << std::string(spaces[lineNum], ' ');
                         nItems++;
-                        if (strlen(key) > 5 && strlen(json_string_value(value))> 1) {
+                        if (strlen(key) > 5 && strlen(json_string_value(value)) > 1) {
                             output << "\n-------------------------------------------------------------------\n";
                             nItems += 2;
                         } else if (nItems % 2 == 0) { //every second item
@@ -994,28 +997,29 @@ std::pair<std::string, int> dispRAMTmpl(const std::string& dataPath, const std::
             }
         }
     }
-    return std::make_pair(output.str(), nItems/2+5);
+    return std::make_pair(output.str(), nItems / 2 + 5);
 }
 
-bool verifyIntegrity (std::string check) {
+bool verifyIntegrity(std::string check)
+{
 
     bool verified = false;
 
     std::transform(check.begin(), check.end(), check.begin(), ::tolower);
-    
+
     for (size_t i = 0; i < check.length() - 4; ++i) {
 
         if (static_cast<int>(check[i]) == 117 && static_cast<int>(check[i + 1]) == 108 && static_cast<int>(check[i + 2]) == 116 && static_cast<int>(check[i + 3]) == 114 && static_cast<int>(check[i + 4]) == 97) {
             verified = true;
-            break; 
+            break;
         }
     }
 
     return verified;
 }
 
-
-void removeLastNumericWord(std::string& str) {
+void removeLastNumericWord(std::string& str)
+{
     // Iterate through the string from the end
     for (int i = str.length() - 1; i >= 0; --i) {
         if (str[i] == ' ' && std::isdigit(str[i + 1])) {
@@ -1026,7 +1030,8 @@ void removeLastNumericWord(std::string& str) {
     }
 }
 
-std::vector<std::string> parseString(const std::string& str, char delimiter) {
+std::vector<std::string> parseString(const std::string& str, char delimiter)
+{
     std::vector<std::string> result;
     std::istringstream iss(str);
     std::string token;
@@ -1038,7 +1043,8 @@ std::vector<std::string> parseString(const std::string& str, char delimiter) {
     return result;
 }
 
-std::string getVersion(json_t* json) {
+std::string getVersion(json_t* json)
+{
     json_t* error = json_object_get(json, "message");
     if (json_string_length(error) != 0) {
         log("API limit reached");
@@ -1052,9 +1058,10 @@ std::string getVersion(json_t* json) {
     return "Error";
 }
 
-std::string getLinkOnLatest(json_t* json, int dEntry = 1) {
+std::string getLinkOnLatest(json_t* json, int dEntry = 1)
+{
     json_t* assets = json_object_get(json_array_get(json, 0), "assets");
-    json_t* link = json_object_get(json_array_get(assets, dEntry-1), "browser_download_url");
+    json_t* link = json_object_get(json_array_get(assets, dEntry - 1), "browser_download_url");
     if (link && json_is_string(link)) {
         const std::string linkS = json_string_value(link);
         return linkS;
@@ -1062,8 +1069,8 @@ std::string getLinkOnLatest(json_t* json, int dEntry = 1) {
     return "Error";
 }
 
-
-std::map<std::string, std::string> packageUpdateCheck(const std::string& subConfigIniPath) {
+std::map<std::string, std::string> packageUpdateCheck(const std::string& subConfigIniPath)
+{
     std::map<std::string, std::string> packageInfo;
     PackageHeader packageHeader = getPackageHeaderFromIni(packageDirectory + subConfigIniPath);
     if (packageHeader.version != "" && packageHeader.github != "") {
@@ -1074,7 +1081,7 @@ std::map<std::string, std::string> packageUpdateCheck(const std::string& subConf
         if (!git_json) {
             packageInfo.clear();
             return packageInfo;
-        }   
+        }
         packageInfo["repoVer"] = getVersion(git_json);
         if (packageInfo["repoVer"] == "ApiLimit" || packageInfo["repoVer"] == "Error") {
             packageInfo.clear();
@@ -1092,7 +1099,8 @@ std::map<std::string, std::string> packageUpdateCheck(const std::string& subConf
     return packageInfo;
 }
 
-std::map<std::string, std::string> ovlUpdateCheck(std::map<std::string, std::string> currentOverlay) {
+std::map<std::string, std::string> ovlUpdateCheck(std::map<std::string, std::string> currentOverlay)
+{
     std::map<std::string, std::string> ovlItemToUpdate;
     auto git_json = loadJsonFromUrl(currentOverlay["link"]);
     if (!git_json) {
@@ -1106,8 +1114,8 @@ std::map<std::string, std::string> ovlUpdateCheck(std::map<std::string, std::str
     }
     //log("repoVerovl: "+ovlItemToUpdate["repoVer"]);
     if (ovlItemToUpdate["repoVer"][0] == 'v') {
-            ovlItemToUpdate["repoVer"] = ovlItemToUpdate["repoVer"].substr(1);
-        }
+        ovlItemToUpdate["repoVer"] = ovlItemToUpdate["repoVer"].substr(1);
+    }
     if (currentOverlay["localVer"] != ovlItemToUpdate["repoVer"]) {
         ovlItemToUpdate["link"] = getLinkOnLatest(git_json, std::stoi(currentOverlay["downloadEntry"]));
         ovlItemToUpdate["name"] = currentOverlay["name"];
