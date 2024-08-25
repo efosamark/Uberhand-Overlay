@@ -8,11 +8,10 @@ jobs:
   Test-Uberhand:
     name: "Build Test"
     runs-on: "ubuntu-latest"
-    container: "devkitpro/devkita64:20240324"
+    container: "devkitpro/devkita64:latest"
     steps:
       - name: Update devkit
-        # latest switch-zziplib 0.13.76-2 is broken and causes linking errors
-        run: dkp-pacman -Suy --noconfirm --ignore switch-zziplib
+        run: dkp-pacman -Suy --noconfirm
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build
