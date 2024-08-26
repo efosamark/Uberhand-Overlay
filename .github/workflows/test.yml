@@ -8,10 +8,8 @@ jobs:
   Test-Uberhand:
     name: "Build Test"
     runs-on: "ubuntu-latest"
-    container: "devkitpro/devkita64:latest"
+    container: "ghcr.io/irneracoonovich/devkita64:latest"
     steps:
-      - name: Update devkit
-        run: dkp-pacman -Suy --noconfirm
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build
