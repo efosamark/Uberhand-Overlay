@@ -3,7 +3,6 @@
 #define TESLA_INIT_IMPL
 
 #include <FanSliderOverlay.hpp>
-#include <JsonInfoOverlay.hpp>
 #include <KipInfoOverlay.hpp>
 #include <switch/kernel/thread.h>
 #include <tesla.hpp>
@@ -240,7 +239,6 @@ public:
                                                     "Uberhand Package", "", hasHelp, footer);
         auto list = new tsl::elm::List();
 
-        bool ramInfo = false;
         bool useFilter = false;
         bool useSource = false;
         bool useJson = false;
@@ -289,9 +287,6 @@ public:
                     useJson = true;
                 } else if (cmd[0] == "kip_info") {
                     jsonPath = preprocessPath(cmd[1]);
-                } else if (cmd[0] == "ram_info") {
-                    ramPath = preprocessPath(cmd[1]);
-                    ramInfo = true;
                 } else if (cmd[0] == "json_mark_cur_kip") {
                     jsonPath = preprocessPath(cmd[1]);
                     if (cmd.size() > 2) {
@@ -538,63 +533,48 @@ public:
                     } else {
                         isFirst = false;
                         auto listItem = new tsl::elm::ListItem(optionName);
-                        if (ramInfo) {
-                            listItem->setClickListener([count, this, listItem, helpPath, ramPath](uint64_t keys) { // Add 'command' to the capture list
-                                if (keys & KEY_A) {
-                                    tsl::changeTo<JsonInfoOverlay>(ramPath, listItem->getText());
-                                    return true;
-                                } else if (keys & KEY_Y && !helpPath.empty()) {
-                                    tsl::changeTo<HelpOverlay>(helpPath);
-                                } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
-                                    listItem->setValue("");
+                        listItem->setValue(footer);
+                        listItem->setClickListener([count, this, listItem, helpPath, footer](uint64_t keys) { // Add 'command' to the capture list
+                            if (keys & KEY_A) {
+                                if (listItem->getValue() == "APPLIED" && !prevValue.empty()) {
+                                    listItem->setValue(prevValue);
+                                    prevValue = "";
+                                    resetValue = false;
                                 }
-                                return false;
-                            });
-                            list->addItem(listItem);
+                                if (listItem->getValue() != "DELETED") {
+                                    // Replace "{json_source}" with file in commands, then execute
+                                    std::string countString = std::to_string(count);
+                                    std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(commands, countString, false, true, true);
+                                    int result = interpretAndExecuteCommand(modifiedCommands);
+                                    if (result == 0) {
+                                        listItem->setValue("DONE", tsl::PredefinedColors::Green);
+                                    } else if (result == 1) {
+                                        applied = true;
+                                        prevValue = listItem->getText();
+                                        tsl::goBack();
+                                    } else {
+                                        listItem->setValue("FAIL", tsl::PredefinedColors::Red);
+                                    }
+                                }
+                                return true;
+                            } else if (keys & KEY_Y && !helpPath.empty()) {
+                                tsl::changeTo<HelpOverlay>(helpPath);
+                            } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
+                                listItem->setValue(footer);
+                            }
+                            return false;
+                        });
+                        if (color.compare(0, 1, "#") == 0) {
+                            listItem->setColor(tsl::PredefinedColors::Custom, color);
                         } else {
-                            listItem->setValue(footer);
-                            listItem->setClickListener([count, this, listItem, helpPath, footer](uint64_t keys) { // Add 'command' to the capture list
-                                if (keys & KEY_A) {
-                                    if (listItem->getValue() == "APPLIED" && !prevValue.empty()) {
-                                        listItem->setValue(prevValue);
-                                        prevValue = "";
-                                        resetValue = false;
-                                    }
-                                    if (listItem->getValue() != "DELETED") {
-                                        // Replace "{json_source}" with file in commands, then execute
-                                        std::string countString = std::to_string(count);
-                                        std::vector<std::vector<std::string>> modifiedCommands = getModifyCommands(commands, countString, false, true, true);
-                                        int result = interpretAndExecuteCommand(modifiedCommands);
-                                        if (result == 0) {
-                                            listItem->setValue("DONE", tsl::PredefinedColors::Green);
-                                        } else if (result == 1) {
-                                            applied = true;
-                                            prevValue = listItem->getText();
-                                            tsl::goBack();
-                                        } else {
-                                            listItem->setValue("FAIL", tsl::PredefinedColors::Red);
-                                        }
-                                    }
-                                    return true;
-                                } else if (keys & KEY_Y && !helpPath.empty()) {
-                                    tsl::changeTo<HelpOverlay>(helpPath);
-                                } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
-                                    listItem->setValue(footer);
-                                }
-                                return false;
-                            });
-                            if (color.compare(0, 1, "#") == 0) {
-                                listItem->setColor(tsl::PredefinedColors::Custom, color);
-                            } else {
-                                listItem->setColor(defineColor(color));
-                            }
-                            // Find the curent list item to jump to
-                            size_t checkmarkPos = listItem->getValue().find(checkmarkChar);
-                            if (checkmarkPos != std::string::npos) {
-                                savedItem = listItem;
-                            }
-                            list->addItem(listItem);
+                            listItem->setColor(defineColor(color));
                         }
+                        // Find the curent list item to jump to
+                        size_t checkmarkPos = listItem->getValue().find(checkmarkChar);
+                        if (checkmarkPos != std::string::npos) {
+                            savedItem = listItem;
+                        }
+                        list->addItem(listItem);
                     }
                 } else {
                     auto listItem = new tsl::elm::ListItem(itemName);
