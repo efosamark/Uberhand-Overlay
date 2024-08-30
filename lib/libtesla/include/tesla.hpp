@@ -1597,7 +1597,11 @@ namespace tsl {
             virtual ~CustomDrawer() {}
 
             virtual void draw(gfx::Renderer* renderer) override {
-                renderer->enableScissoring(ELEMENT_BOUNDS(this));
+                if (this->getParent()) {
+                    renderer->enableScissoring(ELEMENT_BOUNDS(this->getParent()));
+                } else {
+                    renderer->enableScissoring(ELEMENT_BOUNDS(this));
+                }
                 this->m_renderFunc(renderer, ELEMENT_BOUNDS(this));
                 renderer->disableScissoring();
             }
