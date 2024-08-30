@@ -88,14 +88,22 @@ static size_t progress_callback(void* clientp,
         //log("Download progress: Unknown total size");
         return 0;
     }
+    if (!clientp) {
+        log("%s: ERROR: clientp is NULL", __func__);
+        return 1;
+    }
     struct progress* memory = static_cast<struct progress*>(clientp);
     tsl::elm::ListItem* listItem = memory->listItem;
+    if (!listItem) {
+        log("%s: ERROR: listItem is NULL", __func__);
+        return 1;
+    }
     int totalCommands = memory->totalCommands;
     int curProgress = memory->curProgress;
     // Calculate download percentage
     int progress = curProgress + ((static_cast<int>(dlnow) * 100) / (static_cast<int>(dltotal) * totalCommands));
     std::string progressStr = std::to_string(progress) + "%";
-    if (listItem->getValue() != progressStr) {
+    if (listItem && listItem->getValue() != progressStr) {
         listItem->setValue(progressStr, tsl::PredefinedColors::Green);
     }
 
@@ -148,18 +156,18 @@ bool downloadFile(const std::string& url, const std::string& toDestination, tsl:
         log("Error opening file: %s", destination.c_str());
         return false;
     }
-    struct progress data;
-    data.listItem = listItem;
-    data.totalCommands = totalCommands;
-    data.curProgress = curProgress;
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallbackFile);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
-    if (totalCommands != -1) {
+    struct progress progressData;
+    if (listItem && totalCommands > 0) {
+        progressData.listItem = listItem;
+        progressData.totalCommands = totalCommands;
+        progressData.curProgress = curProgress;
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+        curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &progressData);
+        curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
     }
-    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &data);
-    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
     // Set a user agent
     curl_easy_setopt(curl, CURLOPT_USERAGENT, userAgent);
 
@@ -225,7 +233,7 @@ bool unzipFile(const std::string& zipFilePath, const std::string& toDestination,
         std::string fileName = entry.d_name;
         std::string extractedFilePath = toDestination + fileName;
 
-        if (totalCommands != -1) {
+        if (listItem && totalCommands > 0) {
             // Calculate the percentage completion and add it to the log string
             std::string progress_str = std::to_string(curProgress + ((currentFile * 100) / (totalFiles * totalCommands))) + "%";
             if (listItem->getValue() != progress_str.c_str()) {
