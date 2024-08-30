@@ -553,7 +553,7 @@ public:
                             list->addItem(listItem);
                         } else {
                             listItem->setValue(footer);
-                            listItem->setClickListener([count, this, listItem, helpPath](uint64_t keys) { // Add 'command' to the capture list
+                            listItem->setClickListener([count, this, listItem, helpPath, footer](uint64_t keys) { // Add 'command' to the capture list
                                 if (keys & KEY_A) {
                                     if (listItem->getValue() == "APPLIED" && !prevValue.empty()) {
                                         listItem->setValue(prevValue);
@@ -579,7 +579,7 @@ public:
                                 } else if (keys & KEY_Y && !helpPath.empty()) {
                                     tsl::changeTo<HelpOverlay>(helpPath);
                                 } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
-                                    listItem->setValue("");
+                                    listItem->setValue(footer);
                                 }
                                 return false;
                             });
@@ -644,7 +644,7 @@ public:
                                 }
                                 return true;
                             } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
-                                listItem->setValue("");
+                                listItem->setValue(prevValue);
                             }
                             return false;
                         });
@@ -1208,7 +1208,7 @@ public:
                     }
                 }
 
-                listItem->setClickListener([command = option.second, keyName = headerName, subPath = this->subPath, usePattern, listItem, helpPath, useSlider](uint64_t keys) {
+                listItem->setClickListener([command = option.second, keyName = headerName, subPath = this->subPath, usePattern, listItem, helpPath, useSlider, footer](uint64_t keys) {
                     if (exitMT) {
                         // Means that commands was executed
                         threadClose(&threadMT);
@@ -1249,13 +1249,12 @@ public:
                                 Mtrun = true;
                             }
                         } else if (keys & KEY_X) {
-                            listItem->setValue("");
                             tsl::changeTo<ConfigOverlay>(subPath, keyName);
                             return true;
                         } else if (keys & KEY_Y && !helpPath.empty()) {
                             tsl::changeTo<HelpOverlay>(helpPath);
                         } else if (keys && (listItem->getValue() == "DONE" || listItem->getValue() == "FAIL")) {
-                            listItem->setValue("");
+                            listItem->setValue(footer);
                         }
                         return false;
                     }
