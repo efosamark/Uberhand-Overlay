@@ -1764,12 +1764,14 @@ public:
             if (settingsData.count("uberhand") > 0) {
                 auto& uberhandSection = settingsData["uberhand"];
                 if (uberhandSection.count("last_menu") > 0) {
-                    menuMode = uberhandSection["last_menu"];
                     if (uberhandSection.count("default_menu") > 0) {
                         defaultMenuMode = uberhandSection["default_menu"];
                         if (uberhandSection.count("in_overlay") > 0) {
                             settingsLoaded = true;
                         }
+                    }
+                    if (defaultMenuMode == "last_menu") {
+                        menuMode = uberhandSection["last_menu"];
                     }
                 }
                 if (uberhandSection["show_ovl_versions"] == "true") {
