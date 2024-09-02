@@ -1846,8 +1846,7 @@ public:
             setIniFileValue(settingsConfigIniPath, "uberhand", "default_menu", defaultMenuMode);
         }
 
-        std::string versionLabel = APP_VERSION + std::string("   (") + envGetLoaderInfo() + std::string(")");
-        auto rootFrame = new tsl::elm::OverlayFrame("Uberhand", versionLabel, menuMode);
+        auto rootFrame = new tsl::elm::OverlayFrame("Uberhand", APP_VERSION, menuMode);
         auto list = new tsl::elm::List();
 
         //loadOverlayFiles(list);
