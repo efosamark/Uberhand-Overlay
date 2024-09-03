@@ -34,10 +34,10 @@
 #define KEY_SR HidNpadButton_AnySR
 #define KEY_LSTICK HidNpadButton_StickL
 #define KEY_RSTICK HidNpadButton_StickR
-#define KEY_UP (HidNpadButton_Up | HidNpadButton_StickLUp | HidNpadButton_StickRUp)
-#define KEY_DOWN (HidNpadButton_Down | HidNpadButton_StickLDown | HidNpadButton_StickRDown)
-#define KEY_LEFT (HidNpadButton_Left | HidNpadButton_StickLLeft | HidNpadButton_StickRLeft)
-#define KEY_RIGHT (HidNpadButton_Right | HidNpadButton_StickLRight | HidNpadButton_StickRRight)
+#define KEY_UP (HidNpadButton_Up | HidNpadButton_StickLUp)
+#define KEY_DOWN (HidNpadButton_Down | HidNpadButton_StickLDown)
+#define KEY_LEFT (HidNpadButton_Left | HidNpadButton_StickLLeft)
+#define KEY_RIGHT (HidNpadButton_Right | HidNpadButton_StickLRight)
 #define touchPosition const HidTouchState
 #define touchInput &touchPos
 #define JoystickPosition HidAnalogStickState

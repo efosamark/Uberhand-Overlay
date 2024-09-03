@@ -6,6 +6,7 @@
 class HelpOverlay : public tsl::Gui {
 private:
     std::string helpPath;
+    tsl::elm::List* p_list;
 
 public:
     HelpOverlay(const std::string& helpPath)
@@ -24,6 +25,7 @@ public:
 
         auto rootFrame = new tsl::elm::OverlayFrame("Help", "Uberhand Package", "", false, "\uE0E1  Back     ");
         auto list = new tsl::elm::List();
+        p_list = list;
 
         if (!isFileOrDirectory(helpPath)) {
             list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
@@ -53,6 +55,16 @@ public:
         if (keysDown & KEY_B) {
             tsl::goBack();
             return true;
+        } else {
+            // process right stick scrolling
+            if ((keysHeld | keysDown) & (HidNpadButton_StickRDown)) {
+                this->p_list->handleInput(HidNpadButton_StickRDown, 0,{},{},{});
+                return true;
+            }
+            if ((keysHeld | keysDown) & (HidNpadButton_StickRUp)) {
+                this->p_list->handleInput(HidNpadButton_StickRUp, 0,{},{},{});
+                return true;
+            }
         }
         return false;
     }

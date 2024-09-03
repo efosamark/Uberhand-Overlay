@@ -98,7 +98,8 @@ namespace tsl {
     enum class Class {
         Element,
         ListItem,
-        TrackBar
+        TrackBar,
+        List
     };
 
     namespace cfg {
@@ -1894,6 +1895,28 @@ namespace tsl {
                     delete item;
             }
 
+            virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
+                // process scrolling with right stick without changing focus
+                const int scroll_amount = 25;
+                if (((((keysHeld | keysDown) & (HidNpadButton_StickRUp)) != 0) | (((keysHeld | keysDown) & (HidNpadButton_StickRDown)) != 0))) {
+                    if ((keysHeld | keysDown) & (HidNpadButton_StickRDown)) {
+                        this->m_nextOffset += scroll_amount;
+                    }
+                    if ((keysHeld | keysDown) & (HidNpadButton_StickRUp)) {
+                        this->m_nextOffset -= scroll_amount;
+                    }
+
+                    if (this->m_nextOffset < 0)
+                        this->m_nextOffset = 0;
+
+                    if (this->m_nextOffset > (this->m_listHeight - this->getHeight()) + 50)
+                        this->m_nextOffset = (this->m_listHeight - this->getHeight() + 50);
+
+                    return true;
+                }
+                return false;
+            }
+
             virtual void draw(gfx::Renderer *renderer) override {
                 if (this->m_clearList) {
                     for (auto& item : this->m_items)
@@ -1964,6 +1987,10 @@ namespace tsl {
                         this->invalidate();
                 }
 
+            }
+
+            Class getClass() override {
+                return Class::List;
             }
 
             virtual void layout(u16 parentX, u16 parentY, u16 parentWidth, u16 parentHeight) override {
@@ -3395,6 +3422,7 @@ namespace tsl {
                 if (topElement == nullptr)
                     return;
                 else if (currentGui != nullptr) {
+
                     if (!currentGui->initialFocusSet() || keysDown & (HidNpadButton_AnyUp | HidNpadButton_AnyDown | HidNpadButton_AnyLeft | HidNpadButton_AnyRight)) {
                         currentGui->requestFocus(topElement, FocusDirection::None);
                         currentGui->markInitialFocusSet();
@@ -3425,15 +3453,16 @@ namespace tsl {
             if (!handled && currentFocus != nullptr) {
                 static bool shouldShake = true;
 
-                if ((((keysHeld & HidNpadButton_AnyUp) != 0) + ((keysHeld & HidNpadButton_AnyDown) != 0) + ((keysHeld & HidNpadButton_AnyLeft) != 0) + ((keysHeld & HidNpadButton_AnyRight) != 0)) == 1) {
+                if ((((keysHeld & (HidNpadButton_Up | HidNpadButton_StickLUp)) != 0) + ((keysHeld & (HidNpadButton_Down | HidNpadButton_StickLDown)) != 0) + 
+                     ((keysHeld & (HidNpadButton_Left | HidNpadButton_StickLLeft)) != 0) + ((keysHeld & (HidNpadButton_Right | HidNpadButton_StickLRight)) != 0)) == 1) {
                     if ((repeatTick == 0 || repeatTick > 20) && (repeatTick % 4) == 0) {
-                        if (keysHeld & HidNpadButton_AnyUp)
+                        if (keysHeld & (HidNpadButton_Up | HidNpadButton_StickLUp))
                             currentGui->requestFocus(currentFocus->getParent(), FocusDirection::Up, shouldShake);
-                        else if (keysHeld & HidNpadButton_AnyDown)
+                        else if (keysHeld & (HidNpadButton_Down | HidNpadButton_StickLDown))
                             currentGui->requestFocus(currentFocus->getParent(), FocusDirection::Down, shouldShake);
-                        else if (keysHeld & HidNpadButton_AnyLeft)
+                        else if (keysHeld & (HidNpadButton_Left | HidNpadButton_StickLLeft))
                             currentGui->requestFocus(currentFocus->getParent(), FocusDirection::Left, shouldShake);
-                        else if (keysHeld & HidNpadButton_AnyRight)
+                        else if (keysHeld & (HidNpadButton_Right | HidNpadButton_StickLRight))
                             currentGui->requestFocus(currentFocus->getParent(), FocusDirection::Right, shouldShake);
 
                         shouldShake = currentGui->getFocusedElement() != currentFocus;
