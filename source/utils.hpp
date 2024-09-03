@@ -577,7 +577,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 //log("hexDataToReplace: "+hexDataToReplace);
                 //log("hexDataReplacement: "+hexDataReplacement);
 
-                // Fix miss-matched string sizes
+                // Fix mismatched string sizes
                 if (hexDataReplacement.length() < hexDataToReplace.length()) {
                     // Pad with spaces at the end
                     hexDataReplacement += std::string(hexDataToReplace.length() - hexDataReplacement.length(), '\0');
@@ -846,12 +846,16 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                         }
 
                         if (state != "filler" || state.empty()) {
-                            if (!j_offset || !j_length) {
+                            if (!j_offset) {
                                 return std::make_pair(output, lineCount);
+                            }
+                            if (j_length) {
+                                length = std::stoi(json_string_value(j_length));
+                            } else {
+                                length = 4;
                             }
                             name = json_string_value(keyValue);
                             offsetStr = json_string_value(j_offset);
-                            length = std::stoi(json_string_value(j_length));
                             if (j_extent) {
                                 extent = json_string_value(j_extent);
                             } else {
