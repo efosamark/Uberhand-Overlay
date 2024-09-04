@@ -861,6 +861,11 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                             } else {
                                 extent = "";
                             }
+                            if (j_ref) {
+                                ref = json_string_value(j_ref);
+                            } else {
+                                ref = "";
+                            }
 
                             if (offsetStr.find(',') != std::string::npos) {
                                 std::istringstream iss(offsetStr);
@@ -898,17 +903,24 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                                     if (!j_ref) {
                                         currentHex = readHexDataAtOffsetF(file, offset, length); // Read the data from kip with offset starting from 'C' in 'CUST'
                                     } else {
-                                        currentHex = findCurrentKip(preprocessPath(ref), std::to_string(offset), file, custOffset);
+                                        currentHex = findCurrentKip(ref, std::to_string(offset), file, custOffset);
+                                        if (currentHex == "\u25B6") {
+                                            currentHex = readHexDataAtOffsetF(file, offset, length); // Read the data from kip with offset starting from 'C' in 'CUST'
+                                        }
                                     }
                                 } else {
                                     if (!j_ref) {
                                         const size_t offset = custOffset + std::stoul(offsetStr);
                                         currentHex = readHexDataAtOffsetF(file, offset, length); // Read the data from kip with offset starting from 'C' in 'CUST'
                                     } else {
-                                        currentHex = findCurrentKip(preprocessPath(ref), offsetStr, file, custOffset);
+                                        currentHex = findCurrentKip(ref, offsetStr, file, custOffset);
+                                        if (currentHex == "\u25B6") {
+                                            const size_t offset = custOffset + std::stoul(offsetStr);
+                                            currentHex = readHexDataAtOffsetF(file, offset, length); // Read the data from kip with offset starting from 'C' in 'CUST'
+                                        }
                                     }
                                 }
-                                if (!j_ref) {
+                                if (ref != "") {
                                     int intValue = reversedHexToInt(currentHex);
                                     if (j_increment) { // Add increment value from the JSON to the displayed value
                                         intValue += std::stoi(json_string_value(j_increment));

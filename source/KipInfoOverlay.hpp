@@ -8,6 +8,7 @@ private:
     std::vector<std::string> kipInfoCommand;
     bool showBackup, hasPages;
     bool isFirstPage = true;
+    tsl::elm::List* p_list;
 
 public:
     KipInfoOverlay(const std::vector<std::string>& kipInfoCommand)
@@ -56,6 +57,7 @@ public:
 
         auto rootFrame = new tsl::elm::OverlayFrame("Kip Management", "Uberhand Package", "", false, footer);
         auto list = new tsl::elm::List();
+        p_list = list;
 
         if (!showBackup) {
             textDataPair = dispCustData(kipInfoCommand[isFirstPage ? 1 : 2]);
@@ -77,6 +79,15 @@ public:
 
     virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override
     {
+        // process right stick scrolling
+        if ((keysHeld | keysDown) & (HidNpadButton_StickRDown)) {
+            this->p_list->handleInput(HidNpadButton_StickRDown, 0,{},{},{});
+            return true;
+        }
+        if ((keysHeld | keysDown) & (HidNpadButton_StickRUp)) {
+            this->p_list->handleInput(HidNpadButton_StickRUp, 0,{},{},{});
+            return true;
+        }
         if (!isFirstPage && (keysDown & KEY_B)) {
             tsl::goBack();
             tsl::goBack();
