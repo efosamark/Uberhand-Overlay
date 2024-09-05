@@ -552,6 +552,15 @@ namespace tsl {
             s32 x, y, w, h;
         };
 
+        struct Glyph {
+            stbtt_fontinfo* currFont;
+            float currFontSize;
+            int bounds[4];
+            int xAdvance;
+            u8* glyphBmp;
+            int width, height;
+        };
+
         /**
          * @brief Manages the Tesla layer and draws raw data to the screen
          */
@@ -787,6 +796,41 @@ namespace tsl {
                 this->fillScreen({ 0x00, 0x00, 0x00, 0x00 });
             }
 
+            Glyph* getGlyph(u32 character, float fontSize, bool monospace)
+            {
+                static std::unordered_map<u64, Glyph> s_glyphCache;
+                Glyph* glyph = nullptr;
+                u64 key = (static_cast<u64>(character) << 32) | static_cast<u64>(monospace) << 31 | static_cast<u64>(std::bit_cast<u32>(fontSize));
+
+                auto it = s_glyphCache.find(key);
+                if (it == s_glyphCache.end()) {
+                    /* Cache glyph */
+                    glyph = &s_glyphCache.emplace(key, Glyph()).first->second;
+
+                    if (stbtt_FindGlyphIndex(&this->m_extFont, character))
+                        glyph->currFont = &this->m_extFont;
+                    else if (this->m_hasLocalFont && stbtt_FindGlyphIndex(&this->m_stdFont, character) == 0)
+                        glyph->currFont = &this->m_localFont;
+                    else
+                        glyph->currFont = &this->m_stdFont;
+
+                    glyph->currFontSize = stbtt_ScaleForPixelHeight(glyph->currFont, fontSize);
+
+                    stbtt_GetCodepointBitmapBoxSubpixel(glyph->currFont, character, glyph->currFontSize, glyph->currFontSize,
+                                                        0, 0, &glyph->bounds[0], &glyph->bounds[1], &glyph->bounds[2], &glyph->bounds[3]);
+
+                    int yAdvance = 0;
+                    stbtt_GetCodepointHMetrics(glyph->currFont, monospace ? 'W' : character, &glyph->xAdvance, &yAdvance);
+
+                    glyph->glyphBmp = stbtt_GetCodepointBitmap(glyph->currFont, glyph->currFontSize, glyph->currFontSize, character, &glyph->width, &glyph->height, nullptr, nullptr);
+                } else {
+                    /* Use cached glyph */
+                    glyph = &it->second;
+                }
+
+                return glyph;
+            }
+
             /**
              * @brief Draws a string
              *
@@ -802,15 +846,6 @@ namespace tsl {
                 s32 maxX = x;
                 s32 currX = x;
                 s32 currY = y;
-
-                struct Glyph {
-                    stbtt_fontinfo *currFont;
-                    float currFontSize;
-                    int bounds[4];
-                    int xAdvance;
-                    u8 *glyphBmp;
-                    int width, height;
-                };
 
                 static std::unordered_map<u64, Glyph> s_glyphCache;
 
@@ -835,35 +870,7 @@ namespace tsl {
                         continue;
                     }
 
-                    u64 key = (static_cast<u64>(currCharacter) << 32) | static_cast<u64>(monospace) << 31 | static_cast<u64>(std::bit_cast<u32>(fontSize));
-
-                    Glyph *glyph = nullptr;
-
-                    auto it = s_glyphCache.find(key);
-                    if (it == s_glyphCache.end()) {
-                        /* Cache glyph */
-                        glyph = &s_glyphCache.emplace(key, Glyph()).first->second;
-
-                        if (stbtt_FindGlyphIndex(&this->m_extFont, currCharacter))
-                            glyph->currFont = &this->m_extFont;
-                        else if(this->m_hasLocalFont && stbtt_FindGlyphIndex(&this->m_stdFont, currCharacter)==0)
-                            glyph->currFont = &this->m_localFont;
-                        else
-                            glyph->currFont = &this->m_stdFont;
-
-                        glyph->currFontSize = stbtt_ScaleForPixelHeight(glyph->currFont, fontSize);
-
-                        stbtt_GetCodepointBitmapBoxSubpixel(glyph->currFont, currCharacter, glyph->currFontSize, glyph->currFontSize,
-                                                            0, 0, &glyph->bounds[0], &glyph->bounds[1], &glyph->bounds[2], &glyph->bounds[3]);
-
-                        int yAdvance = 0;
-                        stbtt_GetCodepointHMetrics(glyph->currFont, monospace ? 'W' : currCharacter, &glyph->xAdvance, &yAdvance);
-
-                        glyph->glyphBmp = stbtt_GetCodepointBitmap(glyph->currFont, glyph->currFontSize, glyph->currFontSize, currCharacter, &glyph->width, &glyph->height, nullptr, nullptr);
-                    } else {
-                        /* Use cached glyph */
-                        glyph = &it->second;
-                    }
+                    Glyph* glyph = this->getGlyph(currCharacter, fontSize, monospace);
 
                     if (glyph->glyphBmp != nullptr && !std::iswspace(currCharacter) && fontSize > 0 && color.a != 0x0) {
 
@@ -940,19 +947,20 @@ namespace tsl {
                 return string;
             }
 
-        private:
-            Renderer() {}
-
             /**
              * @brief Gets the renderer instance
              *
              * @return Renderer
              */
-            static Renderer& get() {
+            static Renderer& get()
+            {
                 static Renderer renderer;
 
                 return renderer;
             }
+
+        private:
+            Renderer() { }
 
             /**
              * @brief Sets the opacity of the layer

@@ -1,25 +1,38 @@
 #pragma once
 
+#include "tesla.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <utility>
 
+size_t lineWidth(const std::string& line, const int fontSize = 19, const bool monospace = false)
+{
+    size_t width = 0;
+    for (const auto character : line) {
+        auto glyph = tsl::gfx::Renderer::get().getGlyph(character, fontSize, monospace);
+        width += static_cast<size_t>(glyph->xAdvance * glyph->currFontSize);
+    }
+    return width;
+}
+
 std::pair<std::string, int> readTextFromFile(const std::string& filePath)
 {
     // log("Entered readTextFromFile");
 
-    std::string lines;
+    std::stringstream lines;
     std::string currentLine;
     std::ifstream file(filePath);
     std::vector<std::string> words;
     int lineCount = 0;
-    size_t maxRowLength = 35;
+    const size_t maxRowWidth = 363; // magic number. width of a tesla List drawing area
+    const size_t whitespaceWidth = lineWidth(" ");
 
     std::string line;
     while (std::getline(file, line)) {
         if (line == "\r" || line.empty()) {
-            lines += "\n"; // Preserve empty lines
+            lines << std::endl; // Preserve empty lines
             lineCount++;
             continue;
         }
@@ -27,27 +40,31 @@ std::pair<std::string, int> readTextFromFile(const std::string& filePath)
         std::istringstream lineStream(line);
         std::string word;
         std::string currentLine;
+        size_t currentLineWidth = 0;
 
         while (lineStream >> word) {
             if (currentLine.empty()) {
                 currentLine = word;
-            } else if (currentLine.length() + 1 + word.length() <= maxRowLength) {
+                currentLineWidth = lineWidth(currentLine);
+            } else if (const auto wordWidth = lineWidth(word); currentLineWidth + whitespaceWidth + wordWidth <= maxRowWidth) {
                 currentLine += " " + word;
+                currentLineWidth = currentLineWidth + whitespaceWidth + wordWidth;
             } else {
-                lines += currentLine + "\n";
+                lines << currentLine << std::endl;
                 currentLine = word;
+                currentLineWidth = lineWidth(currentLine);
                 lineCount++;
             }
         }
 
         if (!currentLine.empty()) {
-            lines += currentLine + "\n";
+            lines << currentLine << std::endl;
             lineCount++;
         }
     }
 
     file.close();
-    return std::make_pair(lines, lineCount);
+    return std::make_pair(lines.str(), lineCount);
 }
 
 bool write_to_file(const std::string& file_path, const std::string& line)
