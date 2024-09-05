@@ -14,7 +14,7 @@ std::pair<std::string, int> readTextFromFile(const std::string& filePath)
     std::ifstream file(filePath);
     std::vector<std::string> words;
     int lineCount = 0;
-    size_t maxRowLength = 34;
+    size_t maxRowLength = 35;
 
     std::string line;
     while (std::getline(file, line)) {

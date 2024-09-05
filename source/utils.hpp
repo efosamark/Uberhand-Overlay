@@ -922,7 +922,7 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                                         }
                                     }
                                 }
-                                if (ref != "") {
+                                if (ref == "") {
                                     int intValue = reversedHexToInt(currentHex);
                                     if (j_increment) { // Add increment value from the JSON to the displayed value
                                         intValue += std::stoi(json_string_value(j_increment));
