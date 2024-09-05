@@ -905,6 +905,7 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                                     } else {
                                         currentHex = findCurrentKip(ref, std::to_string(offset), file, custOffset);
                                         if (currentHex == "\u25B6") {
+                                            ref = "";
                                             currentHex = readHexDataAtOffsetF(file, offset, length); // Read the data from kip with offset starting from 'C' in 'CUST'
                                         }
                                     }
@@ -915,6 +916,7 @@ std::pair<std::string, int> dispCustData(const std::string& jsonPath, const std:
                                     } else {
                                         currentHex = findCurrentKip(ref, offsetStr, file, custOffset);
                                         if (currentHex == "\u25B6") {
+                                            ref = "";
                                             const size_t offset = custOffset + std::stoul(offsetStr);
                                             currentHex = readHexDataAtOffsetF(file, offset, length); // Read the data from kip with offset starting from 'C' in 'CUST'
                                         }

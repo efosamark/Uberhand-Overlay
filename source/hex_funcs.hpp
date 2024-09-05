@@ -397,9 +397,9 @@ std::string findCurrentKip(const std::string& jsonPath, const std::string& offse
     auto jsonData = readJsonFromFile(jsonPath);
     
     if (jsonData && json_is_array(jsonData)) {
-        log("jsonData is gotten");
+        // log("jsonData is gotten");
         size_t arraySize = json_array_size(jsonData);
-        log("arraySize = %ld", arraySize);
+        // log("arraySize = %ld", arraySize);
         if (arraySize < 2) {
             return "\u25B6";
         }
@@ -408,8 +408,8 @@ std::string findCurrentKip(const std::string& jsonPath, const std::string& offse
             json_t* hexValue = json_object_get(item, "hex");
             json_t* decValue = json_object_get(item, "dec");
             int hexLength = 0;
-            if (hexValue) {log("hexvalue");}
-            if (decValue) {log("decValue");}
+            // if (hexValue) {log("hexvalue");}
+            // if (decValue) {log("decValue");}
             if ((hexValue && json_is_string(hexValue))) {
                 valueStr = json_string_value(hexValue);
                 searchKey = "hex";
@@ -422,8 +422,8 @@ std::string findCurrentKip(const std::string& jsonPath, const std::string& offse
             } else {
                 return "\u25B6";
             }
-            log("hexLength = %d", hexLength);
-            log("searchKey = %s", searchKey.c_str());
+            // log("hexLength = %d", hexLength);
+            // log("searchKey = %s", searchKey.c_str());
             std::string currentHex;
             try {
                 const std::string CUST = "43555354";
@@ -431,7 +431,7 @@ std::string findCurrentKip(const std::string& jsonPath, const std::string& offse
             } catch (const std::invalid_argument& ex) {
                 log("ERROR - %s:%d - invalid offset value: \"%s\" in \"%s\"", __func__, __LINE__, offset.c_str(), jsonPath.c_str());
             }
-            log("currentHex = %s", currentHex.c_str());
+            // log("currentHex = %s", currentHex.c_str());
             if (!currentHex.empty()) {
                 if (searchKey == "dec") {
                     currentHex = std::to_string(reversedHexToInt(currentHex));
