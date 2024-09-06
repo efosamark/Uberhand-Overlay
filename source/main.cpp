@@ -200,6 +200,8 @@ private:
     bool toggleState = false;
     bool searchCurrent;
     tsl::elm::ListItem* savedItem = nullptr;
+    tsl::elm::List* p_list;
+    bool useText = false;
 
 public:
     SelectionOverlay(const std::string& file, const std::string& key = "", const std::vector<std::vector<std::string>>& cmds = {}, std::string footer = "")
@@ -240,7 +242,6 @@ public:
         bool useFilter = false;
         bool useSource = false;
         bool useJson = false;
-        bool useText = false;
         bool useToggle = false;
         bool useSplitHeader = false;
         bool markCurKip = false;
@@ -309,7 +310,7 @@ public:
                     }
                 } else if (cmd[0] == "text_source") {
                     textPath = preprocessPath(cmd[1]);
-                    useText = true;
+                    this->useText = true;
                 }
             }
         }
@@ -317,7 +318,8 @@ public:
         // Get the list of files matching the pattern
 
         if (!useToggle) {
-            if (useText) {
+            if (this->useText) {
+                p_list = list;
                 if (!isFileOrDirectory(textPath)) {
                     list->addItem(new tsl::elm::CustomDrawer([lineHeight, fontSize](tsl::gfx::Renderer* renderer, s32 x, s32 y, s32 w, s32 h) {
                                       renderer->drawString("Text file not found.\nContact the package dev.", false, x, y + lineHeight, fontSize, a(tsl::style::color::ColorText));
@@ -754,6 +756,17 @@ public:
         if (keysDown & KEY_ZR) { // Scroll to down for 5 items
             scrollListItems(this, ShiftFocusMode::DownMax);
             return true;
+        }
+        if (this->useText) {
+            // process right stick scrolling
+            if ((keysHeld | keysDown) & (HidNpadButton_StickRDown)) {
+                this->p_list->handleInput(HidNpadButton_StickRDown, 0,{},{},{});
+                return true;
+            }
+            if ((keysHeld | keysDown) & (HidNpadButton_StickRUp)) {
+                this->p_list->handleInput(HidNpadButton_StickRUp, 0,{},{},{});
+                return true;
+            }
         }
         if (keysDown & KEY_B) {
             if (!Mtrun) {
