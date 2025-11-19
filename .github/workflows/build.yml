@@ -22,3 +22,4 @@ jobs:
           draft: true
           generate_release_notes: true
           files: ovlmenu.ovl
+          tag_name: Draft
