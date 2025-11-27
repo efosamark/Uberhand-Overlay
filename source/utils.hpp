@@ -691,11 +691,13 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             splExit();
             fsdevUnmountAll();
             spsmShutdown(SpsmShutdownMode_Reboot);
+            spsmExit();
         } else if (commandName == "shutdown") {
             // Reboot command
             splExit();
             fsdevUnmountAll();
             spsmShutdown(SpsmShutdownMode_Normal);
+            spsmExit();
         } else if (commandName == "backup") {
             // Generate backup
             generateBackup();
