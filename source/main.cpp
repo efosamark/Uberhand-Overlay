@@ -49,7 +49,7 @@ public:
         auto rootFrame = new tsl::elm::OverlayFrame(getNameFromPath(filePath), "Uberhand Config");
         auto list = new tsl::elm::List();
 
-        std::string configFile = filePath + "/" + configFileName;
+        std::string configFile = resolvePackageConfig(filePath);
 
         std::string fileContent = getFileContents(configFile);
         if (!fileContent.empty()) {
@@ -971,7 +971,7 @@ public:
             std::vector<std::string> subdirectories = getSubdirectories(subPath);
             std::sort(subdirectories.begin(), subdirectories.end());
             for (const auto& subDirectory : subdirectories) {
-                if (isFileOrDirectory(subPath + subDirectory + '/' + configFileName)) {
+                if (isFileOrDirectory(resolvePackageConfig(subPath + subDirectory))) {
                     auto item = new tsl::elm::ListItem(subDirectory);
                     item->setValue("\u25B6", tsl::PredefinedColors::White);
                     item->setClickListener([&, subDirectory, helpPath](u64 keys) -> bool {
@@ -993,7 +993,7 @@ public:
         // list->addItem(new tsl::elm::CategoryHeader("Commands"));
 
         // Load options from INI file in the subdirectory
-        std::string subConfigIniPath = subPath + "/" + configFileName;
+        std::string subConfigIniPath = resolvePackageConfig(subPath);
         std::vector<std::pair<std::string, std::vector<std::vector<std::string>>>> options = loadOptionsFromIni(subConfigIniPath);
 
         // Package Info
@@ -1450,7 +1450,7 @@ public:
     tsl::elm::Element* createUI() override
     {
         package = getNameFromPath(subPath);
-        std::string subConfigIniPath = subPath + "/" + configFileName;
+        std::string subConfigIniPath = resolvePackageConfig(subPath);
         PackageHeader packageHeader = getPackageHeaderFromIni(subConfigIniPath);
         enableConfigNav = packageHeader.enableConfigNav;
         showCurInMenu = packageHeader.showCurInMenu;
@@ -2062,10 +2062,10 @@ public:
                 std::string subdirectoryIcon = "";
 
                 std::string subPath = packageDirectory + subdirectory + "/";
-                std::string configFilePath = subPath + "config.ini";
+                std::string configFilePath = resolvePackageConfig(subPath);
 
                 if (isFileOrDirectory(configFilePath)) {
-                    PackageHeader packageHeader = getPackageHeaderFromIni(subPath + configFileName);
+                    PackageHeader packageHeader = getPackageHeaderFromIni(configFilePath);
                     if (count == 0) {
                         // Add a section break with small text to indicate the "Packages" section
                         list->addItem(new tsl::elm::CategoryHeader("Packages"));

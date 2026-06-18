@@ -53,6 +53,28 @@ const std::string overlaysIniFilePath = settingsPath + "overlays.ini";
 const std::string packagesIniFilePath = settingsPath + "packages.ini";
 const std::string checkmarkChar = "\uE14B";
 
+// Resolve a package's config file inside a directory. Prefers Uberhand's
+// "config.ini" and falls back to Ultrahand's "package.ini" so Ultrahand
+// packages are discovered and loaded unmodified. When neither exists the
+// config.ini path is returned (it doubles as the creation target for the
+// root menu).
+inline std::string resolvePackageConfig(const std::string& dirPath)
+{
+    std::string base = dirPath;
+    if (!base.empty() && base.back() == '/') {
+        base.pop_back();
+    }
+    const std::string configIni = base + "/config.ini";
+    if (isFileOrDirectory(configIni)) {
+        return configIni;
+    }
+    const std::string packageIni = base + "/package.ini";
+    if (isFileOrDirectory(packageIni)) {
+        return packageIni;
+    }
+    return configIni;
+}
+
 bool applied = false;
 bool deleted = false;
 bool resetValue = false;
@@ -266,6 +288,20 @@ struct ThreadArgs {
     int* errCode;
     std::string progress;
 };
+
+// Safely parse a decimal unsigned long from a command argument. Returns false
+// on malformed input instead of throwing, so a bad package value cannot crash
+// the overlay (std::stoul/std::stoi throw on invalid or out-of-range input).
+static bool parseUnsignedArg(const std::string& str, unsigned long& out)
+{
+    try {
+        size_t pos = 0;
+        out = std::stoul(str, &pos);
+        return pos == str.size();
+    } catch (const std::exception&) {
+        return false;
+    }
+}
 
 // Main interpreter
 int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& commands,
@@ -512,6 +548,40 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                     return -1;
                 }
             }
+        } else if (commandName == "add-ini-section") {
+            // Add a new section to an INI file (Ultrahand compatibility)
+            if (command.size() >= 3) {
+                sourcePath = preprocessPath(command[1]);
+                desiredSection = removeQuotes(command[2]);
+                bool result = addIniFileSection(sourcePath, desiredSection);
+                if (!result && catchErrors) {
+                    log("Error in %s command", commandName.c_str());
+                    return -1;
+                }
+            }
+        } else if (commandName == "remove-ini-section" || commandName == "ini-del-sec") {
+            // Remove a whole section from an INI file (Ultrahand compatibility)
+            if (command.size() >= 3) {
+                sourcePath = preprocessPath(command[1]);
+                desiredSection = removeQuotes(command[2]);
+                bool result = removeIniFileSection(sourcePath, desiredSection);
+                if (!result && catchErrors) {
+                    log("Error in %s command", commandName.c_str());
+                    return -1;
+                }
+            }
+        } else if (commandName == "rename-ini-section") {
+            // Rename a section header in an INI file (Ultrahand compatibility)
+            if (command.size() >= 4) {
+                sourcePath = preprocessPath(command[1]);
+                desiredSection = removeQuotes(command[2]);
+                desiredNewKey = removeQuotes(command[3]);
+                bool result = renameIniFileSection(sourcePath, desiredSection, desiredNewKey);
+                if (!result && catchErrors) {
+                    log("Error in %s command", commandName.c_str());
+                    return -1;
+                }
+            }
         } else if (commandName == "remove-txt-str") {
             // Edit command
             if (command.size() == 3) {
@@ -542,10 +612,18 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 offset = removeQuotes(command[2]);
                 hexDataReplacement = removeQuotes(command[3]);
 
-                bool result = hexEditByOffset(sourcePath, std::stoul(offset), hexDataReplacement);
-                if (!result && catchErrors) {
-                    log("Error in %s command", commandName.c_str());
-                    return -1;
+                unsigned long offsetVal;
+                if (!parseUnsignedArg(offset, offsetVal)) {
+                    if (catchErrors) {
+                        log("Error in %s command: invalid offset \"%s\"", commandName.c_str(), offset.c_str());
+                        return -1;
+                    }
+                } else {
+                    bool result = hexEditByOffset(sourcePath, offsetVal, hexDataReplacement);
+                    if (!result && catchErrors) {
+                        log("Error in %s command", commandName.c_str());
+                        return -1;
+                    }
                 }
             }
         } else if (commandName == "hex-by-swap") {
@@ -645,10 +723,18 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 sourcePath = preprocessPath(command[1]);
                 offset = removeQuotes(command[2]);
                 hexDataReplacement = decimalToReversedHex(removeQuotes(command[3]));
-                bool result = hexEditCustOffset(sourcePath, std::stoul(offset), hexDataReplacement);
-                if (!result && catchErrors) {
-                    log("Error in %s command", commandName.c_str());
-                    return -1;
+                unsigned long offsetVal;
+                if (!parseUnsignedArg(offset, offsetVal)) {
+                    if (catchErrors) {
+                        log("Error in %s command: invalid offset \"%s\"", commandName.c_str(), offset.c_str());
+                        return -1;
+                    }
+                } else {
+                    bool result = hexEditCustOffset(sourcePath, offsetVal, hexDataReplacement);
+                    if (!result && catchErrors) {
+                        log("Error in %s command", commandName.c_str());
+                        return -1;
+                    }
                 }
             }
         } else if (commandName == "hex-by-cust-offset") {
@@ -657,10 +743,18 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
                 sourcePath = preprocessPath(command[1]);
                 offset = removeQuotes(command[2]);
                 hexDataReplacement = removeQuotes(command[3]);
-                bool result = hexEditCustOffset(sourcePath, std::stoul(offset), hexDataReplacement);
-                if (!result && catchErrors) {
-                    log("Error in %s command", commandName.c_str());
-                    return -1;
+                unsigned long offsetVal;
+                if (!parseUnsignedArg(offset, offsetVal)) {
+                    if (catchErrors) {
+                        log("Error in %s command: invalid offset \"%s\"", commandName.c_str(), offset.c_str());
+                        return -1;
+                    }
+                } else {
+                    bool result = hexEditCustOffset(sourcePath, offsetVal, hexDataReplacement);
+                    if (!result && catchErrors) {
+                        log("Error in %s command", commandName.c_str());
+                        return -1;
+                    }
                 }
             }
         } else if (commandName == "download") {
@@ -702,7 +796,7 @@ int interpretAndExecuteCommand(const std::vector<std::vector<std::string>>& comm
             // Generate backup
             generateBackup();
         }
-        if (!progress.empty()) {
+        if (!progress.empty() && listItem != nullptr) {
             curProgress += 100 / commands.size();
             listItem->setValue(std::to_string(curProgress) + "%", tsl::PredefinedColors::Green);
             //log("q%s", ss.str().c_str());
@@ -1026,7 +1120,13 @@ bool verifyIntegrity(std::string check)
 
     std::transform(check.begin(), check.end(), check.begin(), ::tolower);
 
-    for (size_t i = 0; i < check.length() - 4; ++i) {
+    // Need at least 5 chars to match "ultra"; guard against size_t underflow
+    // (check.length() - 4 wraps to a huge value when length < 4).
+    if (check.length() < 5) {
+        return false;
+    }
+
+    for (size_t i = 0; i + 4 < check.length(); ++i) {
 
         if (static_cast<int>(check[i]) == 117 && static_cast<int>(check[i + 1]) == 108 && static_cast<int>(check[i + 2]) == 116 && static_cast<int>(check[i + 3]) == 114 && static_cast<int>(check[i + 4]) == 97) {
             verified = true;
@@ -1039,11 +1139,11 @@ bool verifyIntegrity(std::string check)
 
 void removeLastNumericWord(std::string& str)
 {
-    // Iterate through the string from the end
-    for (int i = str.length() - 1; i >= 0; --i) {
-        if (str[i] == ' ' && std::isdigit(str[i + 1])) {
-            std::string lastWord = str.substr(i + 1); // Extract the last word
-            str.resize(i); // Remove the last word if it's numeric
+    // Iterate through the string from the end. Cast to unsigned char before
+    // std::isdigit: passing a negative char (bytes > 127) is undefined behavior.
+    for (int i = static_cast<int>(str.length()) - 1; i >= 0; --i) {
+        if (str[i] == ' ' && std::isdigit(static_cast<unsigned char>(str[i + 1]))) {
+            str.resize(i); // Remove the trailing numeric word
             break;
         }
     }

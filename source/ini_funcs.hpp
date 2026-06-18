@@ -563,6 +563,109 @@ bool removeIniFileKey(const std::string& fileToEdit, const std::string& desiredS
     return true;
 }
 
+// Append a new section header to an INI file (no-op if it already exists).
+// Provided for compatibility with Ultrahand's "add-ini-section" command.
+bool addIniFileSection(const std::string& fileToEdit, const std::string& desiredSection)
+{
+    std::ifstream file(fileToEdit);
+    std::string line;
+    bool sectionExists = false;
+    while (std::getline(file, line)) {
+        std::string trimmed = trim(line);
+        if (!trimmed.empty() && trimmed[0] == '[' && trimmed.back() == ']'
+            && trimmed.substr(1, trimmed.length() - 2) == desiredSection) {
+            sectionExists = true;
+            break;
+        }
+    }
+    file.close();
+
+    if (sectionExists) {
+        return true;
+    }
+
+    std::ofstream outfile(fileToEdit, std::ios::app);
+    if (!outfile) {
+        return false;
+    }
+    outfile << "[" << desiredSection << "]" << std::endl;
+    outfile.close();
+    return true;
+}
+
+// Remove a whole section (header and its body) from an INI file.
+// Provided for compatibility with Ultrahand's "remove-ini-section" command.
+bool removeIniFileSection(const std::string& fileToEdit, const std::string& desiredSection)
+{
+    std::ifstream file(fileToEdit);
+    if (!file) {
+        return false;
+    }
+
+    std::string line, currentSection;
+    bool inSection = false;
+    std::vector<std::string> newLines;
+
+    while (std::getline(file, line)) {
+        std::string trimmed = trim(line);
+        if (!trimmed.empty() && trimmed[0] == '[' && trimmed.back() == ']') {
+            currentSection = trimmed.substr(1, trimmed.length() - 2);
+            inSection = (currentSection == desiredSection);
+            if (inSection) {
+                continue; // Drop the matching section header
+            }
+        } else if (inSection) {
+            continue; // Drop lines belonging to the matching section
+        }
+        newLines.push_back(line);
+    }
+    file.close();
+
+    std::ofstream outfile(fileToEdit);
+    if (!outfile) {
+        return false;
+    }
+    for (const auto& outLine : newLines) {
+        outfile << outLine << std::endl;
+    }
+    outfile.close();
+    return true;
+}
+
+// Rename a section header in an INI file (best effort; no-op if not found).
+// Provided for compatibility with Ultrahand's "rename-ini-section" command.
+bool renameIniFileSection(const std::string& fileToEdit, const std::string& oldSection, const std::string& newSection)
+{
+    std::ifstream file(fileToEdit);
+    if (!file) {
+        return false;
+    }
+
+    std::string line;
+    std::vector<std::string> newLines;
+
+    while (std::getline(file, line)) {
+        std::string trimmed = trim(line);
+        if (!trimmed.empty() && trimmed[0] == '[' && trimmed.back() == ']'
+            && trimmed.substr(1, trimmed.length() - 2) == oldSection) {
+            newLines.push_back("[" + newSection + "]");
+        } else {
+            newLines.push_back(line);
+        }
+    }
+    file.close();
+
+    std::ofstream outfile(fileToEdit);
+    if (!outfile) {
+        return false;
+    }
+    for (const auto& outLine : newLines) {
+        outfile << outLine << std::endl;
+    }
+    outfile.close();
+    return true;
+}
+
 std::string readIniValue(const std::string& filePath, const std::string& section, const std::string& key)
 {
     std::ifstream file(filePath);
